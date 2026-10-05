@@ -1,0 +1,105 @@
+{
+  "_readme": "Copy to config.json and fill in. Every path is relative to this file's folder. Every number marked EXAMPLE was measured on one specific recording and is wrong for yours: measure your own tape (see README.md, stage 1). Keys starting with _ are comments.",
+
+  "recording": "../raw/workshop.mp4",
+  "transcript": "transcripts/workshop.json",
+  "_transcript": "Scribe-shaped word JSON: {\"words\": [{\"text\", \"start\", \"end\", \"type\": \"word\", \"speaker_id\"}]}. Produce it with .claude/skills/shorts-editor/scripts/transcribe.py --keyterms-file keyterms.txt",
+  "out_dir": "../renders",
+  "fonts_dir": "fonts",
+  "_fonts_dir": "Put the caption font file (and a display font for the opener) here. Not shipped: use fonts you hold a licence for.",
+
+  "frame": {"w": 1920, "h": 1080, "fps": 25, "background": "#F6F3EC"},
+  "speed": 1.05,
+  "video_codec_args": ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18"],
+  "_video_codec_args": "On a Mac you can swap in [\"-c:v\", \"h264_videotoolbox\", \"-b:v\", \"9M\"] for a much faster render.",
+
+  "silence": {"threshold_db": -30, "min_s": 1.0, "leave_each_side_s": 0.3, "min_sliver_s": 1.2},
+  "_silence": "The threshold is a property of the room. If silencedetect finds nothing, the room is noisy: try -35 or -30. Never drop a clean tape toward -30.",
+
+  "layouts": [
+    {"kind": "share", "start": 645.88, "end": 3056.66, "_note": "EXAMPLE: deck on screen, hand-off measured TO THE FRAME"},
+    {"kind": "grid", "grid": "g33", "start": 3056.66, "end": 3181.5, "_note": "EXAMPLE: 7 people in the room, 3x3 gallery"}
+  ],
+  "default_grid": "g32",
+
+  "share": {
+    "deck_crop": [1490, 838, 0, 122],
+    "face_crop": [244, 137, 1512, 0],
+    "deck_slot": [1480, 832, 440, 124],
+    "face_slot": [400, 225, 20, 36],
+    "_note": "EXAMPLE crops as [w, h, x, y] on the source recording. The deck crop sits BELOW the browser bar so tab titles and file paths never reach the cut. The face goes top left, the deck shifts right."
+  },
+
+  "grids": {
+    "g32": {"x": 14, "y": 166, "cols": 3, "rows": 2, "tile_w": 576, "tile_h": 324, "row_gap": 0, "label_h": 48,
+            "keep": [[0, 0], [0, 1]],
+            "_note": "EXAMPLE 3x2 gallery. keep = [row, col] tiles of the presenters, put back sharp. Every other tile is soft-blurred and every name strip hard-blurred. Check the presenters' tile positions every 5 s before a render: galleries reflow."},
+    "g33": {"x": 14, "y": 4, "cols": 3, "rows": 3, "tile_w": 576, "tile_h": 324, "row_gap": 2, "label_h": 48,
+            "keep": [[0, 0], [0, 1]]}
+  },
+  "grid_out_h": 720,
+  "grid_y": 240,
+  "grid_title": "",
+  "_grid_title": "Optional text drawn on the gallery background (needs a display font in fonts_dir). Leave empty for a plain background.",
+
+  "blur": {"soft_radius": 16, "soft_passes": 3, "label_luma_radius": 20, "label_chroma_radius": 10},
+  "_blur": "Soft enough that a person stays a person (radius 16 x 3 measured right; 40 was a smear). boxblur caps silently: luma_radius <= 24, chroma_radius <= half the region's chroma height (label_h / 4 for 4:2:0). build.py validates both before rendering.",
+
+  "captions": {
+    "font_name": "Montserrat",
+    "font_file": "Montserrat-Bold.ttf",
+    "size_px": 56,
+    "calib": 0.63,
+    "gap_px": 22,
+    "outline": 4,
+    "max_words": 4,
+    "max_px": 900,
+    "y_base": 1030,
+    "text_colour": "#FFFFFF",
+    "highlight_colour": "#FFD400",
+    "_note": "Set font and highlight from content/brand.md ({BRAND_FONT_CAPTION}, {BRAND_ACCENT}). calib: libass draws some fonts smaller than PIL measures; 0.63 was measured for one bold sans. y_base must keep the block below every speaker's mouth on every layout."
+  },
+
+  "probe_times": [600.0, 1200.0, 3100.0, 3300.0],
+  "_probe_times": "One raw second per layout. `build.py probe` renders each through the shipping segment path and saves its first frame.",
+
+  "cuts": {
+    "full": [[571.5, 3634.0]],
+    "condensed": [
+      [571.5, 595.6], [642.5, 655.5], [793.0, 845.7], [920.0, 1052.6],
+      [1269.2, 1395.6], [1756.0, 1886.35], [2125.0, 2221.3], [2886.0, 2956.0]
+    ],
+    "_note": "EXAMPLE keep ranges in raw seconds. A condensed cut is pure subtraction in the tape's own order: never re-sequence."
+  },
+  "no_tighten": {"condensed": [[571.5, 595.6], [642.5, 645.88]]},
+  "overrides": {"condensed": {"video": "../renders/opener-condensed.mp4", "ranges": [[571.5, 595.6], [642.5, 645.88]]}},
+  "_overrides": "For these raw ranges, use a pre-rendered frame-size video (the animated opener from opener.py) instead of the layout. Its timeline is the ranges concatenated. Remove this block until the opener exists.",
+  "deck_stills": {"condensed": [[1379.4, 1395.6, "../renders/still-finished-slide.png"]]},
+  "_deck_stills": "In that range the deck slot shows a real frame of the finished slide, so a card clicked late lands as the words do. Remove until the PNG exists.",
+  "splits": {"condensed": [1379.4]},
+
+  "chapters": [
+    [571.5, "Why we ran this session"],
+    [793.0, "What you will be able to answer"],
+    [920.0, "The 4 problems, one by one"],
+    [2886.0, "What to do this week"]
+  ],
+  "_chapters": "Raw seconds to title. A chapter lands on the first kept frame at or after its time (within 30 s) and is written on the DELIVERED (sped) timeline.",
+
+  "publish": {
+    "condensed": {
+      "title": "{YOUR_TITLE}",
+      "description": "{ONE_PARAGRAPH_DESCRIPTION}\n\n{LINKS_YOU_PROMISED_ON_CAMERA_EACH_A_LIVE_URL}",
+      "tags": ["{tag one}", "{tag two}"],
+      "category_id": "27"
+    }
+  },
+
+  "handover": {
+    "title": "{RECORDING_NAME}: the cuts",
+    "rulings": "{One line: the host's rulings this build follows, in their words.}",
+    "left_out": ["{what you left out on purpose, so they can subtract in one word}"],
+    "decisions": ["{each open choice, written as a question a stranger could act on}"],
+    "next_steps": [["Watch the condensed cut and send what comes out", "Host"], ["Re-render on those notes", "Session"]]
+  }
+}
