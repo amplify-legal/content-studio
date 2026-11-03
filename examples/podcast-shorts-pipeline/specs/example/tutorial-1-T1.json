@@ -1,0 +1,63 @@
+{
+  "id": "tutorial-1-T1",
+  "slug": "tutorial-1",
+  "kind": "format",
+  "title": "Turn a messy note into a weekly plan",
+  "title_accent": "weekly plan",
+  "format": "screen-hero",
+  "look": "tutorial",
+  "compare_look": null,
+  "people": {
+    "host": {
+      "name": "Host",
+      "file": "tutorials/tutorial-1/screen.mp4",
+      "words": "tutorials/tutorial-1/edit/transcripts/screen.json",
+      "offset": 0.0,
+      "crop": [1548, 708, 336, 336],
+      "face_note": "the webcam box, bottom right of the screen recording, measured on 1 frame"
+    },
+    "cohost": null,
+    "guest": null
+  },
+  "clock": "host",
+  "hook": {
+    "mode": "aha",
+    "speaker": null,
+    "pieces": [[147.20, 150.90, "host"]],
+    "text": "And that's the whole week, planned from one paste."
+  },
+  "opening_line": null,
+  "answer": {
+    "pieces": [
+      [119.60, 126.40, "host"],
+      [126.80, 135.90, "host"],
+      [136.20, 146.70, "host"],
+      [147.20, 153.00, "host"]
+    ]
+  },
+  "speed": 1.1,
+  "caption_drops": ["um", "uh"],
+  "credit": "",
+  "graphic": {
+    "kind": "screen",
+    "items": [],
+    "keys": [],
+    "source_line": null,
+    "html": null
+  },
+  "screen": {
+    "file": "tutorials/tutorial-1/screen.mp4",
+    "pieces": [[119.60, 153.00]],
+    "crop": [420, 180, 1080, 820],
+    "crop_note": "the app's main column, measured on frames at 120 and 140: no sidebar, no webcam box"
+  },
+  "after_of": null,
+  "collaborator": null,
+  "ig": {"emoji": "🗓️", "callout": null},
+  "notes": [
+    "INVENTED EXAMPLE: every name, time, word and file here is made up to show the shape. Replace it all.",
+    "The sidecar beside it (tutorial-1-T1-tutorial.json) carries the zoom regions, marks, the card, and the private boxes and masks, every number measured on frames of the recording.",
+    "Read the opener and the answer against your off-limits topics list before a render."
+  ],
+  "plan_why": "The finished plan on screen is the saved line, so it opens; then the paste, the prompt and the result in tape order."
+}

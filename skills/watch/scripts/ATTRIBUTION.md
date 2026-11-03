@@ -23,10 +23,17 @@ read each project's own licence before anything ships commercially.
   (see the AV1 trap in `SKILL.md`, which is the largest hidden cost in the whole
   pipeline). A direct `yt-dlp` call is still the fallback when the wrapper is
   missing.
-- **Transcripts run on two free routes**: yt-dlp's own captions first, then local
-  faster-whisper. No API key is needed and none is used. The upstream
-  `setup.py` / `config.py` / `whisper.py` are dropped, because they exist to
-  chase hosted transcription keys this skill does not need.
+- **Transcripts run on three free routes**: yt-dlp's own captions first, then
+  (optional, your own channel only, with an OAuth token in `YOUTUBE_OAUTH_TOKEN`)
+  the YouTube Data API's caption tracks, then local faster-whisper. No paid key
+  is needed. The upstream `setup.py` / `config.py` / `whisper.py` are dropped,
+  because they exist to chase hosted transcription keys this skill does not need.
+- **Nothing a run reads can be from another run or another video.** Each
+  transcript run gets a new work folder, a caption file counts only when yt-dlp
+  exited 0, the file is named for this video's id and it was written after the
+  call started; a downloaded video is reused only through the `source.json`
+  record written beside it, for the same link. Both scripts carry an offline
+  `--self-test`. This is our code, not upstream's.
 - **The interpreter is probed, not hard-coded.** faster-whisper is usually
   installed on one python out of the three or four a Mac carries, so
   `transcript.py` looks for an interpreter that can import it. `WATCH_PYTHON`

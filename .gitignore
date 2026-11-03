@@ -24,8 +24,28 @@ build/
 outputs/
 tmp/
 
-# Fonts and licensed assets you add yourself
+# Stills: posters, contact sheets and checker frames are pictures of real people
+# and real screens. An invented diagram you mean to ship goes in with `git add -f`.
+*.jpg
+*.jpeg
+*.png
+
+# The example shorts pipeline, when it is run inside the clone: your config
+# (your names and your guests' firms), its queues, logs, holds and finished shorts
+examples/podcast-shorts-pipeline/config.json
+examples/podcast-shorts-pipeline/finished/
+examples/podcast-shorts-pipeline/check/
+examples/podcast-shorts-pipeline/queue-*.txt
+examples/podcast-shorts-pipeline/done-*.txt
+examples/podcast-shorts-pipeline/lane-*.log
+examples/podcast-shorts-pipeline/HELD.md
+examples/workshop-edit/config.json
+*.log
+results.jsonl
+
+# Fonts, GSAP and licensed assets you add yourself
 skills/shorts-editor/assets/fonts/
+skills/shorts-editor/assets/vendor/
 skills/shorts-editor/assets/*.m4a
 skills/shorts-editor/assets/logos/
 

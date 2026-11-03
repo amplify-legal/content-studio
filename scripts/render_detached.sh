@@ -167,9 +167,15 @@ monitor() {
 
 supervised_run() {
   local D="$1" WATCH JOB rc attempt i sw fp waited
+  # A hangup from the terminal that started us must not reach the job.
+  trap '' HUP
   WATCH="$(cat "$D/watch")"
   JOB="$(cat "$D/job")"
   cd "$RENDER_ROOT" || exit 1
+  # The ready handshake: `start` waits for this pid to appear here, so a start
+  # can never report success while the supervisor has not actually come up.
+  echo "$$" > "$D/ready"
+  echo "supervisor ready pid=$$ $(date +%T)" >> "$D/run.log"
 
   monitor "$D" "$WATCH" &
   local MON=$!
@@ -245,6 +251,7 @@ case "$cmd" in
       echo "already running: pid $(cat "$D/pid")"; exit 0
     fi
     : > "$D/exit"    # emptied, not deleted: an empty exit file means "not finished"
+    : > "$D/ready"   # emptied the same way; the supervisor writes its pid here
     printf '%s' "$JOB" > "$D/job"
     printf '%s' "$WATCH" > "$D/watch"
 
@@ -256,11 +263,29 @@ case "$cmd" in
     RENDER_MAX_BYTES="$RENDER_MAX_BYTES" RENDER_GUARD_PROC="$RENDER_GUARD_PROC" \
     RENDER_PREHOOK="${RENDER_PREHOOK:-}" \
     nohup python3 -c 'import os,sys; os.setsid(); os.execv(sys.argv[1], sys.argv[1:])' \
-      "$SELF" _run "$name" > /dev/null 2>&1 &
-    echo $! > "$D/pid"
+      "$SELF" _run "$name" >> "$D/launch.log" 2>&1 &
+    pid=$!
+    echo "$pid" > "$D/pid"
     disown 2>/dev/null || true
-    echo "started $name (pid $(cat "$D/pid"))"
-    echo "log $D/run.log"
+    # Wait up to 20 seconds for the supervisor to write its own pid into
+    # `ready`. A launch that printed "started" while its child had already died
+    # once cost a night: the queue waited on an exit file nobody would write.
+    tries=0
+    while [ "$tries" -lt 200 ]; do
+      if [ "$(cat "$D/ready" 2>/dev/null)" = "$pid" ]; then
+        echo "started $name (pid $pid)"
+        echo "log $D/run.log"
+        exit 0
+      fi
+      if ! kill -0 "$pid" 2>/dev/null; then
+        echo "supervisor exited before it was ready; read $D/launch.log" >&2
+        exit 1
+      fi
+      sleep 0.1
+      tries=$((tries+1))
+    done
+    echo "supervisor did not acknowledge startup within 20s; inspect $D/launch.log and $D/pid before retrying" >&2
+    exit 1
     ;;
 
   _run)

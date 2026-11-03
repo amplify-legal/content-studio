@@ -42,6 +42,14 @@ If a video says "link below", "a free resource", "the prompt", "no email needed"
 
 A peer call can describe the stack and the price. It never shows a date that will be stale by the time the video is watched (that turns the video into an expired ad), and never puts a real contact's name on screen (that is somebody else's privacy, in a file that never comes back down).
 
+### 7b. Every post of a short links the full video in its comments
+
+On every platform: the first comment on a written-platform post, a comment under the reel and the short, the first-comment text on a hand-posted card. A short whose full video is not live yet waits off the plan until it is, because a short that points nowhere wastes the one viewer it hooked. A plan check can refuse a short with no full-video link; make it one.
+
+### 7c. A guest on a podcast short is added as a collaborator, and the invite is actually delivered
+
+Where a platform supports collaborators, every short or clip from an episode carries the guest as collaborator. Check how the platform delivers the invite: one platform sends the guest no notification and only creates a link ("active after you save") that has to be emailed to them, so a guest's team once waited 5 days on an invite that existed only as an unsent link.
+
 ---
 
 ## Privacy and frames
@@ -74,6 +82,18 @@ A third party who is not **seen, heard or named** in a cut needs no consent: the
 ### 11. Cut-review runs before any cut reaches the person
 
 A staged cut, from any builder, spin-off or pipeline, goes through `cut-review` before it is put in front of the creator, whatever question is still open about it. **The open question rides with the review; it never replaces it.**
+
+### 11b. A short goes on the posting plan only after the creator has seen it or cut-review has cleared it
+
+Shorts once went onto a plan before the creator had watched them, and the creator had to hold the week. Approval is the gate once posting is automated, so nothing reaches the plan unseen.
+
+### 11c. The director runs before every recording
+
+Every recording plan and recording session runs the `director` (the 7 questions in `content/taste/director.md`, asked only where the brief has not answered them), and the frame is written into the brief before the camera turns on. Every cut review, edit session and planning page reads the kind's sheet (`content/taste/kinds/<kind>.md`) and the newest lines from the review calls first. Why: an edit with no written frame is judged against whatever the reviewer likes that day; the frame gives the edit, the review and the packaging one thing to serve. A line repeated 3 times on review calls is put to the creator to promote; the machine never promotes it to a rule itself.
+
+### 11d. A pass that rejected nothing is not a verdict on taste
+
+2 options once passed every mechanical check and the creator rejected both as "way too basic", built without awareness of the taste files. A cut the creator rejected stays rejected until they accept a revision against a reference they picked.
 
 ### 12. The end-of-run review is a separate reviewer
 

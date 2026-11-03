@@ -62,6 +62,34 @@ If step 1 is missing, do not render.
 - **Match the palette** in `content/brand.md`, so the cut needs no grade.
 - **Real product footage or a real screen capture is allowed.** It is the actual thing being discussed, not generated mood.
 
+### How it moves
+
+If you keep a `content/taste/motion-craft.md`, the motion rules live there and this file points at them. Starting defaults either way:
+
+- **Springs, not curves.** Motion that settles like a physical thing reads as crafted; a stock ease reads as a template.
+- **One shape that never cuts.** The thing the viewer is tracking morphs from state to state instead of being swapped out.
+- **A handoff at identical geometry.** When one element becomes another, the two share position and size at the moment of the swap, so the eye never jumps.
+- **A camera.** A slow push or drift gives a flat composition depth.
+- **No overshoot eases** (back-out, elastic) on a story animation: they are the "bounce eases" the sophistication test rules out. Shorts cards may keep their own, livelier look.
+
+### On-screen teaching cards
+
+For a talk, a podcast or a tutorial, the screen can help the viewer learn. Starting defaults:
+
+- **Boxes that build in step with the words, never black text on a blank whiteboard.** The box-building teaching cards some AI-tutorial channels use are the element to borrow; borrow the element, never the whole style. Leverage boxes and animation without overwhelming: the animation serves the message.
+- **Two tiers.** A small card for a passing note. A full animated teaching card when the viewer should really remember it: a prompt, a strategy, a tactic, an acronym, a short list ("the 4 things to avoid", "the 2 questions").
+- **A website someone mentions is shown as the real site**, captured and animated in, not redrawn.
+
+### A mascot explainer: start in a flat world
+
+A guideline from one test set, not a rule. Shown 5 directions for 5 script lines (a photoreal office, an isometric diorama, a flat 2D world with a pixel mascot, image-first stills, a set built on published prompting rules), the creator picked the flat 2D clip on every row, over the photoreal and rule-shaped clips that had been recommended. What the flat set had (the creator gave no reason with the picks; this is the read afterwards):
+
+- **The mascot stayed flat.** In the photoreal office it mostly came back rounded or blocky 3D; in the flat world it kept a flat, pixel-edged build (though it still took the prompt's words over the drawing where they disagreed).
+- **The idea read at a glance.** A cutaway building in a circle, sheets bouncing off it, red marks turning into black bars: countable and resolved, nothing to decode. The count still drifted (asked for 6, drew 5 marks, ended on 7 bars).
+- **It sat beside the deck.** The plate used the brand's own colour words, so the cut needed no grade.
+
+Start a mascot explainer in a flat world, and offer another world when the video's own look calls for it. The prompts that made the set are in `.claude/skills/media-gen/reference/prompt-recipes.md`.
+
 ### Which tool for which job
 
 - **Where meaning lives in exact quantity, render it deterministically** (HTML, code, frame-exact image rendering). A generative video pass tends to keep the look and rebuild the structure, which eats the proportion.
@@ -69,6 +97,8 @@ If step 1 is missing, do not render.
 - **Generative video is right where precision carries no meaning**: depth, light, atmosphere. Route it through `media-gen`.
 - **Pass a deterministic version of the same beat as a video reference** when the model accepts one. It hands over the beat structure and the colours.
 - **Video-model edit requests have quiet traps.** Common ones: the output takes the reference's aspect ratio, the requested duration must match the reference exactly, a re-uploaded reference under the same storage name may be cached, and the real error detail can sit deeper in the response than the top-level error field. Check `content/reference/media-gen.md` for the ones known for your model.
+- **Colours as words on Omni, hex only on Seedance.** Hex codes in an Omni prompt rendered a palette strip with garbled labels in the opening frames. Name the colours ("deep teal", "warm off-white") and keep the hex in `content/brand.md`.
+- **Omni's length follows the ask** (5 s and 6 s were honoured); an 8 s clip came from the edit task, not a default. It always returns an audio track: mute it on the timeline.
 
 ## Mine
 

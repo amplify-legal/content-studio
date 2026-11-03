@@ -51,6 +51,12 @@
 - **Proper nouns and URLs are verified at caption build, before the burn.** Every capitalised token, domain and organisation name comes out of the ASS and is checked against the guest's real assets. A misheard compound word and a missing letter in a domain both got burned in and passed self-review. Verified names go into a `known_nouns.txt` as the audit trail.
 - **An all-caps style hides every proper noun from the checker**, so a person spot-reads the intro captions on every episode.
 - **A key word guessed from context is still a guess.** A machine heard one word, a context guess picked a second, and both were wrong. The tape settles it.
+- **Every caption group in the whole episode, not only the trailer, ends at least 1 frame before any cut or layout switch and never bridges one.** A group that crosses a boundary is split there. A check once measured 19 body captions running 1 to 3 frames past a cut, because the rule had only been written for the trailer.
+- **A trailer caption never outlives its clip:** it ends 1 frame before the cut and its words start inside the clip.
+- **A stutter prefix on the same word ("FI-FIRST") is never captioned; the kept word is.**
+- **A number word that closes a sentence stays a word** ("one of the two.", never "THE 2."); every other number is digits.
+- **On a 3-card frame a lone word folds into its neighbour** when it is the same speaker and style, the gap is under 0.15 s and the pair needs at most a 15% shrink. 32% of groups were single-word flashes before this.
+- **Nobody is captioned while off screen**, because a caption under someone else's mouth reads as theirs.
 - **A transcript false start ("c-", "jo-") is dropped from the captions, never stripped of its dash**, or it shows as a stray letter.
 - **Backchannels ("mm-hmm") are dropped** when the other speaker holds the floor. On a 2-host recording, crosstalk under the other person's sentence is the main caption fault: read every caption against who is speaking before the review.
 - **On a vertical derivative: 78px in a 1080-wide frame and never below it**, judged at 375px phone width. On shorts the block also ends at or above 78% of frame height (`content/taste/shorts-formats.md`). A corpus finding never overrides a floor the host set: 2 independent review passes once recommended shrinking and both were wrong.
@@ -93,18 +99,76 @@ The key terms are most of the difference on either API.
 - **A boomy mono bus** (one mic for 2 people, peaking at 0 dBFS): `adeclip,highpass=f=120:poles=2,lowshelf=f=220:g=-5,afftdn=nr=8:nf=-34,alimiter=limit=0.95`, then loudnorm. Measured on a 30 second slice: the low band (under 150 Hz) went from -27.9 to -31.3 dB mean, peaks from -10.5 to -14.5 dB. A built clip peaked at -1.4 dB after the chain.
 - **Every derivative inherits the episode's audio chain.** Every short, reel and clip runs the episode's own chain before the speed pass, or reproduces it exactly. Write the chain down where a shorts session will find it, not only inside one render script.
 - **Music from a licensed library, never generated.** The bed sits clearly under the speech: about 19 to 20 dB under the voices was right where 6 to 7 dB under was "way too loud". **Measure bed against voice in the same window before a render is shown, and say the number.** One shape that worked: the bed under the trailer and intro animation, fading out over the 7 seconds before the intro animation ends.
+- **A host's echo is fixed from the source tracks, before the cut.** Measure each speaker's reverb tail on the same tape (a decay time in ms; on one tape the host rang 235 to 310 ms against 170 to 190 for the guests). When one track rings longer, de-reverb that track alone (DeepFilterNet 3 worked) and cross-fade the original back wherever the output digs more than 20 dB under it, so quiet consonants are not eaten.
+- **Measure the true peak on the encoded file that ships, not on the wav.** The AAC encode added about 1 dB on a real run: -1.7 dBFS on the wav read -0.7 on the mp4 until the limiter came down.
+- **A bed level copied from another episode is re-set from this trailer's own measure.** Trailers differ: one episode's voices ran about 7 dB quieter than the last, so the copied level sat 9.8 dB under where it should. Measure bed against voice after the picks, and set the level so the bed sits 19 to 20 dB under (new level = old level x 10^((gap - 19.5)/20)) before the finalise.
+- **The host's laughs are pulled down and their peaks over-normalised** when the host has a loud laugh: find the laugh spans on that track and bring them to about the level of their speech with a limiter, before the music bed is set.
+- **Every candidate moment gets an audio-model listen for background noise before it is offered** (horns, dogs, doors, notifications). One prompt asking for every noise at once missed a horn that one listen per sound type (6 listens per clip) found, while staying quiet on a clean clip. The model's timestamps drift by a second or more, so confirm a hit on the raw track before cutting. A hit is cut, ducked, or the moment is dropped and the card says why.
 - **A secondary feed** (a phone livestream) measured about 12 dB under the main mix (mean -25.4 dB against -12.8 dB). Lift it to roughly 6 dB under, and err toward lower volume.
 
 ## 7. The finish
 
 - **Speed last, captions first.** A conversational episode can ship at 1.1x with pitch preserved; captions burn before the speed pass so they stay synced.
+- **When a guest names a book, a podcast or a product, find it and show it on screen** (the cover, the show's artwork, the product), placed where they talk about it. It widens the rule below from what was promised to anything the guest names.
 - **A resource promised on tape is shown on screen**, as an animation that walks through it (step one appears, then step two), not just a static card and not just a link. The resource takes the frame screen-share style (the document fills the card, the speaker shrinks to a corner) while it is being enumerated.
 - **On-screen text that quotes the tape names its transcript line and timestamp** at the top of its build prompt. A walkthrough built from the wrong passage cost a re-render.
 - **Name plates**: on from the intro through about the first minute of conversation, off for the body, back on for the goodbye. Each EDL segment carries a `plates` flag and the clip cache key carries a no-plates suffix so both states coexist.
 - **Never upload before the host has seen the file**, even under an explicit end-to-end autonomous mandate. A long public artifact is not the kind of irreversible thing an autonomy grant covers.
+- **Chapters are built from the finalise manifest, in final time** (after the speed pass), each on its starting second, the trailer at 0:00. After an NLE pass they are re-derived from the new runtime.
 - **Handing the file to an editor or an NLE is a supported ending.** Hand over the derivative-dependency list (chapters, description timestamps, short in and out points) with the one command that re-derives them from the new runtime.
 
-## 8. Pipeline lessons, paid for in hours
+## 8. The frame, the picks and the trailer
+
+### The frame follows the people, not a fixed grid
+
+**The layout is chosen per stretch, not fixed for the episode:** one card (the speaker alone), 2 cards, or all 3. A person who looks bad in a stretch (eyes down, dark, off camera, distracted, unengaged) comes out of the frame for that stretch, and the speaker is never dropped. The episode's house layout is the default the cut returns to, never a rule that keeps everyone on screen. Switches land on cuts or turn changes, never mid-sentence, and not so often they flicker. It applies to trailers, the body and shorts. Why: on a real trailer one host sat in their card looking down through the best clip and another card was underexposed at the key line.
+
+- **In one-person stretches the frame changes every 10 to 20 seconds, at the speaker's pauses; back-and-forth stays as it is.** Not a switch every 2 seconds, but a long monologue rotates through the speaker alone, the equal cards, 2 cards and the house layout, which helps retention.
+- **A 3-equal-cards layout is one of the options.**
+- **No frame shows for under a second.** A sliver under 5 s left by a split or an override edge folds into a neighbour that shows its talkers (a 0.9 s flash shipped on a first rotation run).
+- **A switch never lands inside a word.** It moves to the nearest gap of 0.12 s or more in every speaker's words, within 1.5 s; an override edge snaps to a turn end only within 2.5 s. An independent pass found 3 switches mid-word in crosstalk.
+- **Who must be on screen is counted in turns, not words:** a talker holds a turn of 1.2 s or more in the span, so a listener's "yeah, yeah" never puts them back in the frame.
+- **Listeners looking down are marked on every tape before the layout pass** (by hand, or automatically: face luma under 70% of the median, no eyes where eyes usually are, 3 of 5 seconds), and come out of the big cards for that stretch.
+- **Every stretch answers 3 questions:** What is a viewer watching at this moment? What do we want them to take from this section? Is that objective achieved? **Anyone named, introduced or addressed in a sentence is on screen in that sentence**, and a host laughing under a guest is on screen. The frame plan is an editor's plan with a reason per stretch, never only a mechanical rule.
+
+### A pick on a mockup, a description or a rule is not a pick on the tape
+
+What went wrong once: the edit plan showed the frame as still mockups and the opener as a description, and its moments were the machine's picks from the transcript. The host picked off that page, saw 3 rendered trailers and answered "something else", then said "present me the final versions", and the session read that as licence to build the trailer from its own first draft and choose who was on screen in all 29 stretches. A handoff then called all of it "already decided by the host". So, on every episode:
+
+- **The moments are the host's.** Every trailer and short candidate goes to them as its own rendered clip, labelled, before anything is assembled. A list in a plan is not a pick.
+- **An unanswered pick stays open.** "Something else" with nothing after it, a skipped question, or "present me the final versions" never lets the builder fill the pick with its own choice; the open pick goes back as rendered options the same session.
+- **A rule is not a pick.** "The frame follows the people" tells the builder how to propose; the stretch-by-stretch result goes in front of the host on real footage before the full render.
+- **A page or a handoff never calls a choice decided unless the host chose it on the rendered thing**, and it says which choices were theirs and which were the machine's default.
+
+### The trailer is the host's picked moments
+
+- **The moments the host picks on an options page are the trailer, and each becomes its own full short.** The trailer runs as long as those moments joined, never cut to a target length. Each clip keeps its own frame; the builder orders them for the hook and the close and says the order in one line; each picked moment widened to its complete thought (25 to 60 s, sentence edges) becomes a short.
+- **The trailer appends the moments as separate scenes, and every cut between 2 moments changes the frame.** 3 moments in the same frame read as 1 long clip, which is the failure. Consecutive moments never share speaker and frame; alternate speakers where the order allows.
+- **A trailer moment is only its hook or its punchline, never the whole thought.** Propose the tight cut first; a moment over about 8 s carries a reason. A moment with no shock, curiosity or hook is not offered.
+- **A laugh moment keeps its laugh:** its out-point carries the tail through the silence to the next word, never stopping at the breath before the laugh. This is the exception to the decay rule in section 1.
+- **A retaken intro replaces the original whole:** the first take and the blooper around it come out of the body.
+- **A trailer bed is at least as long as the trailer plus the title card, and its fade is measured to play.** The build refuses a shorter bed; a short track is extended musically (a crossfaded repeat of whole bars before the track's own ending), never looped hard or padded with silence. A real build ended its bed 5 s before the window, so the fade never played and the title card was digital silence.
+- **`loudnorm` never sits in the final filter graph of a clip cut with `-t`.** Finish the sound in its own pass, then decode every clip's sound and refuse any that runs more than 0.2 s short. 25 clips once lost about 3 s mid-clip while `ffprobe` showed full length.
+
+### Narrowing the moments before the options page
+
+An options page that offers every candidate is homework: one page offered 116 clips and was never picked from. Hosts pick 6 to 8. The method, as proposals your own picks will move:
+
+1. **Mine every candidate**, as wide as the tape earns, nothing rendered.
+2. **Rank them from text and times only.** Score each on 6 things (weights proposed): **hook (3)**, the first sentence carries a number, a bold claim, a confession or a sharp question and opens on the claim, not on context; **stands alone (3)**, no reference back ("like I said") and no first sentence leaning on a pronoun; **payoff (2)**, ends on a whole line (a trail-off scores 0, a closing question half); **your topics (2)**, what your audience comes for (topics you have ruled out of content kill the moment); **speaker clarity (2)**, one voice carries it; **length (2)**, 8 s or less full, up to 20 s half, over 20 s 0.
+3. **Cap: 12 moments per episode, never more than 15**, so there are about 2 to choose from per keeper. Inside the cap: at least 4 the guest carries alone, at most 5 any one voice is in, at most 3 laughs. A moment already posted as a short is not offered again (a trailer may still borrow it).
+4. **Settle every other set from the host's past picks** (frame, opener, captions, plates, sound, endings), each named on the page as "settled from <episode, date>" so one word reopens it. Only a call no past pick covers renders, at most 3 options each. Whole page: about 30 clips. One real page went from 109 clips to 33 this way.
+5. **The dropped moments stay one word away:** listed under the 12 as 1 text line each (label, score, first sentence, why it dropped), never rendered.
+6. **The noise listen and the full-resolution frame check run on the 12 only.**
+
+**Calibration:** the machine ranks, the host picks. Every pick and every struck moment is written down with the reason the same turn; when the host picks something the ranking dropped, or strikes the same kind twice, the weight moves and the change is dated.
+
+### The selection stage
+
+- **Every new episode can start with variations of every characteristic** (frame, opener, captions, plates, sound), built without questions through a parallel workflow, with your strongest model on the creative pass and on the final judgment of fixes. Then the narrowing above decides which reach the host.
+- **A trial worth running: 2 or 3 sentences on what you do and who for, right after the trailer**, said by the host in the welcome, before the guest is introduced, kept whole by the edit. On tape that does not have them, nothing is invented: no regenerated sentence and no line moved from later. Measure retention across those seconds against your past episodes a week after it goes public, and keep it only if it does not dip.
+
+## 9. Pipeline lessons, paid for in hours
 
 ### The render
 
@@ -114,7 +178,8 @@ The key terms are most of the difference on either API.
 - **Render lock: while a render's pid is alive, no other heavy job starts.** Load average once hit 241 and blocked an upload for 35 minutes.
 - **The runaway tail.** Any ffmpeg graph with `-loop 1` image inputs keeps producing frames after the main video ends ("More than 100000 frames duplicated" is the tell). It masqueraded as an out-of-memory crash at "98%" and as 17 hour renders. **Every command with a looped image gets an explicit output `-t`**, belt and braces with `shortest=1` on the first overlay. Salvage: SIGINT, not SIGKILL; the head of the file is intact. An aerial step with `-t` only on the inputs produced a 367 second trailer; the duration check after every build caught it in seconds.
 - **The framesync stall.** Finite image-sequence overlay inputs against a mismatched frame rate can hang forever at a huge memory number with zero output. Bake plates in with `-loop 1` (infinite) images only, composite entrance animations frame by frame in PIL, and keep the final pass to subtitles plus loudnorm.
-- **A segment at 0% CPU is a deadlock.** A 1.5s segment hung 13 minutes with `-ss S -t d+pre+0.2` because its audio ran out exactly where `apad` began. With 1.0s of slack on the input window it rendered in 0.4s. That was not the whole cause: a 75s segment then stalled the same way under memory pressure while the identical command ran in 11s by hand (cause unproven). The fix that holds is structural: `-nostdin` on every call, a bounded wait of 60s plus 3x the duration, one retry.
+- **A cut edge is a floor for the piece that resumes after it.** A builder snapped every piece start to 120 ms before its first word and then floored it to the frame grid, so a resume asked for at a cut landed 75 ms early, inside the last letter of the word the cut removed (a 40 ms tick at -17 dB). Take the segment's own start as the lower bound and round a segment's first piece up to the frame grid. A pipeline copied from an older episode carries the old snap until it is ported.
+- **A segment at 0% CPU is a deadlock.** A 1.5s segment hung 13 minutes with `-ss S -t d+pre+0.2` because its audio ran out exactly where `apad` began. With 1.0s of slack on the input window it rendered in 0.4s. That was not the whole cause: a 75s segment then stalled the same way under memory pressure while the identical command ran in 11s by hand (cause unproven). The fix that holds is structural: `-nostdin` on every call, a bounded wait of 60s plus 3x the duration, one retry. On a slower machine 60s plus 3x killed healthy pieces; 120s plus 8x worked.
 - **The memory gate reads memory pressure, not swap used.** The OS keeps swap allocated after the pressure is gone; a gate on swap used sat waiting on a machine that was 49% free. On macOS, `memory_pressure`'s free percentage is the kernel's own verdict (25% or more free releases the render).
 - **`timeout` does not exist on macOS** and every step using it exits 127. `perl -e "alarm N; exec @ARGV"` is the portable version.
 

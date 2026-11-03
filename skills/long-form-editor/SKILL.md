@@ -15,7 +15,7 @@ description: >-
 
 # Long-Form Editor
 
-**Load before any step:** `content/PRINCIPLES.md` (the constitution: it wins over every step here), then `content/reference/long-form-lessons.md` (the taste and the errors table for this lane), then `content/reference/lessons.md` (the rules that cross every lane, publishing included), then their `content/taste/editing-rules.md` and `content/taste/editing-checklist.md`. Load the lane file that matches the tape as well: `content/reference/workshop-edit.md` for a recorded session with attendees and a deck, or `content/reference/podcast-edit.md` plus `content/reference/podcast-edit-runbook.md` for a conversational episode.
+**Load before any step:** `content/PRINCIPLES.md` (the constitution: it wins over every step here), then `content/reference/long-form-lessons.md` (the taste and the errors table for this lane), then `content/reference/lessons.md` (the rules that cross every lane, publishing included), then their `content/taste/editing-rules.md` and `content/taste/editing-checklist.md`. Then the kind's sheet, `content/taste/kinds/<kind>.md`, and the brief's frame section (the `director`'s answers): the edit serves that frame. Load the lane file that matches the tape as well: `content/reference/workshop-edit.md` for a recorded session with attendees and a deck, or `content/reference/podcast-edit.md` plus `content/reference/podcast-edit-runbook.md` for a conversational episode.
 
 **The thing this exists to stop.** Somebody has a 90 minute recording and treats it as raw material they cannot use, so it sits on a drive and the week produces nothing. A raw recording is not an impediment. It is the cheapest content you will ever have, because the hard part, saying the thing out loud, already happened.
 

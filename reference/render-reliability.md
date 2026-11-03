@@ -18,6 +18,7 @@
 
 - `scripts/render_preflight.sh` lints every pipeline script for a `-loop` input with no `-t` and refuses the job.
 - `scripts/render_detached.sh` has a runaway guard: any watched file past 4GB (`RENDER_MAX_BYTES`) gets its encoder an interrupt, so the file closes valid instead of filling the disk.
+- **A long master can pass 4GB legitimately.** A 60 minute cut at 12 Mbps is about 5.5GB, and the guard killed one twice at 4.33 and 4.37GB. For a long master, raise `RENDER_MAX_BYTES` for that job or point `--watch` at the job's data folder rather than its output folder, and bound the encode with its own `-t`.
 - The tell in the log is "More than 100000 frames duplicated". Search for it first.
 
 ---
@@ -61,6 +62,8 @@
 **Symptom.** The scheduler's log says "started" and a pid file exists, but no `status` and no `run.log`, both of which the supervisor writes in its first second.
 
 **The fix.** On macOS launchd, `<key>AbandonProcessGroup</key><true/>` in the agent's plist. Reproduced with 2 throwaway agents: without the key nothing ran; with it the child wrote and survived. Either way, have the scheduled script check 15 seconds later that the runner pid is alive and its status file exists, and alert if not. **Any scheduled job that starts a detached job needs the same key.**
+
+**The start now proves itself.** `render_detached.sh start` waits up to 20 seconds for the supervisor to write its own pid into `ready` beside the log, and exits 1 with a pointer to `launch.log` if the supervisor died first or never answered. A start that printed "started" while its child had already died once let a queue wait all night on an exit file nobody would write. A paused start exits 75 and writes no exit file, so `render_queue.sh` retries a paused start every 5 minutes and skips any job whose start failed, instead of waiting on it.
 
 ---
 
@@ -175,6 +178,10 @@ Keep a table like this for your own pipeline. Every row is an attempt with its o
 | 3 overnight supervisors waiting with `pgrep -f` | They matched each other's command lines and ran a stale job. Replaced by one queue waiting on exit files |
 | A soak script using `timeout` | macOS has no `timeout`: every step exited 127. Replaced with a perl alarm |
 | Serial queue plus preflight | Works |
+
+## A cut in a finished master is a splice, not a re-render
+
+4.7 seconds of dead air found in a finished 48 minute master does not need a full re-render. Stream-copy the master, re-encode only the stretch between the keyframes either side of each cut (a master encoded with a keyframe every 0.5 s needs about a second of re-encode per cut), and copy the rest: 23 seconds for a 3.4GB master, sync checked frame for frame at 3 points after. 2 traps: feed each side of a seam from its own seeked input (one decoded stream feeding both sides 9 s apart dropped the second side), and pass absolute paths in the concat list. Cut times are on the master's own clock: find them by an audio match against the tape, not by arithmetic from the trims. Encode masters with a short, regular keyframe interval (`-g` at half a second of frames) if you want this option later.
 
 ## Not tried yet, worth trying
 

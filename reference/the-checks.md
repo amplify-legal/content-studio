@@ -85,6 +85,14 @@ These 4 machine constructions recur across letters and posts, and naming them is
 - **The aphorism closer.** A final clause whose job is to sound wise: "and that is where almost everybody actually lives", "which is why it survives so long".
 - **The essay verb.** An episode "cites", "draws the line", "insists", "touches on something most conversations skip". An episode says things.
 
+Plus 5 AI tells that `copy_check.py` warns on, shapes measured recurring in machine drafts and rare in the same writers' hand-written messages:
+
+- **Interest announced where a question should be.** "I'd love to hear how your team uses it." Ask it: "How does your team use it?"
+- **The remembered-point compliment.** "That stuck with me", "caught my eye", "I keep coming back to". Say what they said or what it changed.
+- **The stock benefit idiom.** "Off your plate", "frees up your time", "without sacrificing". Say what it does.
+- **Category framing.** "This is exactly the kind of library AI can search." State the fact.
+- **The importance flag.** "Here's why this matters." Show the consequence instead.
+
 ---
 
 ## How to write a check that survives

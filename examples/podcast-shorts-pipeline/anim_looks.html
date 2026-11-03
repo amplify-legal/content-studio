@@ -1,0 +1,1835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shorts look template, animation directions</title>
+<!-- anim_looks.html: looks.html plus the animation directions (payload.anim A, B, C; anim_title; anim_dark; card_windows).
+     With payload.anim unset it is looks.html (anim_selftest.py checks it). The directions are described in the block
+     comment above `let ANIM`. -->
+<!--
+  The GRAPHIC LAYER of a 1080x1920 short, rendered by pipeline.py through Chrome (Playwright, omitBackground)
+  as a PNG with alpha at any output time t. Everything the video shows through (the face panels) is left
+  transparent; the layer paints the ground above the panels, the held title, the look's graphic keyed to the
+  spoken words, and the faded extension from y=1500 down (never a bar, never empty).
+
+  Contract (pipeline.py -> window.setup(payload) once, then window.setTime(t) per frame, which returns a state
+  signature so identical frames are hardlinked instead of re-shot):
+    payload = { look, title, title_accent, eyebrow, credit, pov_line, held_top, band_text,
+                hook_end (output s; -1 when there is no hook), duration,
+                graphic: { kind: list|table|timeline|scene|screen|bars|none, items: [..], keys: [[label, t_out], ..],
+                           source_line, clawd (true: the optional mascot illustration) }, screen_rect: [x,y,w,h] | null,
+                layout: { hook: {top_band_h, host:[y,h], guest:[y,h]}, answer: {top_band_h, guest:[y,h]} } }
+  Generalised from one design mockup per look (26 Oct night). Springs from springs.js beside this page
+  (closed form, so any t is exact).
+  Tokens: {{FONT_DIR}}, {{PIPELINE_DIR}}, {{LOGO_SVG}}, {{MASCOT_PNG}}, {{ACCENT}} and {{ACCENT_DARK}} are filled by
+  paths.page_for_this_mac (a copy in the work folder) before the browser opens the page, so never open this file
+  directly; the accent tokens must be #RRGGBB (the page does arithmetic on them).
+  Safe frame: content/taste/shorts-formats.md. Title top at or below 290; nothing of ours in x>905 below y=960;
+  captions are burned by libass, not here.
+-->
+<style>
+@font-face { font-family: "DM Serif Display"; src: url("file://{{FONT_DIR}}/DMSerifDisplay-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "Montserrat"; src: url("file://{{FONT_DIR}}/Montserrat-Bold.ttf"); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url("file://{{FONT_DIR}}/Inter[opsz,wght].ttf"); font-weight: 100 900; }
+@font-face { font-family: "Menlo"; src: url("file:///System/Library/Fonts/Menlo.ttc"); }
+:root {
+  --ink: #1C1C1E; --accent-dark: {{ACCENT_DARK}}; --accent-light: {{ACCENT}}; --paper: #F7F6F2; --white: #FFFFFF;
+  --rule: rgba(28,28,30,0.16); --rule-faint: rgba(28,28,30,0.06); --tint: color-mix(in srgb, {{ACCENT}} 18%, transparent);
+  --ground: #F7F6F2; --fg: #1C1C1E; --accent: {{ACCENT_DARK}}; --mono: #1C1C1E;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+body { position: relative; font-family: "Inter", sans-serif; color: var(--fg); }
+#ground { position: absolute; left: 0; top: 0; width: 1080px; background: var(--ground); overflow: hidden; }
+#gap { position: absolute; left: 0; width: 1080px; background: var(--ground); }
+#fade { position: absolute; left: 0; top: 1500px; width: 1080px; height: 420px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--fade-70) 45%, var(--fade) 100%); }
+/* ledger ruling, whiteboard rim */
+body.ledger #ground { background-image: repeating-linear-gradient(to bottom, transparent 0 51px, var(--rule-faint) 51px 52px); }
+body.whiteboard #ground { background: #FFFFFF; }
+body.whiteboard #gap { background: #1C1C1E; }
+body.whiteboard #rim { position: absolute; inset: 0; border: 14px solid #D7D7D3; box-shadow: inset 0 0 0 2px #EDEDEA; }
+body.whiteboard #tray { position: absolute; left: 14px; right: 14px; bottom: 14px; height: 14px; background: #C9C9C4; border-radius: 3px 3px 0 0; }
+body.whiteboard #tray i { position: absolute; top: -9px; height: 9px; width: 50px; border-radius: 2px; }
+body.operator #ground { background: #15171A; }
+body.flat2d #ground { background: #F3F7F8; }
+body.none #ground { background: var(--paper); }
+
+/* eyebrow + title */
+#eyebrow { position: absolute; left: 60px; right: 60px; top: 292px; height: 32px; white-space: nowrap; display: flex; justify-content: space-between;
+  font-family: "Menlo", monospace; font-size: 24px; line-height: 32px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mono); overflow: hidden; }
+#eyebrow .no { color: var(--accent); }
+#title { position: absolute; left: 60px; right: 60px; top: 260px; font-family: "DM Serif Display", serif; font-size: 84px; line-height: 1.0;   /* 28 Oct (polish, guest O's option D): 260, was 332 */
+  letter-spacing: -0.005em; color: var(--fg); transform-origin: 0 0; }
+body.whiteboard #title, body.flat2d #title, body.operator #title { font-family: "Inter", sans-serif; font-weight: 900; letter-spacing: -0.025em; line-height: 1.02; }
+#title .t { color: var(--accent); }
+#title .w { display: inline-block; }
+#sub { position: absolute; left: 60px; right: 60px; top: 520px; font-family: "Inter", sans-serif; font-weight: 700; font-size: 44px; line-height: 1.12; color: var(--accent); }
+#sub .t { color: var(--accent); }
+
+/* the graphic region */
+#graphic { position: absolute; left: 60px; width: 960px; top: 540px; height: 360px; }
+#source { position: absolute; left: 60px; right: 60px; height: 34px; font-family: "Menlo", monospace; font-size: 26px; line-height: 34px;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--mono); white-space: nowrap; overflow: hidden; }
+#source b { font-weight: 400; color: var(--accent); }
+#source.chip { right: auto; padding: 0 14px; border-radius: 8px; background: rgba(247,246,242,0.92); color: #3A3F45; }
+
+/* rows (ledger table / whiteboard list / operator steps) */
+.row { position: absolute; left: 0; display: grid; align-items: center; }
+.row .idx { font-family: "Menlo", monospace; letter-spacing: 0.06em; color: var(--fg); }
+.row .lab { font-family: "DM Serif Display", serif; color: var(--fg); white-space: normal; line-height: 1.02; overflow: hidden; }
+body.whiteboard .row .lab, body.operator .row .lab, body.flat2d .row .lab { font-family: "Inter", sans-serif; font-weight: 800; letter-spacing: -0.015em; }
+.row .box { position: relative; border: 4px solid var(--fg); border-radius: 6px; justify-self: end; }
+.row .box svg { position: absolute; inset: -4px; overflow: visible; }
+.row .box path { fill: none; stroke: var(--accent); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 50; }
+.row .tint { position: absolute; left: -20px; right: -20px; top: 6px; bottom: 6px; border-radius: 8px; background: var(--tint); transform-origin: 0 50%; z-index: -1; }
+.row .hair { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--rule); transform-origin: 0 50%; }
+.row .num { border-radius: 50%; border: 5px solid #C4C4BF; color: #C4C4BF; font-weight: 900; text-align: center; font-family: "Inter", sans-serif; }
+.row .wob { position: absolute; }
+.row .wob svg { width: 100%; height: 100%; overflow: visible; }
+.row .wob .fill { fill: var(--accent-light); fill-opacity: 0.55; }
+.row .wob .stroke { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+/* flow chips (flat2d scene) */
+.chip { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 18px;
+  font-family: "Inter", sans-serif; font-weight: 800; letter-spacing: -0.01em; color: var(--ink); background: #FFFFFF; border: 4px solid var(--ink); padding: 0 18px; line-height: 1.08; }
+.arrow { position: absolute; height: 6px; background: var(--ink); transform-origin: 0 50%; }
+.arrow:after { content: ""; position: absolute; right: -4px; top: -11px; border: 14px solid transparent; border-left: 18px solid var(--ink); border-right: 0; }
+/* operator window */
+#win { position: absolute; left: 0; top: 0; width: 960px; height: 360px; border-radius: 16px; background: #FFFFFF; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,0.35); }
+#win .bar { position: absolute; left: 0; right: 0; top: 0; height: 64px; background: #ECEEF0; border-bottom: 1px solid #D5D8DB; display: flex; align-items: center; padding-left: 20px; gap: 10px;
+  font-family: "Inter", sans-serif; font-weight: 700; font-size: 44px; color: #3A3F45; white-space: nowrap; overflow: hidden; }
+#win .bar i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+#win .body { position: absolute; left: 0; right: 0; top: 64px; bottom: 0; }
+#win .hole { position: absolute; background: transparent; }
+/* bars */
+.bar-row { position: absolute; left: 0; width: 960px; }
+.bar-row .lab { position: absolute; left: 0; top: 0; font-family: "Inter", sans-serif; font-weight: 800; font-size: 44px; line-height: 1.0; color: var(--fg); white-space: nowrap; }
+.bar-row .val { position: absolute; right: 0; top: -16px; font-family: "DM Serif Display", serif; font-size: 72px; line-height: 1.0; color: var(--accent); }
+.bar-row .track { position: absolute; left: 0; bottom: 10px; width: 960px; height: 26px; background: var(--rule-faint); border-radius: 13px; }
+.bar-row .fill { position: absolute; left: 0; bottom: 10px; height: 26px; background: var(--accent); border-radius: 13px; transform-origin: 0 50%; }
+#mascot { position: absolute; width: 170px; }
+/* timeline (27 Oct, reviewers C1 and C2: scene, timeline and bars were chip grids) */
+.tl-line { position: absolute; left: 0; width: 960px; height: 8px; background: var(--fg); border-radius: 4px; transform-origin: 0 50%; }
+.tl-dot { position: absolute; width: 34px; height: 34px; border-radius: 50%; border: 6px solid var(--fg); background: var(--ground); box-sizing: border-box; }
+.tl-lab { position: absolute; width: 360px; text-align: center; font-family: "Inter", sans-serif; font-weight: 800; font-size: 44px; line-height: 1.0; color: var(--fg); letter-spacing: -0.01em; }
+.actor { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); border: 4px solid #FFFFFF; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.chip { overflow: hidden; }
+.tl-pin { position: absolute; width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-bottom: 26px solid var(--accent); }   /* under the line, pointing up (it covered the label above) */
+.g-head { position: absolute; left: 0; right: 0; top: 0; font-family: "Inter", sans-serif; font-weight: 800; font-size: 44px; line-height: 1.1; color: var(--fg); opacity: 0.8; letter-spacing: -0.01em; }
+#card { position: absolute; left: 0; right: 0; top: 0; border-radius: 22px; background: #FFFFFF; border: 4px solid var(--fg); padding: 26px 34px; box-shadow: 0 14px 40px rgba(0,0,0,0.12); }
+body.operator #card { background: #1E2126; border-color: #F2F3F4; }
+#card .ln { font-family: "DM Serif Display", serif; color: var(--fg); line-height: 1.12; margin: 0 0 6px 0; }
+#card .ln .t { color: var(--accent); }
+#card .lbl { position: absolute; right: 30px; bottom: 14px; font-family: "Menlo", monospace; font-size: 44px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.row .val { font-family: "DM Serif Display", serif; color: var(--accent); white-space: nowrap; justify-self: end; }
+.g-src { position: absolute; left: 0; right: 0; bottom: 0; height: 50px; font-family: "Menlo", monospace; font-size: 44px; line-height: 50px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--mono); white-space: nowrap; overflow: hidden; opacity: 0.85; }
+#mark { position: absolute; left: 60px; top: 230px; width: 56px; height: 56px; }
+#mark img { width: 56px; height: 56px; display: block; opacity: 0.9; }
+/* (the creator, round-2 ruling 4): the credit is no chip and no Menlo line: the name (and "Full talk in the comments"
+   only when the long form is live: a promise made on screen is a live link) as larger text at the bottom, inside the safe zone, in the last 6 s */
+#source { display: none !important; }
+#credit2 { position: absolute; left: 60px; right: 60px; top: 232px; text-align: center; font-family: "Montserrat", sans-serif; font-weight: 700;
+  font-size: 48px; line-height: 1.05; color: var(--fg); display: none; }
+/* (builder A, cause 5: on guest C's M2 and guest O's M1 the credit at y 1112 to 1160 ran across the guest's mouth): on the drawn
+   looks the credit sits in the band, on the eyebrow's old line above the title (its foot at 326, the title from 332), in
+   the look's ink, 48 px down to 44 and then 2 lines broken at the dot; ig_native keeps it at y 1400 in white, 60 px down
+   to 44, then 2 lines */
+body.ig_native #credit2 { left: 90px; right: 150px; top: 1400px; font-size: 60px; line-height: 1.15; color: #FFFFFF; text-shadow: 0 3px 8px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.7);
+  -webkit-text-stroke: 7px rgba(14,14,14,0.85); paint-order: stroke fill; }   /* 29 Oct (builder G, Round-3 I: white on guest C's light blouse): a dark outline under the white */
+/* (builder A, cause 5: 'GUEST NAME · ON THE PODCAST' in Menlo caps at 26 px): no eyebrow on any look */
+#eyebrow { display: none !important; }
+/* ig_native (the creator's pick: option B of the Instagram-native study): full bleed, the app's own stickers, nothing of ours but text */
+body.ig_native #ground, body.ig_native #gap, body.ig_native #fade, body.ig_native #eyebrow, body.ig_native #title, body.ig_native #sub,
+body.ig_native #graphic, body.ig_native #source, body.ig_native #mark { display: none !important; }
+#ig { display: none; position: absolute; inset: 0; font-family: "Montserrat", sans-serif; font-weight: 700; }
+body.ig_native #ig { display: block; }
+/* 28 Oct (polish, ig_between): an animated short between its animations is the Instagram look */
+body.igb #ig { display: block; }
+body.igb #title, body.igb #sub, body.igb #eyebrow, body.igb #mark, body.igb #source, body.igb #gap, body.igb #fade { display: none !important; }
+body.igb #credit2 { left: 90px; right: 150px; top: 1400px; font-size: 60px; line-height: 1.15; color: #FFFFFF; text-shadow: 0 3px 8px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.7);
+  -webkit-text-stroke: 7px rgba(14,14,14,0.85); paint-order: stroke fill; }   /* 29 Oct (builder G, Round-3 I: white on guest C's light blouse): a dark outline under the white */
+#ig .stk { display: inline; background: #FFFFFF; color: #000000; border-radius: 18px; padding: 6px 22px; line-height: 1.68;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+#ig-title { position: absolute; left: 90px; right: 90px; top: 238px; text-align: center; font-size: 56px; }
+#ig-title .stk, #ig-callout .stk { white-space: nowrap; }
+#ig-callout { position: absolute; left: 90px; right: 150px; text-align: center; font-size: 60px; }
+#ig-callout .stk { background: #F81820; color: #FFFFFF; border-radius: 12px; }
+#ig-list { position: absolute; left: 70px; width: 840px; font-size: 44px; }
+#ig-list .it { position: absolute; left: 0; transform-origin: 0 50%; white-space: nowrap; }
+#ig-list .it .stk { line-height: 1.5; border-radius: 14px; padding: 6px 18px; }
+#ig-cap { position: absolute; left: 150px; width: 780px; top: 1556px; text-align: center; color: #FFFFFF; font-size: 52px; line-height: 1.2;
+  text-shadow: 0 3px 6px rgba(0,0,0,0.55), 0 0 2px rgba(0,0,0,0.6); white-space: nowrap; }
+#ig-cap .w { padding: 0 6px; border-radius: 10px; }
+#ig-cap .w.on { background: #F41CC8; text-shadow: none; }
+/* 29 Oct (builder G, guest C's F3 and M1 r3: white captions on a white-and-pale-blue blouse; Round-3 I "a caption on a light
+   background sits in a box or takes a dark colour"): the caption sticker always sits in a dark translucent box, one box per
+   line (box-decoration-break clone), the pink word box over it as before; under alpha 200 so the ink checks read it as before */
+#ig-cap .ln { background: rgba(14,14,14,0.70); padding: 2px 12px; border-radius: 14px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* ===================================================================================================================
+   THE ANIMATION DIRECTIONS (anim_looks.html only, 27 Oct 2026 night). Inert unless setup() adds body.anim (payload.anim "A", "B" or "C" on ledger, whiteboard, flat2d,
+   operator or none). Brief: a written study of 3 public animation styles (one still each), content/taste/motion-craft.md,
+   content/taste/shorts-formats.md Round-2 rulings.
+   =================================================================================================================== */
+@font-face { font-family: "DMSI"; src: url("file://{{FONT_DIR}}/DMSerifDisplay-Italic.ttf"); font-weight: 400; }
+@font-face { font-family: "Lexend Exa"; src: url("file://{{FONT_DIR}}/LexendExa[wght].ttf"); font-weight: 100 900; }
+#anim { display: none; position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; }
+body.anim #anim { display: block; }
+body.anim #graphic, body.anim #source { display: none !important; }
+body.anim #rim { display: none; }
+body.anim #ground { background: var(--a-ground) !important; background-image: var(--a-ground-img) !important; }
+body.anim #gap { background: var(--a-ground) !important; }
+body.anim.anim-A #title, body.anim.anim-B #title { font-family: "Inter", sans-serif; font-weight: 900; letter-spacing: -0.025em; line-height: 1.02; }
+body.anim.anim-C #title { font-family: "DM Serif Display", serif; font-weight: 400; letter-spacing: -0.005em; line-height: 1.0; }
+body.anim #eyebrow { font-family: "Lexend Exa", sans-serif; font-weight: 500; font-size: 23px; letter-spacing: 0.08em; color: var(--accent); }
+body.anim.anim-B #eyebrow { font-family: "Inter", sans-serif; font-weight: 700; font-size: 24px; letter-spacing: 0.06em; color: #77746D; }
+body.anim #sub { color: var(--accent); }
+.a-probe { position: absolute; left: 0; top: 0; visibility: hidden; white-space: nowrap; }
+.a-glowwrap { position: absolute; left: 0; right: 0; top: 300px; bottom: 0; overflow: hidden; }
+.a-glow { position: absolute; left: 0; top: 0; width: 1240px; height: 840px; }
+.a-corner { position: absolute; width: 44px; height: 44px; }
+.a-rule { position: absolute; left: 0; width: 1080px; height: 6px; background: {{ACCENT_DARK}}; }
+.a-panel { position: absolute; transform-origin: 50% 50%; }
+.a-cam { position: absolute; left: 0; top: 0; right: 0; bottom: 0; transform-origin: 50% 50%; }
+.a-sheet { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 30px; background: #FFFFFF; border: 1.5px solid rgba(0,0,0,0.08);
+  box-shadow: 0 30px 60px rgba(60,50,30,0.14), 0 4px 10px rgba(60,50,30,0.06); }
+.a-box { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 26px; background: #FFFFFF; border: 2px solid rgba(28,28,30,0.12);
+  box-shadow: 0 10px 26px rgba(28,28,30,0.06); }
+.a-stack { position: absolute; }
+.ar { position: absolute; left: 0; }
+.ar-bg { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 22px; }
+body.anim-A .ar-bg { background: #101318; border: 2px solid rgba(255,255,255,0.10); border-radius: 26px; }
+body.anim-B .ar-bg { border: 2px solid transparent; border-radius: 14px; }
+.ar-hair { position: absolute; left: 30px; right: 30px; bottom: -3px; height: 2px; background: rgba(28,28,30,0.08); }
+.ar-mk { position: absolute; border-radius: 50%; border: 3px solid transparent; box-sizing: border-box; }
+body.anim-B .ar-mk { border-radius: 12px; border-width: 4px; }
+.ar-ping { position: absolute; left: -3px; top: -3px; right: -3px; bottom: -3px; border-radius: 50%; border: 3px solid transparent; opacity: 0; }
+.ar-ping.free { left: 0; top: 0; right: auto; bottom: auto; }
+.ar-txt { position: absolute; top: 0; transform-origin: 0 0; }
+.aw { position: absolute; left: 0; top: 0; display: block; white-space: pre; transform-origin: 0 0; }
+.aw .tx { font-weight: inherit; }
+.aw .sk { position: absolute; left: 0; right: 0; top: 0.3em; height: 0.44em; border-radius: 0.22em; background: #E6E3DD; }
+.aw.lab, .aw.unit { font-family: "Inter", sans-serif; font-weight: 800; letter-spacing: -0.02em; line-height: 1.04; }
+.aw.unit { letter-spacing: -0.015em; }
+.aw.num { font-family: "DM Serif Display", serif; font-weight: 400; line-height: 1.0; text-align: right; }
+.aw.val { font-family: "DMSI", serif; font-weight: 400; line-height: 1.1; }
+.aw.pval { font-family: "Inter", sans-serif; font-weight: 700; letter-spacing: -0.01em; line-height: 1.08; }
+.stp { display: inline-block; font-family: "Inter", sans-serif; font-weight: 900; letter-spacing: 0.03em; line-height: 1.0; padding: 0.16em 0.34em 0.18em;
+  border: 0.08em solid; border-radius: 0.2em; background: rgba(255,255,255,0.9); transform-origin: 50% 50%; white-space: pre; }
+.ar-track { position: absolute; left: 0; border-radius: 999px; overflow: hidden; }
+.ar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; transform-origin: 0 50%; }
+.ar-ul { position: absolute; left: 0; top: 0; transform-origin: 0 50%; border-radius: 3px; }
+.ar-flash { position: absolute; left: 0; top: 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,0.75), rgba(255,255,255,0)); }
+.ar-ring { position: absolute; left: 0; top: 0; overflow: visible; }
+.ar-ring path { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 100 100; }
+.a-conn { position: absolute; width: 6px; border-radius: 3px; transform-origin: 50% 0; background: currentColor; }
+.a-conn.scene:after { content: ""; position: absolute; left: -9px; bottom: -14px; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 16px solid currentColor; }
+.a-now { position: absolute; border-radius: 50%; border: 4px solid transparent; box-sizing: border-box; }
+.a-scan { position: absolute; left: 6px; right: 6px; height: 5px; border-radius: 3px; }
+.a-card { position: absolute; left: 0; top: 0; right: 0; bottom: 0; padding: 34px 40px; overflow: hidden; }
+body.anim-A .a-card { border-radius: 26px; background: #101318; border: 2px solid rgba(255,255,255,0.12); }
+body.anim-A:not(.anim-dark) .ar-bg { background: #FFFFFF; border: 2px solid rgba(28,28,30,0.12); box-shadow: 0 10px 26px rgba(28,28,30,0.08); }
+body.anim-A:not(.anim-dark) .a-card { background: #FFFFFF; border: 2px solid rgba(28,28,30,0.14); }
+.a-ln { font-family: "DM Serif Display", serif; line-height: 1.14; margin: 0 0 10px 0; }
+.a-ln .seg.hl { background-image: linear-gradient(transparent 58%, color-mix(in srgb, {{ACCENT}} 45%, transparent) 58%, color-mix(in srgb, {{ACCENT}} 45%, transparent) 94%, transparent 94%);
+  background-repeat: no-repeat; background-size: 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.a-ln .re { color: transparent; }
+.a-cur { display: inline-block; width: 5px; height: 0.86em; margin-left: 3px; vertical-align: -0.08em; }
+</style>
+</head>
+<body class="none">
+<div id="ground"><div id="rim"></div></div>
+<div id="gap"></div>
+<div id="mark" style="display:none"><img src="{{LOGO_SVG}}" alt=""></div>
+<div id="eyebrow"><span id="eyebrow-l"></span><span class="no" id="count"></span></div>
+<div id="title"></div>
+<div id="sub"></div>
+<div id="graphic"></div>
+<div id="source"></div>
+<div id="fade"></div>
+<div id="anim"></div>
+<div id="credit2"></div>
+<div id="ig"><div id="ig-title"></div><div id="ig-callout"></div><div id="ig-list"></div><div id="ig-cap"></div></div>
+<script src="file://{{PIPELINE_DIR}}/springs.js"></script>
+<script>
+(function () {
+  const P = {};              // payload
+  let rows = [], chips = [], bars = [], flow = null, rowKeyTimes = [], titleWords = [], tl = null, cardLines = [];
+  let page = null, actor = null;   // 27 Oct: a window of PAGE items (rows, timeline dots, scene chips) and the scene's moving actor
+  const PAGE = 4;
+  const q = (s) => document.querySelector(s);
+  const el = (tag, cls, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; (parent || document.body).appendChild(e); return e; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const prog = (spring, t0, t) => (t0 == null || t < t0) ? 0 : spring.S(t - t0);   // 0..1, exact in t
+
+  const GROUND = { ledger: "#F7F6F2", none: "#F7F6F2", whiteboard: "#FFFFFF", operator: "#15171A", flat2d: "#F3F7F8" };
+  const FADE = { ledger: "#F7F6F2", none: "#F7F6F2", whiteboard: "#1C1C1E", operator: "#15171A", flat2d: "#F3F7F8" };
+  const FG = { ledger: "#1C1C1E", none: "#1C1C1E", whiteboard: "#1C1C1E", operator: "#F2F3F4", flat2d: "#1C1C1E" };
+  const ACC = { ledger: "{{ACCENT_DARK}}", none: "{{ACCENT_DARK}}", whiteboard: "{{ACCENT_DARK}}", operator: "{{ACCENT}}", flat2d: "{{ACCENT_DARK}}" };
+  const hex2rgba = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
+
+  function wobbleRect(w, h, seed) {
+    let s = seed; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 - 0.5; };
+    const r = 14, j = 2.2, pts = [], steps = 10;
+    const edge = (x0, y0, x1, y1) => { for (let k = 0; k <= steps; k++) { const t = k / steps; pts.push([x0 + (x1 - x0) * t + rnd() * j, y0 + (y1 - y0) * t + rnd() * j]); } };
+    edge(r, 3, w - r, 3); edge(w - 3, r, w - 3, h - r); edge(w - r, h - 3, r, h - 3); edge(3, h - r, 3, r);
+    let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let k = 1; k < pts.length; k++) d += ` L ${pts[k][0].toFixed(1)} ${pts[k][1].toFixed(1)}`;
+    return d + " Z";
+  }
+
+  // ---- (builder A, cause 6: 'Have You Ever Had To Chase A' / 'Supplier?', 'Speed Is The Quiet Edge In' / 'Support',
+  // 'Short Notes, Long' / 'Notes'): a title, a callout or a sticker is broken into balanced lines, never a word alone
+  // on a line when the words allow 2 a line; the break prefers a comma or a full stop before it and a small word after
+  // it ('In Support', 'To Chase A Supplier?'), and never leaves a line ending on 'a', 'the', 'to' and their kind.
+  // wOf(text) is the drawn width of a line; null when no split into maxLines lines fits maxW.
+  const SMALL_NEXT = /^(in|to|for|of|with|on|at|by|and|or|but|from|into|about|than|vs)$/i;
+  const BAD_END = /^(a|an|the|to|of|and|or|in|on|is|i|but|so|that|with|for|at|my|your|our|if|by|from)$/i;
+  function breakLines(words, wOf, maxW, maxLines) {
+    const n = words.length, line = (i, j) => words.slice(i, j).join(" ");
+    if (!n) return [[]];
+    if (wOf(line(0, n)) <= maxW) return [words.slice()];
+    for (let L = 2; L <= maxLines; L++) {
+      let best = null;
+      const check = (segs) => {
+        const ws = segs.map(([i, j]) => wOf(line(i, j)));
+        if (ws.some(w => w > maxW)) return;
+        let c = (Math.max(...ws) - Math.min(...ws)) / maxW;
+        segs.forEach(([i, j], si) => {
+          if (j - i < 2 && n >= 2 * L) c += 10;
+          if (si < segs.length - 1) {
+            const last = words[j - 1], next = words[j], bare = x => x.replace(/[^A-Za-z']/g, "");
+            if (BAD_END.test(bare(last))) c += 0.6;
+            if (/[,.;:?!]$/.test(last)) c -= 0.35;
+            if (SMALL_NEXT.test(bare(next))) c -= 0.6;
+          }
+        });
+        if (!best || c < best.c) best = { c, segs };
+      };
+      const rec = (start, left, acc) => {
+        if (left === 1) { check(acc.concat([[start, n]])); return; }
+        for (let k = start + 1; k <= n - (left - 1); k++) rec(k, left - 1, acc.concat([[start, k]]));
+      };
+      rec(0, L, []);
+      if (best) return best.segs.map(([i, j]) => words.slice(i, j));
+    }
+    return null;
+  }
+  // title case on every part of a hyphenated word ('4-Letter', '30-Page', 'Month-To-Month'), every word capitalised as
+  // before (the Classic sticker's own habit)
+  function capWord(w) { return String(w).split("-").map(x => x.replace(/^([^A-Za-z0-9]*)([a-z])/, (m, a, b) => a + b.toUpperCase())).join("-"); }
+  function measurer(host, fontPx) {
+    const pr = document.createElement("span"); pr.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;left:0;top:0;font-size:" + fontPx + "px";
+    host.appendChild(pr);
+    return { w: t => { pr.textContent = t; return pr.getBoundingClientRect().width; }, done: () => pr.remove() };
+  }
+
+  // ---- title: fit 2 lines inside 960, the accent phrase coloured, each word its own span for the TYPE entrance
+  function buildTitle() {
+    const T = q("#title"); T.innerHTML = "";
+    const title = P.title || "", acc = (P.title_accent || "").trim();
+    let i = acc ? title.toLowerCase().indexOf(acc.toLowerCase()) : -1;
+    const parts = [];
+    if (i >= 0) { parts.push([title.slice(0, i), false]); parts.push([title.slice(i, i + acc.length), true]); parts.push([title.slice(i + acc.length), false]); }
+    else parts.push([title, false]);
+    titleWords = [];
+    const W = [];
+    for (const [txt0, isAcc] of parts) {
+      let txt = txt0;
+      // trailing punctuation after the accent ("chase a supplier" + "?") stays on the word before it, never its own word
+      const m = txt.match(/^([?.!,:;'"\u2019\u201d)]+)/);
+      if (m && W.length) { W[W.length - 1].text += m[1]; txt = txt.slice(m[1].length); }
+      for (const w of txt.split(/\s+/).filter(Boolean)) W.push({ text: w, acc: isAcc });
+    }
+    const render = (lines) => {
+      T.innerHTML = ""; titleWords = []; let wi = 0;
+      lines.forEach((ln, li) => {
+        ln.forEach((t, k) => { const s = el("span", "w" + (W[wi].acc ? " t" : ""), T); s.textContent = W[wi].text; titleWords.push(s); wi++;
+          if (k < ln.length - 1) T.appendChild(document.createTextNode(" ")); });
+        if (li < lines.length - 1) T.appendChild(document.createElement("br"));
+      });
+    };
+    // the title lives between y 332 and 500 (the hook's host panel starts at 516): 2 lines at most, 80 px down to 72,
+    // and below 72 only to keep 2 lines inside the band (a 3-line title never fits above the panel); the lines
+    // are balanced (breakLines), never a word alone on the last line
+    let fs = P._animTitleMax || 80;
+    const maxBottom = 502;
+    for (; fs >= 56; fs -= 2) {
+      T.style.fontSize = fs + "px";
+      const ms = measurer(T, fs);
+      const lines = breakLines(W.map(w => w.text), ms.w, 960, 2) || breakLines(W.map(w => w.text), ms.w, 960, 3) || [W.map(w => w.text)];
+      ms.done();
+      render(lines);
+      const b = T.getBoundingClientRect();
+      if (b.bottom <= maxBottom) break;
+    }
+    if (fs < 56) fs = 56;
+    P._titleSize = fs;
+    P._titleOverflow = T.scrollWidth > T.clientWidth + 1;
+    P._titleBottom = T.getBoundingClientRect().bottom;
+  }
+
+  // ---- the graphic: built once, driven by time
+  function buildGraphic() {
+    const G = q("#graphic"); G.innerHTML = ""; rows = []; chips = []; bars = []; flow = null; tl = null; cardLines = [];
+    const g = P.graphic || { kind: "none", items: [], keys: [] };
+    const keys = (g.keys || []).map(k => ({ label: String(k[0]), t: +k[1] }));
+    const aTop = (P.layout && P.layout.answer) ? P.layout.answer.top_band_h : 940;
+    const top = Math.max(540, Math.round(P._titleBottom + 36));
+    // (builder A, causes 1 and 2): the card state's band ends at 736 so the face under it can be 1.5x; the graphic
+    // is compacted into 540 to 720 (16 px of ground over the face panel instead of 44)
+    const bottom = aTop - (aTop < 800 ? 16 : 44);
+    G.style.top = top + "px"; G.style.height = (bottom - top) + "px";
+    q("#source").style.top = (aTop - 40) + "px";
+    let H = bottom - top;
+    let kind = g.kind || "none";
+    // 27 Oct (pass 2, set D: the compares were the primary graphic with a theme swap): a look draws with its own
+    // template: ledger = rows with the figure, whiteboard = numbered boxes, flat2d = the scene with its actor
+    if (P.look === "ledger" && (kind === "timeline" || kind === "scene")) kind = "table";
+    else if (P.look === "whiteboard" && (kind === "timeline" || kind === "scene")) kind = "list";
+    else if (P.look === "flat2d" && (kind === "list" || kind === "table")) kind = "scene";
+    // (guest R's F3): bars whose items carry no value are rows (a bar with no figure is a track), drawn at the floors
+    if (kind === "bars" && !(g.items || []).some(x => /\|\s*[0-9$]/.test(String(x)))) kind = P.look === "whiteboard" ? "list" : "table";
+    let items = (g.items || []).map(String);
+    // the steps of an operator window with no screen file are the keys when the items read as the builder's prose
+    if (kind === "screen" && !P.screen_rect && (!items.length || items.some(x => x.length > 48 || x.includes(";")))) items = keys.map(k => k.label);
+    // "Setup fee: $2,500" on a ledger reads as label|value
+    if (kind === "table") items = items.map(x => x.includes("|") ? x : x.replace(/:\s*(\$?[0-9][0-9,.]*\s*(?:months?|days?|years?|%|K)?)$/i, "|$1"));
+    const srcOn = g.source_line_on_card ? (typeof g.source_line_on_card === "string" ? g.source_line_on_card : (g.source_line || "")) : "";
+    let inner = G;
+    if (g.title_on_card && kind !== "card") {
+      const hd = el("div", "g-head", G); hd.textContent = g.title_on_card;
+      inner = el("div", null, G); inner.style.cssText = "position:absolute;left:0;right:0;top:54px;bottom:0";
+      H -= 54;
+    }
+    if (srcOn && kind !== "card") { const sl = el("div", "g-src", inner); sl.textContent = srcOn; H -= 36; }
+    // which key lights which row: a key whose label is contained in the item (or the item in the label), else by order
+    const norm = s => s.toLowerCase().replace(/[^a-z0-9%$ ]/g, " ").replace(/\s+/g, " ").trim();
+    const matchKeys = (labels) => {
+      const times = labels.map(() => null); const used = new Set();
+      labels.forEach((lab, i) => { const n = norm(lab);
+        for (let k = 0; k < keys.length; k++) { if (used.has(k)) continue; const kn = norm(keys[k].label);
+          if (kn && n && (n.includes(kn) || kn.includes(n) || kn.split(" ")[0] === n.split(" ")[0] && kn.length > 3)) { times[i] = keys[k].t; used.add(k); break; } } });
+      let ki = 0;
+      labels.forEach((lab, i) => { if (times[i] == null) { while (ki < keys.length && used.has(ki)) ki++; if (ki < keys.length) { times[i] = keys[ki].t; used.add(ki); ki++; } } });
+      return times;
+    };
+    if (kind === "list" || kind === "table" || (kind === "screen" && !P.screen_rect)) {
+      const labels = items.length ? items : keys.map(k => k.label);
+      rowKeyTimes = items.length ? matchKeys(labels) : keys.map(k => k.t);
+      const n = labels.length; const cols = 1; const colw = 960;
+      // 27 Oct (pass 2: 36 to 40 px labels, 3-line pills clipping): one column, labels 44 px or more, a window of
+      // PAGE rows that scrolls as the keys light (the rows beyond the window wait off the panel); a label that needs
+      // 2 lines at 44 px makes the window 3 rows tall
+      const probe = el("span", "lab", inner); probe.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font-size:44px";
+      const cellw = colw - (P.look === "whiteboard" ? 130 : 140);
+      let longest = 0; const widths = labels.map(lab => { probe.textContent = lab.split("|")[0].trim(); const w = probe.getBoundingClientRect().width; longest = Math.max(longest, w); return w; }); probe.remove();
+      // (guest D's F3 item 6, an 80-character prompt as a row): a label that needs more than 2 lines at 44 px is prose
+      // in a row's place; it shrinks to fit (floor 30) rather than clip, and the spec should carry it as a card instead
+      const prose = widths.map(w => w > 2.05 * cellw);
+      const twoLines = longest > cellw;
+      // the window holds as many 58 px rows as the panel has room for (a 2-line title leaves about 170 px: 2 rows)
+      // rows at least 80 px (a 44 px label and its 44 px number or index); a smaller set of rows, never smaller type
+      const per = Math.min(n, twoLines ? Math.max(2, Math.min(3, Math.floor(H / 96))) : Math.max(2, Math.min(PAGE, Math.floor(H / 80))));
+      const rh = Math.min(twoLines ? 124 : 108, Math.floor(H / per));
+      const labfs = Math.round(clamp(rh * 0.52, 44, 56));
+      page = { per, rh, offset: container => (container === inner ? 0 : 12) };
+      let container = inner;
+      if (kind === "screen" || P.look === "operator") {   // the operator window frame
+        const W = el("div", null, inner); W.id = "win"; W.style.height = H + "px";
+        const bar = el("div", "bar", W); bar.innerHTML = '<i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span style="margin-left:14px">' + (P.window_title || "Process") + "</span>";
+        container = el("div", "body", W); container.style.padding = "0 24px";
+      }
+      labels.forEach((lab, i) => {
+        const c = 0, r = Math.min(i, per - 1);
+        const row = el("div", "row pending", container); if (prose[i]) row.dataset.prose = "1";
+        row.style.top = (r * rh + (container === inner ? 0 : 12)) + "px"; row.style.left = "0px"; if (i >= per) row.style.display = "none";
+        page.off = (container === inner ? 0 : 12);
+        row.style.width = (container === inner ? colw : colw - 24) + "px"; row.style.height = rh + "px";
+        const pipe = lab.indexOf("|"); const val = pipe >= 0 ? lab.slice(pipe + 1).trim() : ""; if (pipe >= 0) lab = lab.slice(0, pipe).trim();
+        if (P.look === "whiteboard") {
+          row.style.gridTemplateColumns = "76px 1fr";
+          const nd = Math.max(64, Math.round(rh * 0.68));
+          const num = el("div", "num", row); num.textContent = String(i + 1); num.style.width = num.style.height = nd + "px"; num.style.lineHeight = (nd - 10) + "px"; num.style.fontSize = Math.max(44, Math.round(rh * 0.38)) + "px";
+          const wob = el("div", "wob", row); wob.style.left = "92px"; wob.style.right = "0"; wob.style.top = "6px"; wob.style.bottom = "6px";
+          const ww = (container === inner ? colw : colw - 24) - 92, wh = rh - 12;
+          const d = wobbleRect(ww, wh, 11 + i * 7);
+          wob.innerHTML = `<svg viewBox="0 0 ${ww} ${wh}" preserveAspectRatio="none"><path class="fill" d="${d}"/><path class="stroke" d="${d}" style="stroke-dasharray:${2 * (ww + wh) + 60};stroke-dashoffset:${2 * (ww + wh) + 60}"/></svg>`;
+          const l = el("div", "lab", row); l.textContent = lab; l.style.fontSize = labfs + "px"; l.style.position = "absolute"; l.style.left = "100px"; l.style.right = "8px"; l.style.top = "6px"; l.style.bottom = "6px"; l.style.textAlign = "center"; l.style.color = "#1C1C1E"; l.style.padding = "0 10px";
+          // (pass 3, guest X's wave1-02: a 'label|value' row showed its label only): a value sits in the box's right half, in the accent
+          if (val) { l.style.textAlign = "left"; l.style.right = "50%"; const v = el("div", "lab val", row); v.textContent = val; v.style.cssText = `position:absolute;left:50%;right:14px;top:6px;bottom:6px;display:flex;align-items:center;justify-content:flex-end;text-align:right;font-size:${labfs}px;color:{{ACCENT_DARK}};padding:0 10px`; }
+        } else if (kind === "timeline" || P.look === "operator" || P.look === "flat2d") {
+          row.style.gridTemplateColumns = val ? "64px 1fr auto 44px" : "64px 1fr 44px";
+          const idx = el("span", "idx", row); idx.textContent = String(i + 1).padStart(2, "0"); idx.style.fontSize = Math.max(44, Math.round(labfs * 0.6)) + "px";
+          const l = el("span", "lab", row); l.textContent = lab; l.style.fontSize = labfs + "px"; l.style.maxHeight = (rh - 8) + "px"; l.style.display = "flex"; l.style.alignItems = "center";
+          if (val) { const v = el("span", "val", row); v.textContent = val; v.style.fontSize = Math.round(Math.min(rh * 0.7, 64)) + "px"; v.style.padding = "0 10px"; v.style.fontFamily = '"Inter", sans-serif'; v.style.fontWeight = "800"; }
+          const dot = el("span", null, row); dot.className = "dot"; dot.style.width = dot.style.height = "26px"; dot.style.borderRadius = "50%"; dot.style.border = "4px solid currentColor"; dot.style.justifySelf = "end";
+          el("span", "tint", row); el("span", "hair", row);
+          if (container !== inner) { row.querySelector(".idx").style.color = "#3A3F45"; l.style.color = "#1C1C1E"; dot.style.color = "#3A3F45"; }
+        } else {   // ledger table: a value column (label|value, the true number said) or a tick box
+          row.style.gridTemplateColumns = val ? "64px 1fr auto" : "64px 1fr 56px";
+          const idx = el("span", "idx", row); idx.textContent = String(i + 1).padStart(2, "0"); idx.style.fontSize = Math.max(44, Math.round(labfs * 0.6)) + "px";
+          const l = el("span", "lab", row); l.textContent = lab; l.style.fontSize = labfs + "px"; l.style.maxHeight = (rh - 8) + "px"; l.style.display = "flex"; l.style.alignItems = "center";
+          if (val) { const v = el("span", "val", row); v.textContent = val; v.style.fontSize = Math.round(Math.min(rh * 0.7, 64)) + "px"; v.className = "val box"; v.style.border = "0"; v.style.padding = "0 6px"; }
+          else { const box = el("span", "box", row); box.style.width = box.style.height = Math.round(rh * 0.5) + "px";
+            box.innerHTML = `<svg viewBox="0 0 56 56"><path d="M12 29 L24 41 L45 16"/></svg>`; }
+          el("span", "tint", row); el("span", "hair", row);
+        }
+        rows.push(row);
+      });
+      if (P.look === "ledger" && container === inner) { inner.style.borderTop = "2px solid var(--fg)"; }
+      // a label longer than its cell wraps to 2 lines and shrinks (floor 26 px) until it fits its row, never truncates
+      rows.forEach(r => { const l = r.querySelector(".lab"); if (!l) return; let fs = parseFloat(l.style.fontSize);
+        const fits = () => l.scrollHeight <= l.clientHeight + 2 && l.scrollWidth <= l.clientWidth + 1;
+        const floor = 44;   // (cause 5): prose rows too; a row that cannot fit at 44 reads as overflow, never smaller
+        while (fs > floor && !fits()) { fs -= 2; l.style.fontSize = fs + "px"; }   // floor 44 (pass 2); a long label wraps to 2 lines in a 3-row window instead; prose shrinks to 30
+        l.style.lineHeight = "0.98";
+        if (l.style.position === "absolute") { l.style.display = "flex"; l.style.alignItems = "center"; l.style.justifyContent = "center"; l.style.lineHeight = "1.02"; } });
+      q("#count").textContent = "";   // the "0 / 3" count read as a number nobody said (reviewer B1, guest R's F3)
+    } else if (kind === "timeline") {
+      // a horizontal line, a labelled dot per item appearing on its key word, an accent pin on the latest one
+      const labels = items.length ? items : keys.map(k => k.label); rowKeyTimes = items.length ? matchKeys(labels) : keys.map(k => k.t);
+      // 27 Oct (pass 2, set CE: 30 px labels): at most PAGE dots on the line at once, labels 44 px up to 2 lines,
+      // alternating above and below the line; the window pages as later events light (the earliest slide off)
+      // (builder A): in the compact band (H under 250) the labels all sit above the line, 3 slots at most, so the
+      // whole timeline fits 180 px
+      const compactTl = H < 250;
+      const n = labels.length; const ly = compactTl ? H - 40 : Math.round(H * 0.5);
+      const line = el("div", "tl-line", inner); line.style.top = (ly - 4) + "px";
+      const slots = Math.min(n, compactTl ? 3 : PAGE); const lw = compactTl ? Math.floor(880 / Math.max(1, slots)) - 10 : (slots >= 4 ? 360 : slots === 3 ? 440 : 480); const fs = 44;
+      const slotX = i => slots > 1 ? Math.round(lw / 2 + 20 + i * ((920 - lw) / (slots - 1))) : 480;
+      tl = { line, items: [], xs: [], slotX, slots, ly, lw, fs };
+      labels.forEach((lab, i) => {
+        const sl = Math.min(i, slots - 1); const x = slotX(sl);
+        const dot = el("div", "tl-dot", inner); dot.style.left = (x - 17) + "px"; dot.style.top = (ly - 17) + "px";
+        const l = el("div", "tl-lab", inner); l.textContent = lab; l.style.width = lw + "px"; l.style.left = (x - lw / 2) + "px"; l.style.fontSize = fs + "px";
+        { const ms = measurer(l, fs); const bl = breakLines(String(lab).split(/[ ]+/).filter(Boolean), ms.w, lw - 4, 2); ms.done();
+          if (bl && bl.length > 1) l.innerHTML = bl.map(x => escapeHtml(x.join(" "))).join("<br>"); }   // balanced ('Record:' / '3 days')
+        const up = compactTl || i % 2 === 1;
+        l.style.top = (up ? ly - 30 - Math.round(fs * 1.0 * 2) : ly + 48) + "px";
+        if (up) { l.style.display = "flex"; l.style.alignItems = "flex-end"; l.style.justifyContent = "center"; l.style.height = Math.round(fs * 2.0) + "px"; }
+        if (i >= slots) { dot.style.display = "none"; l.style.display = "none"; }
+        tl.items.push({ dot, lab: l, side: up ? 1 : 0 }); tl.xs.push(x);
+      });
+      const pin = el("div", "tl-pin", inner); pin.style.top = (ly + 14) + "px"; pin.style.left = (tl.xs[0] - 16) + "px"; tl.pin = pin;
+    } else if (kind === "card") {
+      // the prompt card (the sauce): the lines in DM Serif, each appearing on its key word; `highlight` in the accent
+      const lines = items.length ? items : [String(g.card_text || "")];
+      rowKeyTimes = items.length ? matchKeys(lines) : keys.map(k => k.t);
+      const C = el("div", null, G); C.id = "card"; C.style.height = H + "px";
+      if (g.title_on_card) { const hd = el("div", "g-head", C); hd.style.position = "static"; hd.style.marginBottom = "10px"; hd.textContent = g.title_on_card; }
+      const hl = (g.highlight || "").toString().trim().toLowerCase();
+      let fs = lines.length <= 2 ? 56 : lines.length <= 4 ? 48 : 42;
+      lines.forEach((ln, i) => { const d = el("div", "ln", C); d.style.fontSize = fs + "px";
+        const j = hl ? ln.toLowerCase().indexOf(hl) : -1;
+        if (j >= 0) d.innerHTML = escapeHtml(ln.slice(0, j)) + '<span class="t">' + escapeHtml(ln.slice(j, j + hl.length)) + "</span>" + escapeHtml(ln.slice(j + hl.length)); else d.textContent = ln;
+        cardLines.push(d); });
+      while (fs > 44 && C.scrollHeight > C.clientHeight + 2) { fs -= 2; cardLines.forEach(d => d.style.fontSize = fs + "px"); }   // floor 44
+      if (g.prompt_card_label) { const lb = el("div", "lbl", C); lb.textContent = g.prompt_card_label; }
+    } else if (kind === "scene") {
+      // a flow of chips lighting in key order (the mechanism as a sequence); up to 4 per row, arrows between
+      // 27 Oct (pass 2, set CE: "still a chip grid"): ONE row of chips joined by arrows, at most PAGE on screen
+      // (the window pages as later beats light), the active chip filled in the accent, and an actor dot that rides from chip to
+      // chip on the beats (the thing moving through the mechanism)
+      const labels = items.length && items.length >= keys.length ? items : keys.map(k => k.label);
+      rowKeyTimes = items.length && items.length >= keys.length ? matchKeys(labels) : keys.map(k => k.t);
+      // (builder A, cause 5: guest O's M1: 'Reviewers to sign off' on 3 lines at 32 to 36 px): chip type 44 px, 2 lines
+      // at most inside the chip; the row holds as many chips as fit that way (4, 3, 2 or 1 on screen, the window pages)
+      const n = labels.length; const gapx = 44;
+      const ch = Math.min(124, Math.max(112, Math.floor(H * 0.46)));
+      const fits44 = (cwi) => { const pr = el("div", "chip", inner); pr.style.cssText += `;visibility:hidden;left:0;top:0;width:${cwi}px;height:auto;font-size:44px`;
+        const sp = el("span", null, pr); sp.style.display = "block";
+        const ok = labels.every(lab => { sp.textContent = lab; const r = sp.getBoundingClientRect(); return r.height <= 2 * 44 * 1.08 + 2 && sp.scrollWidth <= cwi - 36 + 1 &&
+          lab.split(/\s+/).every(w => { sp.textContent = w; sp.style.display = "inline"; const ww = sp.getBoundingClientRect().width; sp.style.display = "block"; return ww <= cwi - 44; }); });
+        pr.remove(); return ok; };
+      let perRow = Math.min(n, PAGE);
+      while (perRow > 1 && !fits44(Math.floor((960 - gapx * (perRow - 1)) / perRow))) perRow--;
+      const cw = Math.floor((960 - gapx * (perRow - 1)) / perRow);
+      const y = Math.round(Math.min(H - ch, Math.max(48, H * 0.30)));
+      const fs = 44;
+      flow = { perRow, cw, ch, gapx, y };
+      labels.forEach((lab, i) => {
+        const c = Math.min(i, perRow - 1);
+        const x = c * (cw + gapx);
+        const chip = el("div", "chip pending", inner); chip.style.left = x + "px"; chip.style.top = y + "px"; chip.style.width = cw + "px"; chip.style.height = ch + "px"; chip.style.fontSize = fs + "px";
+        const sp = el("span", null, chip); sp.textContent = lab; sp.style.display = "block"; chip._sp = sp; chips.push(chip);
+        { const ms = measurer(chip, fs); const bl = breakLines(String(lab).split(/[ ]+/).filter(Boolean), ms.w, cw - 44, 2); ms.done();
+          if (bl && bl.length > 1) sp.innerHTML = bl.map(x => escapeHtml(x.join(" "))).join("<br>"); }   // balanced 2-line chips
+        const a = el("div", "arrow", inner); a.style.left = (x + cw + 6) + "px"; a.style.top = (y + ch / 2 - 3) + "px"; a.style.width = (gapx - 22) + "px"; chip._arrow = a;
+        if (i >= perRow) { chip.style.display = "none"; a.style.display = "none"; }
+      });
+      // the label's own span is measured (a flex box reports no overflow): the type shrinks from 40 px until the
+      // text fits inside the chip, 2 lines where it can, 3 lines at 34 px when a 3-word label needs them, never clipped
+      chips.forEach(chip => { let f = fs; const sp = chip._sp; const maxH = ch - 14;
+        while (f > 44 && sp.getBoundingClientRect().height > maxH) { f -= 2; chip.style.fontSize = f + "px"; } });   // floor 44
+      actor = el("div", "actor", inner); actor.style.top = (y - 46) + "px"; actor.style.left = (cw / 2 - 15) + "px";
+      if (g.clawd) { const c = el("img", null, inner); c.id = "mascot"; c.src = "{{MASCOT_PNG}}";   /* the optional mascot illustration (any one you own); the field keeps its old name */ c.style.right = "0"; c.style.bottom = "0"; }
+    } else if (kind === "bars") {
+      // items "label|value" (value as said on tape), bars drawn once to the value on the key
+      const parsed = items.map(s => { const [lab, v] = s.split("|"); return { lab: lab.trim(), v: parseFloat((v || "").replace(/[^0-9.]/g, "")) || 0, raw: (v || "").trim() }; });
+      rowKeyTimes = matchKeys(parsed.map(p => p.lab));
+      const mx = Math.max(...parsed.map(p => p.v), 1); const rh = Math.min(130, Math.floor(H / Math.max(1, parsed.length)));
+      parsed.forEach((p, i) => {
+        const b = el("div", "bar-row", inner); b.style.top = (i * rh) + "px"; b.style.height = rh + "px";
+        const l = el("div", "lab", b); l.textContent = p.lab; l.style.fontSize = "44px";   // floor 44
+        const v = el("div", "val", b); v.textContent = p.raw || "";   // never a "0" for a bar with no value (guest T's M1)
+        el("div", "track", b); const f = el("div", "fill", b); f.style.width = Math.round(960 * p.v / mx) + "px";
+        v.style.fontSize = Math.max(44, Math.min(72, Math.round(rh * 0.62))) + "px"; v.style.top = "-6px";
+        bars.push({ el: b, fill: f, val: v, v: p.v, raw: p.raw });
+      });
+    } else if (kind === "screen" && P.screen_rect) {
+      const W = el("div", null, G); W.id = "win"; W.style.height = H + "px";
+      const bar = el("div", "bar", W); bar.innerHTML = '<i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span style="margin-left:14px">' + (P.window_title || "Screen") + "</span>";
+      const body = el("div", "body", W); const hole = el("div", "hole", body); hole.style.inset = "0";
+      // the pipeline composites the screen video into P.screen_rect (frame px), which is this body's rect
+      const r = body.getBoundingClientRect(); P._screen_hole = [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
+      rowKeyTimes = keys.map(k => k.t);
+      if (keys.length) { const strip = el("div", null, W); strip.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:60px;background:#ECEEF0;display:flex;gap:10px;align-items:center;padding:0 16px;font-family:Inter;font-weight:800;font-size:24px;color:#3A3F45;overflow:hidden;white-space:nowrap";
+        keys.forEach((k, i) => { const s = el("span", "step pending", strip); s.textContent = k.label; s.style.cssText = "padding:4px 14px;border-radius:999px;border:3px solid #3A3F45;white-space:nowrap;flex:none"; chips.push(s); });
+        // (cause 5): 44 px, never shrunk; the strip is 72 px tall and a step that runs past its right edge is cut there
+        strip.style.fontSize = "44px"; strip.style.height = "72px";
+        P._screen_hole[3] -= 72; }
+    }
+    // the credit line is the finder's `credit` string from the spec on every look (reviewers A, B1, B2, C1: it reached
+    // no look-none short and read "Source · NAME · as said on tape" on the rest)
+    const src = q("#source");
+    src.textContent = P.credit || "";
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+
+  // ---- ig_native: the title as Classic stickers, the red Strong callout, list stickers that pop on their word and stay,
+  // the auto-caption sticker (3 to 5 words, the current word on #F41CC8). Nothing else is drawn; the footage is full bleed.
+  const IG = { items: [], cap: null, capMin: 50 };   // the floor the shrink may reach, reported as the size the check measures
+  function igTitleCase(s) { return String(s).split(" ").map(w => w ? capWord(w) : w).join(" "); }   // each part of a hyphenated word
+  // a sticker set in balanced lines: one .stk box per line (box-decoration clone draws one box a line), the font from
+  // `fs` down to `floor` until every line fits maxW; returns the size used
+  function stickerLines(box, text, fs, floor, maxW, maxLines) {
+    const words = String(text).split(/[ \t\n]+/).filter(Boolean);   // ordinary spaces only: a no-break space binds
+    for (let f = fs; f >= floor; f -= 2) {
+      box.style.fontSize = f + "px";
+      const ms = measurer(box, f);
+      const lines = breakLines(words, ms.w, maxW, maxLines);
+      ms.done();
+      if (lines) { box.innerHTML = '<span class="stk">' + lines.map(l => escapeHtml(l.join(" "))).join("<br>") + "</span>"; return f; }
+    }
+    box.style.fontSize = floor + "px";
+    const ms = measurer(box, floor); const lines = breakLines(words, ms.w, maxW, 4) || [words]; ms.done();
+    box.innerHTML = '<span class="stk">' + lines.map(l => escapeHtml(l.join(" "))).join("<br>") + "</span>";
+    return floor;
+  }
+  function igSetup() {
+    const ig = P.ig || {};
+    const T = q("#ig-title");
+    // (cause 6): balanced lines, the emoji on the first word, 56 px down to 44 for 2 lines (856 = 900 less the padding)
+    const tWords = igTitleCase(P.title).split(/\s+/).filter(Boolean);
+    if (ig.emoji && tWords.length) tWords[0] = ig.emoji + "\u00a0" + tWords[0];   // the emoji never a line of its own
+    const fs = stickerLines(T, tWords.join(" "), 56, 44, 856, 2);
+    const tb = T.getBoundingClientRect();
+    // the stickers' own boxes (inline boxes, one per wrapped line) give the real left and right edges
+    let l = 9999, r = 0; T.querySelectorAll(".stk").forEach(e => { for (const rc of e.getClientRects()) { l = Math.min(l, rc.left); r = Math.max(r, rc.right); } });
+    IG.titleBottom = tb.bottom;
+    const C = q("#ig-callout");
+    if (ig.callout && ig.callout[0]) { stickerLines(C, igTitleCase(ig.callout[0]), 60, 44, 796, 2); IG.callAt = ig.callout[1] || 0; }
+    else { C.innerHTML = ""; IG.callAt = null; }
+    const Lw = q("#ig-list"); Lw.innerHTML = ""; IG.items = [];
+    const keys = (P.graphic && P.graphic.keys) || [];
+    (ig.items || []).forEach((txt, i) => {
+      const d = document.createElement("div"); d.className = "it";
+      Lw.appendChild(d); d.style.display = "block";
+      // (cause 5: type 44 px or more): a sticker too wide for 780 px wraps to 2 balanced lines at 44, never smaller
+      stickerLines(d, igTitleCase(txt), 44, 44, 744, 2);
+      const hh = d.getBoundingClientRect().height; d.style.display = "none";
+      IG.items.push({ el: d, at: keys[i] ? keys[i][1] : null, h: Math.max(80, Math.round(hh)) });
+    });
+    // keys follow the items' order when the labels do not say otherwise (the same rule as the other looks: in order)
+    IG.items.forEach((it, i) => { if (it.at == null) it.at = (P.hook_end > 0 ? P.hook_end : 0) + 1.5 * i; });
+    return Object.assign({ title_top: tb.top, title_bottom: tb.bottom, title_left: l, title_right: r, title_size: fs, title_overflow: false,
+             sub_bottom: null, sub_overflow: false, sub_text: "", screen_hole: null, cap_font_min: IG.capMin }, typeMin());
+  }
+  function igTime(t) {
+    // 28 Oct (polish, the order rule): the stacked question hook may start after an aha opener (hook_start)
+    const hookEnd = P.hook_end == null ? -1 : P.hook_end; const hookStart = P.hook_start || 0; const inHook = hookEnd > 0 && t >= hookStart && t < hookEnd;
+    // 29 Oct (builder H, guest C's F1 r3: a story-proof short sends hook_end as the whole short, so the title never left and
+    // the callout kept the seam spot over a full-face tail): the title's 28 s exit waits only for the stacked question (q_end),
+    // and the callout's spot and the list read whether the frame is really the stacked pair now (P.stack, hook and duo pieces)
+    const qEnd = P.q_end != null ? +P.q_end : hookEnd; const inQ = qEnd > 0 && t >= hookStart && t < qEnd;
+    const inStack = Array.isArray(P.stack) ? P.stack.some(w => t >= w[0] && t < w[1]) : inHook;
+    const sig = [inHook ? 1 : 0, inQ ? 1 : 0, inStack ? 1 : 0];
+    // 28 Oct (polish, guest Q's option C and the Round-3 rule "nothing is ever placed on a face ... the title leaves at about 28 s
+    // or when a graphic needs the top"): the title stickers fade out over 0.25 s at P.title_until (never inside the hook);
+    // on an animated short (ig_between) they also leave while the animation's panel is up (window.__igbEnv from the
+    // anim page) and come back between windows
+    let tOff = 0;
+    if (P.title_until != null && !inQ && t >= P.title_until) tOff = Math.min(1, (t - P.title_until) / 0.25);
+    if (window.__igbEnv) tOff = Math.max(tOff, window.__igbEnv(t));
+    const T = q("#ig-title"); T.style.opacity = (1 - tOff).toFixed(3); T.style.transform = `translateY(${(-22 * tOff).toFixed(1)}px)`;
+    const titleOn = tOff < 0.999; sig.push(Math.round(tOff * 40));
+    // callout: in the hook on the guest panel's top edge (y 912), in the answer under the title
+    const C = q("#ig-callout");
+    // once the list has started the list carries the point, so the callout gives way (guest Q's F1: both said '3 or 4 people')
+    const listOn = !inStack && IG.items.some(it => t >= it.at);
+    // the callout in the answer shows only once the title has left (under the title it sat on the forehead): it takes
+    // the title's own slot; in the hook it sits on the guest panel's top edge as before
+    const introOn = P.intro_start != null && P.intro_start >= 0 && t >= P.intro_start;   // 28 Oct: the introduction at the end carries no callout and no list
+    const showC = IG.callAt != null && t >= IG.callAt && !listOn && (inStack || !titleOn) && !introOn;
+    C.style.display = showC ? "block" : "none";
+    // in the hook on the guest panel's top edge, wherever the seam sits (the pipeline may lower it to fit the host's head)
+    const seamY = (P.layout && P.layout.hook && P.layout.hook.guest) ? P.layout.hook.guest[0] : 880;
+    C.style.top = (inStack ? seamY + 32 : 238) + "px";
+    if (showC) { const k = Math.min(1, (t - IG.callAt) / 0.133); C.style.transform = `scale(${1.08 - 0.08 * k})`; sig.push(Math.round(k * 4)); }
+    // list stickers: between the chin (about 1150) and the caption line (1556), 4 rows at most, the oldest leave first
+    // (builder A, cause 5: guest R's F3 and guest X's F2 ran the credit under the stickers, the name half hidden): the
+    // stickers are down before the credit comes up (the last 6 s); a 2-line sticker takes its own measured height
+    const creditOn = !!P.credit && P.duration > 0 && t >= Math.max(0, creditEnd() - 6.0) && t < creditEnd();
+    // 29 Oct (builder G, guest C's M1 r3: 2 of the 3 list rows never showed, the credit's last 6 s hid them): once the title has
+    // left, the list stacks from y 238 above the head and the credit sits at 1400 under the chin, so they share the frame;
+    // only while the title is up (the list in the chest slot over the credit's line) does the credit take it down
+    const shown = IG.items.filter(it => !inStack && !(creditOn && titleOn) && !introOn && t >= it.at);
+    const vis = shown.slice(-4);
+    IG.items.forEach(it => { it.el.style.display = "none"; });
+    // 28 Oct (polish, guest Q's option C: "put these bullet points above her head"): once the title has left, the list stacks
+    // down from the title's own top (y 238), above the head; while the title is still up (a short too short to lose
+    // it) the old slot over the chest, between the chin and the caption line, is the fallback
+    // 2 Nov 2026 (the creator, on a later set's option D: "not putting text on top of the person's face. Instead, you can put it in the top
+    // half of the screen"): with `ig_list_under_title` the list stacks under the title while the title is up, never in
+    // the chest slot; the pipeline's ig_list_room keeps the head below the list
+    const gapY = 12; let top0 = titleOn ? (P.ig_list_under_title ? Math.round(IG.titleBottom + 24) : 1556 - 24 - vis.reduce((a, it) => a + (it.h || 80) + gapY, 0)) : 238;
+    sig.push(titleOn ? 1 : 0);
+    vis.forEach((it, i) => { it.el.style.display = "block"; it.el.style.top = top0 + "px"; top0 += (it.h || 80) + gapY;
+      const k = Math.min(1, (t - it.at) / 0.133); it.el.style.transform = `scale(${1.08 - 0.08 * k})`; sig.push(Math.round(k * 4)); });
+    q("#ig-list").style.top = "0px"; sig.push(vis.length, IG.items.indexOf(vis[0]));
+    // the caption sticker
+    const caps = P.captions || []; let cur = null;
+    for (const c of caps) { if (t >= c.s && t < c.e) { cur = c; break; } }
+    const cap = q("#ig-cap");
+    if (!cur) { cap.innerHTML = ""; sig.push(-1); }
+    else {
+      let on = 0; cur.w.forEach((w, i) => { if (t >= w[1]) on = i; });
+      const key = caps.indexOf(cur) + ":" + on;
+      if (IG.cap !== key) {
+        cap.innerHTML = '<span class="ln">' + cur.w.map((w, i) => '<span class="w' + (i === on ? " on" : "") + '">' + escapeHtml(w[0]) + "</span>").join(" ") + "</span>";
+        let fs = 52; cap.style.fontSize = fs + "px"; cap.style.whiteSpace = "nowrap"; cap.style.top = "1556px";
+        while (fs > 50 && cap.scrollWidth > 780) { fs -= 2; cap.style.fontSize = fs + "px"; }
+        // (guest Q's F1: a 4-word line ran to x 1075, into the button rail): a line still too wide wraps to 2 lines, lifted
+        if (cap.scrollWidth > 780) { cap.style.whiteSpace = "normal"; cap.style.top = (1556 - Math.round(fs * 1.2)) + "px"; }
+        IG.capMin = Math.min(IG.capMin, fs); IG.cap = key;
+      }
+      sig.push(key);
+    }
+    return sig.join(",");
+  }
+  // =====================================================================================================================
+  // THE ANIMATION DIRECTIONS (anim_looks.html only; 27 Oct 2026 night).
+  // Read by setup() and setTime() only when payload.anim is "A", "B" or "C" on a drawn look; with anim unset the
+  // page is looks.html line for line. Payload keys read (all optional but anim):
+  //   anim        "A" direction A: status cards, landing = lift 6 px, scale 1.035, bloom 0 to 40 px decaying over
+  //               0.6 s, ping ring 0 to 3x over 0.5 s, pending items at 35 % and 8 px blur, the previous active at 85 %;
+  //               always on the dark ground with a radial glow behind the active item.
+  //               "B" direction B: ONE object that changes state; colour-coded items draw the document itself (its
+  //               paragraphs tinted in the said colour by a scan line, a stop-style stamp on the red one, a margin note
+  //               on the others, the camera gliding to each paragraph); other lists are one sheet whose rows flip from
+  //               outline to fill on their word (0.1 s) out of grey skeleton lines. No glow, no ping, no caption pill.
+  //               "C" direction C, a blend: one paper panel (white) holding the rows, A's landing on the active row, Inter 800
+  //               labels, DM Serif numbers and title, Lexend Exa eyebrow, an accent rule on the face panel.
+  //   anim_title  "stays" (default) the held title stays and the panel sits under it; "goes" the title leaves on a spring
+  //               after the hook (3 s when there is none) and the panel takes the band from y 300. Reading taken: between
+  //               card windows (the face-only layout) the title comes back rather than leave a bare 640 px band.
+  //   anim_dark   true: the dark ground (near-black above y 300, #15171A under the card) with the radial glow, on any
+  //               direction; false or absent: the direction's own ground (A's own is the dark one; on the operator look
+  //               every direction is dark).
+  //   card_windows [[start, end], ...] output s: the panel springs in over 0.4 s at a start and out over the 0.3 s before
+  //               an end, invisible outside; absent or empty: up for the whole answer. The band follows the footage's
+  //               own layout (answer inside a window, answer_full outside), never shorter than the footage band where the
+  //               colours differ (the shade comes down before the cut and lifts after it).
+  //   graphic.highlight (1-based index or text, optional): that item gets focus (many become one) and the ring; without
+  //               it the ring goes on the item the title's accent names ("every order" rings Order). Neither
+  //               `highlight` nor `beats` is in overlay_payload's graphic today, so focus only runs when it is added.
+  // Signatures by kind: land (every keyed item), count (bars and any item led by a number of 10 or more: 0 to the value
+  // over 0.6 s, then an underline draws in 0.2 s), flip (marker outline to fill in 0.1 s, the said colour), focus
+  // (highlight), ring (the point item, a hand-drawn loop), sweep and type (card kind), scan (B), rail and arrows
+  // (timeline and scene), a 2.2 % camera push across any hold over 2 s and a slow glow drift (A, C, dark).
+  // Every value written goes into the state signature: a frame is hardlinked only when nothing on it moved.
+  // =====================================================================================================================
+  // a light partner of the accent (the original light value sat about 60 % of the way from the accent to white)
+  function lightHex(h, k) { const n = parseInt(h.slice(1), 16), c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    return "#" + c.map(v => Math.round(v + (255 - v) * k).toString(16).padStart(2, "0")).join(""); }
+  let ANIM = null;
+  const AN = { S: [] };
+  const DARK = { ground: "#030405", lift: "#15171A", fade: "#15171A", fg: "#F4F5F6", acc: "{{ACCENT}}",
+                 ttl: { red: "#FF6B70", yellow: "#F2B640", green: "#45C285" } };
+  const PAL = {
+    A: { ground: DARK.ground, groundImg: "none", fade: DARK.fade, fg: DARK.fg, acc: DARK.acc, ttl: DARK.ttl,
+         col: { red: "#E5484D", yellow: "#F2B640", green: "#30A46C", accent: "{{ACCENT}}" },
+         valc: { red: "#FFB3B5", yellow: "#FFE2A3", green: "#A8E6C4", accent: lightHex("{{ACCENT}}", 0.6) }, ink: "#F4F5F6", pend: "rgba(244,245,246,0.38)" },
+    // 29 Oct (the build log, row 208, guest E's option E: "comparisons of the animations on a light background and a dark background"; the
+    // render of guest E's M2-animA came out as dark as -animAd because A's palette and cards were dark whatever anim_light said):
+    // A on light paper, white status cards, dark ink, the accent glow kept
+    AL: { ground: "#F7F6F2", groundImg: "radial-gradient(ellipse 720px 620px at 540px 540px, #FFFFFF 0%, #F7F6F2 64%, #ECEAE3 100%)", fade: "#F7F6F2",
+          fg: "#1C1C1E", acc: "{{ACCENT_DARK}}", ttl: { red: "#D93A3F", yellow: "#D99A12", green: "#2E9A63" },
+          col: { red: "#D93A3F", yellow: "#E9A92A", green: "#2E9A63", accent: "{{ACCENT_DARK}}" },
+          valc: { red: "#C7282E", yellow: "#9A6400", green: "#1E7A4C", accent: "{{ACCENT_DARK}}" }, ink: "#1C1C1E", pend: "#C9C5BD" },
+    B: { ground: "#EFEDE8", groundImg: "radial-gradient(ellipse 640px 560px at 540px 560px, #FBFAF7 0%, #F1EFEA 62%, #E4E1DA 100%)", fade: "#E9E6E0",
+         fg: "#1F1E1C", acc: "{{ACCENT_DARK}}", ttl: { red: "#D93A3F", yellow: "#D99A12", green: "#2E9A63" },
+         col: { red: "#D93A3F", yellow: "#E9A92A", green: "#2E9A63", accent: "{{ACCENT_DARK}}" },
+         valc: { red: "#C7282E", yellow: "#9A6400", green: "#1E7A4C", accent: "#6B6A66" }, ink: "#1F1E1C", pend: "#CFCBC3" },
+    C: { ground: "#F7F6F2", groundImg: "radial-gradient(ellipse 720px 620px at 540px 540px, #FFFFFF 0%, #F7F6F2 64%, #ECEAE3 100%)", fade: "#F7F6F2",
+         fg: "#1C1C1E", acc: "{{ACCENT_DARK}}", ttl: { red: "#D93A3F", yellow: "#D99A12", green: "#2E9A63" },
+         col: { red: "#E5484D", yellow: "#F2B640", green: "#30A46C", accent: "{{ACCENT_DARK}}" },
+         valc: { red: "#B9282E", yellow: "#8A5A00", green: "#1E7A4C", accent: "#3A3F45" }, ink: "#1C1C1E", pend: "rgba(28,28,30,0.30)" }
+  };
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const cl01 = v => Math.max(0, Math.min(1, v));
+  const r1 = v => Math.round(v * 10) / 10, r3 = v => Math.round(v * 1000) / 1000;
+  // closed-form critically damped springs (springs.js's FADE and EXIT family, no overshoot), each normalised so it lands
+  // exactly at its stated time; the brief's durations are the T values
+  const crit = wv => x => x <= 0 ? 0 : 1 - (1 + wv * x) * Math.exp(-wv * x);
+  // (builder A, cause 4): the panel's IN and the band's RAMP take 0.3 s, the same 0.3 s as the footage's crossfade
+  // between the full-face and the card framing (pipeline.py add_transitions; a window opens where that crossfade starts)
+  const SP = { IN: { f: crit(14), T: 0.3 }, OUT: { f: crit(16), T: 0.3 }, TOUT: { f: crit(18), T: 0.25 }, TIN: { f: crit(13), T: 0.4 },
+               RAMP: { f: crit(16), T: 0.3 }, CNT: { f: crit(10), T: 0.6 }, BLOOM: { f: crit(30), T: 0.15 }, DECAY: { f: crit(8), T: 0.6 },
+               PING: { f: crit(9), T: 0.5 }, SCAN: { f: crit(14), T: 0.3 }, UL: { f: crit(24), T: 0.2 }, DRAW: { f: crit(14), T: 0.35 },
+               THUMP: { f: crit(26), T: 0.18 }, FLASH: { f: crit(12), T: 0.3 }, GLIDE: { f: crit(7), T: 0.7 }, REVEAL: { f: crit(6), T: 0.9 }, SWEEP: { f: crit(16), T: 0.3 } };
+  const nrm = (sp, x) => x <= 0 ? 0 : x >= sp.T ? 1 : sp.f(x) / sp.f(sp.T);
+  function ws(e, k, v) { if (!e) return; const c = e._ac || (e._ac = {}); if (c[k] !== v) { e.style[k] = v; c[k] = v; } AN.S.push(v); }
+  function wtx(e, v) { if (e._at !== v) { e.textContent = v; e._at = v; } AN.S.push(v); }
+  function mk(tag, cls, parent) { const e = document.createElement(tag); if (cls) e.className = cls; parent.appendChild(e); return e; }
+  const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${r3(cl01(a))})`; };
+  const mixHex = (h1, h2, k) => { const a = hexRgb(h1), b = hexRgb(h2); return "#" + a.map((v, i) => Math.round(lerp(v, b[i], k)).toString(16).padStart(2, "0")).join(""); };
+  const lum = h => { const [r, g, b] = hexRgb(h).map(v => v / 255); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const normTxt = s => String(s).toLowerCase().replace(/[^a-z0-9%$ ]/g, " ").replace(/\s+/g, " ").trim();
+  function colourOf(s) { const m = String(s).toLowerCase().match(/\b(red|yellow|amber|green)\b/); return m ? ({ red: "red", yellow: "yellow", amber: "yellow", green: "green" })[m[1]] : null; }
+  const truthy = v => v === true || v === 1 || /^(true|yes|1|dark)$/i.test(String(v == null ? "" : v));
+
+  function animWanted() {
+    const L = String(P.anim == null ? "" : P.anim).trim().toUpperCase();
+    if (!PAL[L]) return null;
+    if (!["ledger", "whiteboard", "flat2d", "operator", "none"].includes(P.look)) return null;
+    const g = P.graphic || {};
+    if (g.kind === "screen" && P.screen_rect) return null;   // a real screen composites into the look's window hole: kept on the look's own path
+    return L;
+  }
+  async function animPre() {
+    document.body.classList.add("anim", "anim-" + ANIM);
+    AN.titleGoes = String(P.anim_title == null ? "stays" : P.anim_title).trim().toLowerCase() === "goes" || !!P.ig_between;
+    // the operator look is the dark one: every direction on it takes the dark ground (the pipeline's ink check reads the
+    // operator look's light ink, #F2F3F4, so a light ground there reads as ink above y 290)
+    // 28 Oct (polish, guest E's option E: "we want to see comparisons of the animations on a light background and a dark
+    // background"; option G: light is the preference, both keep rendering): A takes the light ground too when the spec says
+    // anim_light; ig_between (the Instagram look between animations) forces the title to go when the panel is up
+    AN.dark = (ANIM === "A" && !truthy(P.anim_light)) || truthy(P.anim_dark) || P.look === "operator";
+    AN.igb = !!P.ig_between;
+    if (AN.igb) { document.body.classList.add("igb"); window.__igbEnv = (t) => envAt(t); }
+    if (AN.dark) document.body.classList.add("anim-dark");
+    await Promise.all(['400 50px "DMSI"', '500 24px "Lexend Exa"', '400 50px "DM Serif Display"', '800 50px "Inter"', '900 50px "Inter"', '700 50px "Inter"'].map(f => document.fonts.load(f)));
+    P._animTitleMax = AN.titleGoes ? 80 : 72;   // a title that stays leaves the panel room under it
+  }
+  function animVars() {
+    const pl = (ANIM === "A" && !AN.dark) ? PAL.AL : PAL[ANIM], R = document.documentElement.style;
+    const ground = AN.dark ? DARK.ground : pl.ground, img = AN.dark ? "none" : pl.groundImg, fade = AN.dark ? DARK.fade : pl.fade;
+    const fg = AN.dark ? DARK.fg : pl.fg, acc = AN.dark ? DARK.acc : pl.acc;
+    AN.groundHex = ground;
+    R.setProperty("--ground", ground); R.setProperty("--a-ground", ground); R.setProperty("--a-ground-img", img);
+    R.setProperty("--fade", fade); R.setProperty("--fade-70", hex2rgba(fade, 0.72));
+    R.setProperty("--fg", fg); R.setProperty("--accent", acc); R.setProperty("--mono", fg);
+  }
+  // the title: a said colour in that colour (still C: "the red" red, "is fixed" back to ink)
+  function recolourTitle() {
+    const ttl = AN.dark ? DARK.ttl : ((ANIM === "A") ? PAL.AL : PAL[ANIM]).ttl;
+    titleWords.forEach(w => { w.style.opacity = 1; w.style.transform = "none"; });
+    const cw = titleWords.findIndex(w => colourOf(w.textContent));
+    if (cw < 0) return;
+    const c = colourOf(titleWords[cw].textContent);
+    const keep = new Set([cw]); if (cw > 0 && /^the$/i.test(titleWords[cw - 1].textContent)) keep.add(cw - 1);
+    if (titleWords[cw].classList.contains("t")) titleWords.forEach((w, i) => { if (!keep.has(i)) w.classList.remove("t"); });
+    keep.forEach(i => { titleWords[i].classList.remove("t"); titleWords[i].style.color = ttl[c]; });
+  }
+  function animMatchKeys(labels, keys) {   // the look's own rule: a key whose label is contained in the item (or the item in it), else by order
+    const times = labels.map(() => null), used = new Set();
+    labels.forEach((lab, i) => { const n = normTxt(lab);
+      for (let k = 0; k < keys.length; k++) { if (used.has(k)) continue; const kn = normTxt(keys[k].label);
+        if (kn && n && (n.includes(kn) || kn.includes(n) || kn.split(" ")[0] === n.split(" ")[0] && kn.length > 3)) { times[i] = keys[k].t; used.add(k); break; } } });
+    let ki = 0;
+    labels.forEach((lab, i) => { if (times[i] == null) { while (ki < keys.length && used.has(ki)) ki++; if (ki < keys.length) { times[i] = keys[ki].t; used.add(ki); ki++; } } });
+    return times;
+  }
+
+  // ---- timing shared by the directions and by the look's own path when windows are given
+  function windowsOf() {
+    return (Array.isArray(P.card_windows) ? P.card_windows : []).filter(w => Array.isArray(w) && w.length >= 2 && +w[1] > +w[0])
+      .map(w => [+w[0], +w[1]]).sort((x, y) => x[0] - y[0]);
+  }
+  function bandAt(t) {   // the footage's own band (the pipeline's layout for the piece playing at t)
+    const L = P.layout;
+    if (AN.hookEnd > 0 && t >= AN.hookStart && t < AN.hookEnd) return L.hook.top_band_h;
+    if (!AN.wins.length) return L.answer.top_band_h;
+    for (const w of AN.wins) if (t >= w[0] && t < w[1]) return L.answer.top_band_h;
+    return (L.answer_full || L.answer).top_band_h;
+  }
+  function timingInit(precut) {
+    AN.hookEnd = P.hook_end == null ? -1 : +P.hook_end; AN.dur = +P.duration || 0; AN.wins = windowsOf();
+    // 29 Oct (builder G, guest X's after-wave1-02-animB and -animBd r3: the top black 4.5 to 10.75 s, no table, the title never
+    // went): since the order rule (the build log, row 174) the stacked hook runs from hook_start to hook_end AFTER the aha opener; this
+    // path read 0 to hook_end as the hook, so a window inside the aha (aha_keys) was clipped away and the band held at 0
+    AN.hookStart = AN.hookEnd > 0 ? Math.max(0, +P.hook_start || 0) : 0;
+    const Ts = new Set(); if (AN.hookEnd > 0) Ts.add(AN.hookEnd); if (AN.hookStart > 0) Ts.add(AN.hookStart);
+    AN.wins.forEach(w => { Ts.add(w[0]); if (w[1] < AN.dur - 0.01) Ts.add(w[1]); });
+    AN.steps = [...Ts].sort((a, b) => a - b).map(T => ({ T, from: bandAt(T - 1e-4), to: bandAt(T + 1e-4) })).filter(s => Math.abs(s.to - s.from) > 0.5);
+    AN.precut = precut;
+  }
+  function groundAt(t) {
+    let g = bandAt(t); const D = SP.RAMP.T;
+    for (const s of AN.steps) {
+      if (s.to > s.from) {
+        // a band that grows: before the cut where the ground's colour differs from the footage's (the shade comes down over
+        // the outgoing shot), after it where they match (the footage's own ground is under it, so nothing shows)
+        if (AN.precut) { if (t >= s.T - D && t < s.T) g = Math.max(g, s.from + (s.to - s.from) * nrm(SP.RAMP, t - (s.T - D))); }
+        else if (t >= s.T && t < s.T + D) g = Math.min(g, s.from + (s.to - s.from) * nrm(SP.RAMP, t - s.T));
+      } else if (t >= s.T && t < s.T + D) g = Math.max(g, s.from + (s.to - s.from) * nrm(SP.RAMP, t - s.T));   // a band that shrinks lifts after the cut
+    }
+    return g;
+  }
+  function envAt(t) {
+    let e = 0;
+    for (const [s, en] of AN.spans) {
+      if (t < s) continue;
+      let v = nrm(SP.IN, t - s);
+      if (en !== Infinity) { if (t >= en) continue; v = Math.min(v, 1 - nrm(SP.OUT, t - (en - SP.OUT.T))); }
+      e = Math.max(e, v);
+    }
+    return e;
+  }
+  function titleVisAt(t) {
+    if (!AN.titleGoes) return { v: 1, rise: 0 };
+    let v = 1, rise = 0;
+    for (const [s, en] of AN.spans) {
+      const so = s - SP.TOUT.T;
+      if (t >= so && (en === Infinity || t < en)) v = Math.min(v, 1 - nrm(SP.TOUT, t - so));
+      if (en !== Infinity && t >= en) { const k = nrm(SP.TIN, t - en); if (k < 1) { v = Math.min(v, k); rise = Math.max(rise, 1 - k); } }
+    }
+    return { v, rise };
+  }
+  // the look's own path with windows (no anim): the band follows the footage and the graphic is up only inside a window
+  function lookWindowsInit() {
+    timingInit(false);
+    AN.spans = AN.wins.map(w => [w[0], w[1] >= AN.dur - 0.05 ? Infinity : w[1]]);
+    AN.lookWins = AN.wins.length > 0;
+  }
+  function lookWindowsTime(t, sig) {
+    const G = groundAt(t), env = envAt(t);
+    q("#ground").style.height = Math.round(G) + "px";
+    const g = q("#graphic"); g.style.opacity = String(r3(env * (parseFloat(g.style.opacity || "1") || 0)));
+    g.style.transform = `translateY(${r1((1 - env) * 30)}px)`;
+    sig.push("w" + Math.round(G) + ":" + r3(env));
+  }
+
+  // ---- the build
+  function animBuild() {
+    const pl = (ANIM === "A" && !AN.dark) ? PAL.AL : PAL[ANIM]; AN.pl = pl;
+    AN.ink = pl.ink; AN.col = pl.col; AN.valc = pl.valc;
+    const g = P.graphic || { kind: "none", items: [], keys: [] };
+    recolourTitle();
+    // timing
+    AN.precut = Math.abs(lum(AN.groundHex) - lum("#" + (({ ledger: "F7F6F2", none: "F7F6F2", whiteboard: "FFFFFF", operator: "15171A", flat2d: "F3F7F8" })[P.look] || "F7F6F2"))) > 0.25;
+    timingInit(AN.precut);
+    const hasG = !!(g.kind && g.kind !== "none");
+    AN.hold = AN.titleGoes ? (AN.hookEnd > 0 ? AN.hookEnd : 3.0) : Math.max(0, AN.hookEnd);
+    if (!hasG) AN.spans = [];
+    else if (!AN.wins.length) AN.spans = [[AN.hold, Infinity]];
+    else AN.spans = AN.wins.map(w => [(AN.hookStart > 0 && w[1] <= AN.hookStart + 0.05) ? w[0] : Math.max(w[0], AN.hold), w[1] >= AN.dur - 0.05 ? Infinity : w[1]]).filter(s => s[1] - s[0] > 0.05);   // a window inside the aha opener, before the stacked hook, plays where it is (29 Oct, builder G)
+    // the panel's region: under the title when it stays, the whole band from y 300 when it goes
+    const aTop = P.layout.answer.top_band_h;
+    const titleB = q("#title").getBoundingClientRect().bottom;
+    // 28 Oct (polish, Round-3: "the top band may serve the animation"): on ig_between the panel takes y 140 to the band's foot
+    AN.RT = AN.igb ? 140 : AN.titleGoes ? 300 : Math.round(titleB + 24);
+    AN.RB = aTop - (AN.igb ? 36 : AN.titleGoes ? 40 : 32);
+    // layers: the dark ground's lift and the glow live inside #ground (under the title, clipped at the band's edge)
+    const gr = q("#ground"); gr.querySelectorAll(".a-glowwrap,.a-lift").forEach(e => e.remove());
+    if (AN.dark) { AN.lift = mk("div", "a-lift", gr); AN.lift.style.cssText = `position:absolute;left:0;right:0;top:300px;bottom:0;background:linear-gradient(to bottom, ${rgba(DARK.lift, 0)} 0px, ${DARK.lift} 140px)`; }
+    { const gw = mk("div", "a-glowwrap", gr); gw.style.top = (AN.igb ? 120 : 300) + "px"; AN.glow = mk("div", "a-glow", gw); if (AN.dark) AN.amb = mk("div", "a-glow", gw); }   // 28 Oct (polish, option G): the accent glow on every direction; 29 Oct (the build log, row 217): on ig_between it starts under the top 120
+    q("#mark").style.display = ANIM === "C" && !AN.dark ? "block" : "none";
+    const root = q("#anim"); root.innerHTML = "";
+    if (ANIM === "A") {   // direction A's face panel: rounded top corners in the ground's colour
+      AN.corners = [mk("div", "a-corner", root), mk("div", "a-corner", root)];
+      AN.corners[0].style.left = "0px"; AN.corners[1].style.left = (1080 - 44) + "px";
+    }
+    if (ANIM === "C") AN.rule = mk("div", "a-rule", root);
+    const panel = mk("div", "a-panel", root);
+    panel.style.cssText = `left:60px;top:${AN.RT}px;width:960px;height:${AN.RB - AN.RT}px`;
+    const cam = mk("div", "a-cam", panel);
+    AN.panel = panel; AN.cam = cam;
+    // kind
+    let kind = g.kind || "none";
+    let items = (g.items || []).map(String);
+    const keys = (g.keys || []).map(k => ({ label: String(k[0]), t: +k[1] }));
+    if (kind === "bars" && !items.some(x => /\|\s*[0-9$]/.test(x))) kind = "table";
+    if (kind === "screen" && (!items.length || items.some(x => x.length > 48 || x.includes(";")))) items = keys.map(k => k.label);
+    if (kind === "table") items = items.map(x => x.includes("|") ? x : x.replace(/:\s*(\$?[0-9][0-9,.]*\s*(?:months?|days?|years?|%|K)?)$/i, "|$1"));
+    const labels = items.length ? items : keys.map(k => k.label);
+    AN.kind = kind; AN.rows = []; AN.mode = "none";
+    if (!hasG || !labels.length) { AN.spans = []; return; }
+    const coded = labels.filter(x => colourOf(x.split("|")[0])).length;
+    if (kind === "card") { AN.mode = "card"; buildCard(labels, keys, g); }
+    else if (ANIM === "B" && (coded >= 2 || P.anim_doc)) { AN.mode = "doc"; buildDoc(labels, keys, g); }
+    else { AN.mode = "stack"; buildStack(kind, labels, keys, g); }
+    // the camera's events: every key and every span edge (a hold is the time between two of them)
+    const ev = new Set(); (AN.keyTimes || []).forEach(k => { if (k != null) ev.add(k); }); AN.spans.forEach(([s, e]) => { ev.add(s); if (e !== Infinity) ev.add(e); });
+    AN.events = [...ev].sort((a, b) => a - b);
+    AN.keySet = new Set((AN.keyTimes || []).filter(k => k != null));
+  }
+
+  // ---- parsing an item: "label|value", a number that leads it, the said colour
+  function parseItem(raw, kind) {
+    let lab = raw, val = "";
+    const pipe = raw.indexOf("|"); if (pipe >= 0) { lab = raw.slice(0, pipe).trim(); val = raw.slice(pipe + 1).trim(); }
+    const colour = colourOf(lab);
+    const NUM = /^(\$?)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(%|x|X|K|M|k|\+)?(?=$|[\s,.:;)])/;
+    const parsed = m => { const d = m[2]; return { prefix: m[1], digits: d, suffix: m[3] || "", v: parseFloat(d.replace(/,/g, "")), dec: (d.split(".")[1] || "").length,
+      comma: d.includes(","), text: m[0] }; };
+    const mv = val.match(NUM), ml = lab.match(NUM);
+    if (mv && (kind === "bars" || parsed(mv).v >= 10)) return { lab, val: "", colour, hero: "valnum", num: parsed(mv), unit: val.slice(mv[0].length).trim(), side: lab };
+    if (ml && kind !== "bars" && parsed(ml).v >= 10) return { lab, val, colour, hero: "num", num: parsed(ml), unit: lab.slice(ml[0].length).replace(/^[\s,:]+/, "").trim(), side: "" };
+    return { lab, val, colour, hero: "lab", num: null, unit: "", side: "" };
+  }
+  function fmtNum(n, k) {
+    const v = n.v * k; let s = n.dec ? v.toFixed(n.dec) : String(Math.round(v));
+    if (n.comma) { const [ip, fp] = s.split("."); s = ip.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (fp ? "." + fp : ""); }
+    return n.prefix + s + n.suffix;
+  }
+  function wobbleLoop(seed) {   // a hand-drawn loop in a 100 x 100 box: one pass and a little overlap, never a perfect ellipse
+    let s = seed; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 - 0.5; };
+    const pts = []; const N = 36;
+    for (let k = 0; k <= N; k++) { const a = (-110 + 380 * k / N) * Math.PI / 180; const rr = 1 + rnd() * 0.04 + (k / N) * 0.05; pts.push([50 + 49 * rr * Math.cos(a), 50 + 47 * rr * Math.sin(a)]); }
+    let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+    for (let k = 1; k < pts.length - 1; k++) { const mx = (pts[k][0] + pts[k + 1][0]) / 2, my = (pts[k][1] + pts[k + 1][1]) / 2; d += ` Q ${pts[k][0].toFixed(2)} ${pts[k][1].toFixed(2)} ${mx.toFixed(2)} ${my.toFixed(2)}`; }
+    return d;
+  }
+
+  // ---- the stack: list, table, timeline (a rail), scene (arrows), screen steps, bars (tracks). The active row is big (the
+  // landed word at 100 to 120 px, a number at up to 160 px in DM Serif), the others at 56 to 64 px, never under 44.
+  // Every word is its own span laid out twice (big and small) and moved between the 2 layouts, so a row grows without
+  // re-flowing its text.
+  function buildStack(kind, labels, keys, g) {
+    const pl = AN.pl, n = labels.length;
+    const times = animMatchKeys(labels, keys);
+    const host = ANIM === "B" ? mk("div", "a-sheet", AN.cam) : ANIM === "C" ? mk("div", "a-box", AN.cam) : AN.cam;
+    const ins = ANIM === "A" ? [0, 0] : ANIM === "B" ? [16, 22] : [10, 0];
+    const stack = mk("div", "a-stack", host); AN.stack = stack;
+    // rows sliding out of the window are clipped at the stack's top and bottom (never over the title); wide sideways for the blooms
+    stack.style.cssText = `left:${ins[1]}px;right:${ins[1]}px;top:${ins[0]}px;bottom:${ins[0]}px;clip-path:inset(${ANIM === "A" ? -22 : -10}px -90px ${ANIM === "A" ? -22 : -10}px -90px)`;
+    AN.ins = ins;
+    const W = 960 - 2 * ins[1], innerH = (AN.RB - AN.RT) - 2 * ins[0];
+    AN.W = W; AN.innerH = innerH;
+    const hasMk = kind !== "bars";
+    const Zb = ANIM === "A" ? { padL: 40, padR: 40, padYb: 22, padYs: 12, gap: 12, MB: 56, MS: 40, gM: 30 }
+             : ANIM === "B" ? { padL: 30, padR: 30, padYb: 20, padYs: 12, gap: 6, MB: 56, MS: 40, gM: 28 }
+             : { padL: 34, padR: 34, padYb: 20, padYs: 12, gap: 4, MB: 52, MS: 38, gM: 26 };
+    const x0 = hasMk ? Zb.padL + Zb.MB + Zb.gM : Zb.padL;
+    const AW = W - x0 - Zb.padR;
+    // measuring at 100 px; width scales with the size
+    const probe = mk("div", "a-probe", document.body);
+    const meas = (cls, txt) => { const s = mk("span", cls, probe); s.style.position = "absolute"; s.style.fontSize = "100px"; s.textContent = txt; const r = s.getBoundingClientRect(); s.remove(); return [r.width, r.height]; };
+    const spC = {}; const spOf = cls => spC[cls] != null ? spC[cls] : (spC[cls] = meas(cls, "x x")[0] - meas(cls, "xx")[0]);
+    const cv = document.createElement("canvas").getContext("2d");
+    const metr = (font, lh, sample) => { cv.font = font; const m = cv.measureText(sample); const a = m.fontBoundingBoxAscent / 100, d = m.fontBoundingBoxDescent / 100;
+      return { bl: (lh - (a + d)) / 2 + a, cap: m.actualBoundingBoxAscent / 100 }; };
+    const MET = { lab: metr('800 100px Inter', 1.04, "H"), num: metr('400 100px "DM Serif Display"', 1.0, "0"), val: metr('400 100px DMSI', 1.1, "h"), pval: metr('700 100px Inter', 1.08, "H") };
+    AN.MET = MET;
+    const rows = labels.map((raw, i) => {
+      const it = parseItem(raw, kind);
+      const R = { i, kt: times[i], it, colour: it.colour, chunks: [], iLab: [], iNum: -1, iUnit: [], iVal: [], iSide: [], W, AW, x0, hasMk };
+      const add = (role, cls, text) => { const [w100, h100] = role === "stamp" ? meas("stp", text) : meas(cls, text); R.chunks.push({ role, cls, text, w100, h100, sp100: role === "stamp" ? 0 : spOf(cls) }); return R.chunks.length - 1; };
+      const words = s => String(s).split(/\s+/).filter(Boolean);
+      if (it.hero === "num") { R.iNum = add("num", "aw num", it.num.text); words(it.unit).forEach(x => R.iUnit.push(add("unit", "aw unit", x))); }
+      else if (it.hero === "valnum") { words(it.side).forEach(x => R.iSide.push(add("side", "aw lab", x))); R.iNum = add("num", "aw num", it.num.text); words(it.unit).forEach(x => R.iUnit.push(add("unit", "aw unit", x))); }
+      else words(it.lab).forEach(x => R.iLab.push(add("lab", "aw lab", x)));
+      if (it.val) { if (ANIM === "B" && it.colour) R.iVal.push(add("stamp", "aw stamp", it.val.toUpperCase())); else words(it.val).forEach(x => R.iVal.push(add("val", ANIM === "B" ? "aw pval" : "aw val", x))); }
+      return R;
+    });
+    probe.remove();
+    const roleVOf = R => R.iVal.length ? R.chunks[R.iVal[0]].role === "stamp" ? "stamp" : (ANIM === "B" ? "pval" : "val") : "val";
+    const lhOf = role => role === "num" ? 1.0 : role === "val" ? 1.1 : role === "pval" ? 1.08 : 1.04;
+    // lay a row out for one state; returns chunk boxes [x, y, font], the content height, the marker's centre and the hero box
+    function layRow(R, Z, big) {
+      const out = new Array(R.chunks.length);
+      const roleV = roleVOf(R);
+      const f = { lab: big ? R.LB : Z.FS, num: big ? R.NB : Z.NS, unit: big ? Z.UB : Z.US, side: big ? (R.SLB || Z.SL) : Z.FS };
+      const fv = roleV === "stamp" ? (big ? Z.STB : Z.STS) : (big ? Z.VB : Z.VS);
+      let bottom = 0;
+      const flow = (idx, fs, x, y, maxW, role, put, tag) => {
+        let cx = 0, cy = 0, lines = idx.length ? 1 : 0, mx = 0, over = false; const lh = lhOf(role);
+        idx.forEach((ci, k) => { const c = R.chunks[ci], cw = c.w100 * fs / 100, sp = c.sp100 * fs / 100;
+          if (k > 0) { if (cx + sp + cw > maxW + 0.5) { mx = Math.max(mx, cx); cx = 0; cy += fs * lh; lines++; } else cx += sp; }
+          if (cx + cw > maxW + 0.5) over = true;   // one word wider than its column
+          if (put) { out[ci] = [x + cx, y + cy, fs, (tag || "") + (lines - 1)]; bottom = Math.max(bottom, y + cy + (role === "stamp" ? c.h100 * fs / 100 : fs * lh)); }
+          cx += cw; });
+        mx = Math.max(mx, cx);
+        const hh = lines ? (lines - 1) * fs * lh + (role === "stamp" ? R.chunks[idx[0]].h100 * fs / 100 : fs * lh) : 0;
+        return { lines, w: mx, h: hh, over };
+      };
+      let mkC = 0, hero = [0, 0, 0, 0], labLines = 0, inline = false;
+      if (R.it.hero === "lab") {
+        const vw = R.iVal.length ? flow(R.iVal, fv, 0, 0, 1e9, roleV, false).w : 0;
+        if (R.iVal.length && vw + 28 < AW * 0.66) { const tl = flow(R.iLab, f.lab, 0, 0, AW - vw - 28, "lab", false); inline = tl.lines <= (big ? 2 : 1) && !tl.over; }
+        if (big && R.inlineBig != null) inline = R.inlineBig && R.iVal.length > 0;
+        const lb = flow(R.iLab, f.lab, 0, 0, inline ? AW - vw - 28 : AW, "lab", true);
+        labLines = lb.lines + (lb.over ? 9 : 0); hero = [0, 0, lb.w, lb.h];
+        const blL = MET.lab.bl * f.lab;
+        mkC = blL - MET.lab.cap * f.lab / 2;
+        if (R.iVal.length) {
+          if (inline) { const top = roleV === "stamp" ? mkC - (R.chunks[R.iVal[0]].h100 * fv / 100) / 2 : blL - MET[roleV].bl * fv; flow(R.iVal, fv, AW - vw, Math.max(0, top), 1e9, roleV, true, "vi"); }
+          else flow(R.iVal, fv, 0, lb.h + 6, AW, roleV, true, "vb");
+        }
+      } else if (R.it.hero === "num") {
+        const fn = f.num, nw = R.chunks[R.iNum].w100 * fn / 100;
+        out[R.iNum] = [0, 0, fn]; hero = [0, 0, nw, fn]; bottom = fn;
+        const blN = MET.num.bl * fn;
+        if (R.iUnit.length) {
+          const gu = Math.max(22, 0.17 * fn), avail = AW - nw - gu, ut = flow(R.iUnit, f.unit, 0, 0, avail, "unit", false);
+          if (avail > 150 && ut.lines <= (big ? 2 : 1) && !ut.over) flow(R.iUnit, f.unit, nw + gu, Math.max(0, blN - MET.lab.bl * f.unit - (ut.lines - 1) * f.unit * 1.04), avail, "unit", true, "ui");
+          else flow(R.iUnit, f.unit, 0, fn + 2, AW, "unit", true, "ub");
+        }
+        if (R.iVal.length) flow(R.iVal, fv, 0, bottom + 6, AW, roleV, true);
+        mkC = blN - MET.num.cap * fn / 2;
+      } else {   // valnum: the label on the left, the number (and its unit) on the right, or stacked when the row is narrow
+        const fn = f.num, nw = R.chunks[R.iNum].w100 * fn / 100;
+        const uw = R.iUnit.length ? flow(R.iUnit, f.unit, 0, 0, 1e9, "unit", false).w : 0;
+        const rbw = nw + (uw ? 18 + uw : 0), lavail = AW - rbw - 32;
+        const sl = flow(R.iSide, f.side, 0, 0, Math.max(lavail, 10), "lab", false);
+        // 29 Oct (builder H, guest E's M2-animA r3: 'Outside reviewers' wrapped and its 'rs' ran under the '$3,100'): side by
+        // side only when every label word fits the column the number leaves (`over` is a word wider than it); else stacked
+        if (lavail >= 220 && sl.lines <= 3 && !sl.over) {
+          inline = true;
+          const hb = Math.max(sl.h, fn), ly = (hb - sl.h) / 2, ny = (hb - fn) / 2;
+          flow(R.iSide, f.side, 0, ly, lavail, "lab", true, "sr");
+          out[R.iNum] = [AW - rbw, ny, fn]; bottom = Math.max(bottom, ny + fn);
+          if (uw) flow(R.iUnit, f.unit, AW - uw, ny + MET.num.bl * fn - MET.lab.bl * f.unit, 1e9, "unit", true, "ur");
+          hero = [AW - rbw, ny, nw, fn]; mkC = ly + MET.lab.bl * f.side - MET.lab.cap * f.side / 2;
+        } else {
+          const s2 = flow(R.iSide, f.side, 0, 0, AW, "lab", true, "ss"), ny = s2.h + 4;
+          out[R.iNum] = [0, ny, fn]; bottom = Math.max(bottom, ny + fn);
+          if (uw) flow(R.iUnit, f.unit, nw + 18, ny + MET.num.bl * fn - MET.lab.bl * f.unit, 1e9, "unit", true, "us");
+          hero = [0, ny, nw, fn]; mkC = MET.lab.bl * f.side - MET.lab.cap * f.side / 2;
+        }
+        labLines = sl.lines + (sl.over ? 9 : 0);
+        if (R.iVal.length) flow(R.iVal, fv, 0, bottom + 6, AW, roleV, true);
+      }
+      let H = bottom, trackY = null;
+      const th = big ? 20 : 12;
+      if (kind === "bars") { trackY = H + (big ? 16 : 10); H = trackY + th; }
+      const padY = big ? Z.padYb : Z.padYs, m = big ? Z.MB : Z.MS;
+      const Hr = Math.max(H, hasMk ? m : 0) + 2 * padY;
+      let right = 0; out.forEach((o, ci) => { if (o) right = Math.max(right, o[0] + R.chunks[ci].w100 * o[2] / 100); });
+      return { out, H: Hr, padY, mkC: hasMk ? Math.max(mkC, m / 2) : mkC, hero, trackY, th, labLines, inline, right };
+    }
+    function fitBig(R, Z) {
+      R.LB = Z.LB; R.NB = Z.NB; R.inlineBig = null;
+      if (R.it.hero === "lab") {
+        let done = false;
+        if (R.iVal.length) for (let fs = Z.LB; fs >= Z.LB - 24 && !done; fs -= 4) { R.LB = fs; R.inlineBig = true; const L = layRow(R, Z, true); if (L.labLines <= 2 && L.inline) done = true; }
+        if (!done) { R.inlineBig = false;
+          for (let fs = Z.LB; fs >= Math.max(52, Z.LB - 36) && !done; fs -= 4) { R.LB = fs; if (layRow(R, Z, true).labLines <= 2) done = true; }
+          for (let fs = Math.max(52, Z.LB - 36); fs >= 44 && !done; fs -= 2) { R.LB = fs; if (layRow(R, Z, true).labLines <= 3) done = true; } }
+      } else {
+        const cap = R.it.hero === "valnum" ? 0.6 : 0.9;
+        while (R.NB > 72 && R.chunks[R.iNum].w100 * R.NB / 100 > AW * cap) R.NB -= 4;
+        if (R.it.hero === "valnum") {
+          // 29 Oct (builder H): the number keeps its own right column the label never enters: a label word too wide for
+          // what the number leaves shrinks the number (to 96), then the label (to 44), before the lit row stacks the two
+          R.SLB = null; const nb0 = R.NB; let L = layRow(R, Z, true);
+          while (!L.inline && R.NB > 96) { R.NB -= 4; L = layRow(R, Z, true); }
+          for (let sl = Z.SL - 2; !L.inline && sl >= 44; sl -= 2) { R.SLB = sl; L = layRow(R, Z, true); }
+          if (!L.inline) { R.SLB = null; R.NB = nb0; }
+        }
+      }
+      R.Lb = layRow(R, Z, true); R.Ls = layRow(R, Z, false);
+    }
+    const LV = [ { LB: 112, NB: 160, UB: 60, SL: 64, VB: 56, STB: 50, FS: 60, NS: 66, US: 54, VS: 48, STS: 44 },
+                 { LB: 100, NB: 144, UB: 58, SL: 62, VB: 54, STB: 48, FS: 56, NS: 62, US: 52, VS: 46, STS: 44 },
+                 { LB: 88, NB: 128, UB: 56, SL: 58, VB: 52, STB: 46, FS: 52, NS: 58, US: 50, VS: 44, STS: 44 },
+                 { LB: 76, NB: 112, UB: 54, SL: 56, VB: 50, STB: 46, FS: 48, NS: 54, US: 48, VS: 44, STS: 44 },
+                 { LB: 64, NB: 96, UB: 52, SL: 52, VB: 48, STB: 44, FS: 44, NS: 50, US: 44, VS: 44, STS: 44 } ];
+    let chosen = null;
+    const passes = [[LV.slice(0, 3), Math.min(n, 3)], [LV.slice(0, 3), Math.min(n, 2)], [LV.slice(3), Math.min(n, 3)], [LV.slice(3), Math.min(n, 2)]];
+    outer: for (const [lvs, minPer] of passes) for (const Z0 of lvs) {
+      const Z = Object.assign({}, Zb, Z0); rows.forEach(R => fitBig(R, Z));
+      for (let per = Math.min(n, 4); per >= Math.max(1, minPer); per--) {
+        const hb = Math.max(...rows.map(R => R.Lb.H)), hs = rows.map(R => R.Ls.H).sort((a, b) => b - a);
+        const need = hb + hs.slice(0, per - 1).reduce((s, v) => s + v, 0) + Zb.gap * (per - 1);
+        if (need <= innerH) { chosen = { Z, per, need }; break outer; }
+      }
+    }
+    if (!chosen) { const Z = Object.assign({}, Zb, LV[LV.length - 1]); rows.forEach(R => fitBig(R, Z)); chosen = { Z, per: Math.min(n, 2), need: -1 }; }
+    AN.Z = chosen.Z; AN.per = chosen.per; AN.fitNeed = chosen.need;
+    // the said order: who is next after each key
+    const ord = rows.filter(R => R.kt != null).sort((a, b) => a.kt - b.kt);
+    ord.forEach((R, k) => { R.nextKt = k + 1 < ord.length ? ord[k + 1].kt : null; });
+    AN.keyOrder = ord.map(R => ({ t: R.kt, i: R.i }));
+    AN.keyTimes = rows.map(R => R.kt);
+    // the DOM of each row
+    const Z = AN.Z;
+    rows.forEach(R => {
+      const row = mk("div", "ar", stack); R.el = row; row.style.width = W + "px";
+      row.style.transformOrigin = (kind === "timeline" || kind === "scene") ? `${Z.padL + Z.MB / 2}px 50%` : "50% 50%";
+      R.bg = mk("div", "ar-bg", row);
+      if (ANIM === "C") R.hair = mk("div", "ar-hair", row);
+      const col = pl.col[R.colour || "accent"]; R.col = col;
+      if (hasMk) { R.mk = mk("div", "ar-mk", row); if (ANIM !== "B") { R.ping = mk("i", "ar-ping", R.mk); R.ping.style.borderColor = col; } }
+      R.txt = mk("div", "ar-txt", row); R.txt.style.left = x0 + "px";
+      if (!hasMk && ANIM !== "B") { R.ping = mk("i", "ar-ping free", R.txt); R.ping.style.borderColor = col; }
+      if (kind === "bars") { R.track = mk("div", "ar-track", R.txt); R.track.style.width = AW + "px"; R.track.style.background = AN.dark ? "rgba(255,255,255,0.10)" : "rgba(28,28,30,0.07)";
+        R.fill = mk("div", "ar-fill", R.track); R.fill.style.background = col; R.fill.style.width = Math.round(AW * (R.it.num ? R.it.num.v : 0) / Math.max(1, ...rows.map(x => x.it.num ? x.it.num.v : 0))) + "px"; }
+      R.chunks.forEach((c, ci) => {
+        const s = mk("span", c.cls, R.txt); const fs = R.Lb.out[ci] ? R.Lb.out[ci][2] : 60; s.style.fontSize = fs + "px"; c.bigF = fs; c.el = s;
+        if (c.role === "stamp") { c.inner = mk("span", "stp", s); c.inner.textContent = c.text; c.inner.style.color = col; c.inner.style.borderColor = col; }
+        else { c.tx = mk("b", "tx", s); c.tx.textContent = c.text; if (ANIM === "B") c.sk = mk("i", "sk", s); }
+        if (c.role === "num") { s.style.width = Math.ceil(c.w100 * fs / 100 + 2) + "px"; }
+        s.style.color = c.role === "val" ? pl.valc[R.colour || "accent"] : c.role === "pval" ? "#6B6A66" : pl.ink;
+        // a word jumps when its line or its place in the line differs between the 2 layouts (right-anchored words only by line)
+        const s0 = R.Ls.out[ci], s1 = R.Lb.out[ci];
+        c.jump = !!(s0 && s1) && c.role !== "num" && c.role !== "stamp" && (s0[3] !== s1[3] || (!/^(vi|ur)/.test(String(s1[3] || "")) && c.role !== "unit" && Math.abs(s0[0] / s0[2] - s1[0] / s1[2]) > 0.05));
+        if (c.jump) { c.el2 = s.cloneNode(true); R.txt.appendChild(c.el2); if (ANIM === "B") { c.tx2 = c.el2.querySelector(".tx"); c.sk2 = c.el2.querySelector(".sk"); } }
+      });
+      if (R.it.num) { R.ul = mk("div", "ar-ul", R.txt); R.ul.style.background = col; if (AN.dark) R.flash = mk("div", "ar-flash", R.txt); }
+    });
+    // the point: the spec's highlight when the payload carries it, else the item the title's accent names
+    let hl = null; const h = g.highlight;
+    if (typeof h === "number" && h >= 1 && h <= n) hl = h - 1;
+    else if (typeof h === "string" && h.trim()) { const hn = normTxt(h); const k = labels.findIndex(x => { const xn = normTxt(x.split("|")[0]); return xn && (xn.includes(hn) || hn.includes(xn)); }); hl = k >= 0 ? k : null; }
+    AN.focus = hl != null && rows[hl].kt != null ? hl : null;
+    let pt = hl;
+    if (pt == null && P.title_accent) { const acc = " " + normTxt(P.title_accent) + " "; const k = labels.findIndex(x => { const xn = normTxt(x.split("|")[0]); return xn && acc.includes(" " + xn + " "); }); pt = k >= 0 ? k : null; }
+    AN.point = pt;
+    if (pt != null && rows[pt].kt != null) {
+      const R = rows[pt], NS = "http://www.w3.org/2000/svg";
+      const sv = document.createElementNS(NS, "svg"); sv.setAttribute("class", "ar-ring"); sv.setAttribute("viewBox", "0 0 100 100"); sv.setAttribute("preserveAspectRatio", "none");
+      const p = document.createElementNS(NS, "path"); p.setAttribute("d", wobbleLoop(7)); p.setAttribute("pathLength", "100"); p.style.stroke = AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}";
+      sv.appendChild(p); R.txt.appendChild(sv); R.ring = sv; R.ringPath = p;
+    }
+    // the rail and the arrows run through the marker column, above the rows' cards
+    AN.conns = [];
+    if (kind === "timeline" || kind === "scene") for (let i = 1; i < n; i++) {
+      const ghost = kind === "timeline" ? mk("div", "a-conn ghost", stack) : null;
+      const c = mk("div", "a-conn " + kind, stack);
+      AN.conns.push({ i, el: c, ghost });
+    }
+    if (kind === "timeline") { AN.now = mk("div", "a-now", stack); AN.now.style.borderColor = AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}"; }
+    if (ANIM === "B") AN.scan = mk("div", "a-scan", stack);
+    AN.rows = rows; AN.x0 = x0; AN.AW = AW; AN.hasMk = hasMk;
+  }
+
+  // ---- B's document: the object itself (the creator's pick: show the object itself on screen).
+  // Paragraphs of grey lines; each said item tints its paragraph as a scan line passes (the reference style's own move, about 1.4 s), the
+  // red one takes a stop-style stamp of its value, the others a margin note in their colour; the camera glides to
+  // the paragraph being said (never faster than 0.6 s, the shorts motion study's rule).
+  function buildDoc(labels, keys, g) {
+    const pl = AN.pl, n = labels.length;
+    const times = animMatchKeys(labels, keys);
+    const RH = AN.RB - AN.RT;
+    const view = mk("div", null, AN.cam); view.style.cssText = "position:absolute;left:-40px;top:0;right:-40px;bottom:0;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom, transparent 0px, #000 22px, #000 calc(100% - 36px), transparent 100%);mask-image:linear-gradient(to bottom, transparent 0px, #000 22px, #000 calc(100% - 36px), transparent 100%)";
+    const DW = 860, dx = 90;   // the view runs 40 px past the panel each side so the sheet's shadow is not clipped
+    const doc = mk("div", "a-sheet", view); doc.style.left = dx + "px"; doc.style.right = "auto"; doc.style.width = DW + "px"; doc.style.bottom = "auto";
+    AN.doc = doc; AN.view = view;
+    // the document's name: payload.anim_doc, else an agreement when the moment is about signing, else a plain document
+    const ctx = normTxt((P.title || "") + " " + ((P.graphic || {}).source_line || ""));
+    const name = typeof P.anim_doc === "string" && P.anim_doc.trim() ? P.anim_doc.trim() : /\b(sign|signing|contract|agreement|redline|redlining|clause)\b/.test(ctx) ? "Agreement.docx" : "Document.docx";
+    // 29 Oct (builder H, guest X's after-wave1-02-animB r3: as the card scrolled to the green row its 'Agreement.docx' header was
+    // cut by the frame's top edge, 9.8 to 10.7 s): the header is a sticky strip on the sheet's own white, held at the view's top
+    // while the paragraphs scroll under it (docTime counters the scroll), so the card's body moves and its name never leaves
+    const hdBar = mk("div", null, doc); hdBar.style.cssText = "position:absolute;left:0;right:0;top:0;height:96px;background:#FFFFFF;border-radius:30px 30px 0 0;z-index:3;box-shadow:0 10px 14px -12px rgba(0,0,0,0.18)";
+    AN.docHd = hdBar;
+    const hd = mk("div", null, hdBar); hd.style.cssText = "position:absolute;left:40px;top:30px;display:flex;align-items:center;gap:18px;font-family:Inter,sans-serif;font-weight:700;font-size:44px;line-height:1;color:#2A2A2A;letter-spacing:-0.01em";
+    const ic = mk("i", null, hd); ic.style.cssText = "display:inline-block;width:30px;height:38px;border:4px solid #2A2A2A;border-radius:5px;box-sizing:border-box";
+    mk("span", null, hd).textContent = name;
+    // paragraph order: a plain one first, then the items in pairs with a plain paragraph between pairs, a plain one last
+    const seq = [{ item: -1 }]; labels.forEach((x, i) => { seq.push({ item: i }); if (i % 2 === 1 && i < n - 1) seq.push({ item: -1 }); }); seq.push({ item: -1 });
+    const LP = 30, BH = 14, PADY = 16, GAP = 16;
+    let y = 100; const paras = [];
+    seq.forEach((s, k) => {
+      const nl = s.item >= 0 ? 3 : (!AN.titleGoes && k > 0 && k < seq.length - 1 ? 1 : 2);   // under a held title the separators between pairs are 1 line
+      const h = (nl - 1) * LP + BH + 2 * PADY;
+      const p = mk("div", null, doc); p.style.cssText = `position:absolute;left:24px;right:24px;top:${y}px;height:${h}px`;
+      const tint = mk("div", null, p); tint.style.cssText = "position:absolute;left:0;top:0;right:0;bottom:0;border-radius:14px;border:3px solid transparent";
+      const bars = []; const widths = [100, 88, 64, 80];
+      for (let l = 0; l < nl; l++) { const b = mk("div", null, p); b.style.cssText = `position:absolute;left:18px;top:${PADY + l * LP}px;height:${BH}px;width:calc(${widths[(l + k) % 4]}% - 36px);border-radius:8px;background:#E6E3DD`; bars.push(b); }
+      paras.push({ el: p, tint, bars, y, h, item: s.item });
+      y += h + GAP;
+    });
+    const docH = y + 30; doc.style.height = docH + "px"; AN.docH = docH;
+    AN.drows = labels.map((raw, i) => {
+      const it = parseItem(raw, "list"); const para = paras.find(p => p.item === i);
+      const c = it.colour || "accent", col = pl.col[c];
+      const note = (it.val || it.lab).trim();
+      let tag;
+      if (c === "red" && it.val) {   // the stop: a stamp
+        tag = mk("div", "stp", para.el); tag.textContent = note.toUpperCase(); tag.style.cssText += `;position:absolute;right:26px;top:50%;font-size:56px;color:${col};border-color:${col}`;
+      } else {   // a margin note, a comment bubble in the colour
+        tag = mk("div", null, para.el); tag.textContent = note.charAt(0).toUpperCase() + note.slice(1);
+        tag.style.cssText = `position:absolute;right:20px;top:50%;font-family:Inter,sans-serif;font-weight:800;font-size:56px;line-height:1;letter-spacing:-0.015em;padding:14px 22px 16px;border-radius:16px;white-space:pre;color:#FFFFFF;background:${col};box-shadow:0 8px 20px ${rgba(col, 0.35)}`;
+      }
+      // never wider than the paragraph: the note shrinks to fit (floor 44 px)
+      let fs = parseFloat(tag.style.fontSize); while (fs > 44 && tag.getBoundingClientRect().width > DW - 140) { fs -= 2; tag.style.fontSize = fs + "px"; }
+      return { i, kt: times[i], it, col, para, tag, stamp: c === "red" && !!it.val };
+    });
+    AN.scan = mk("div", "a-scan", doc); AN.scan.style.left = "30px"; AN.scan.style.right = "30px";
+    AN.keyTimes = times;
+    const ord = AN.drows.filter(d => d.kt != null).sort((a, b) => a.kt - b.kt);
+    AN.dorder = ord;
+    // the camera's targets: the document's top first, then each paragraph as it is said
+    const RHv = RH;
+    AN.docY = d => { const target = d ? d.para.y + d.para.h / 2 - RHv / 2 : 0; return -Math.max(0, Math.min(Math.max(0, docH - RHv), target)); };
+    doc.style.transformOrigin = "50% 0";
+    // the payoff: once every item is said, the camera pulls back to frame all the tinted paragraphs (scale floor 0.8, so a
+    // 56 px stamp stays at 45 px)
+    const ip = AN.drows.filter(d => d.kt != null).map(d => d.para);
+    if (ip.length >= 2) { const top = Math.min(...ip.map(q2 => q2.y)) - 10, bot = Math.max(...ip.map(q2 => q2.y + q2.h)) + 10;
+      const sc = Math.max(0.8, Math.min(1, RHv / (bot - top))), cy = (top + bot) / 2;
+      AN.reveal = { s: sc, y: RHv / 2 - cy * sc, at: Math.max(...AN.drows.filter(d => d.kt != null).map(d => d.kt)) + 1.6 }; }
+  }
+
+  // ---- the card (a prompt): each line types in at speaking pace on its word, a cursor at the end of the typing; the
+  // highlight phrase (graphic.highlight when given, else the title's accent) gets a light accent sweep once typed
+  function buildCard(lines, keys, g) {
+    const times = animMatchKeys(lines, keys);
+    const host = ANIM === "B" ? mk("div", "a-sheet", AN.cam) : ANIM === "C" ? mk("div", "a-box", AN.cam) : AN.cam;
+    const box = mk("div", "a-card", host); AN.cardBox = ANIM === "A" ? box : host;
+    const hl = (typeof g.highlight === "string" && g.highlight.trim()) ? g.highlight.trim() : String(P.title_accent || "").trim();
+    const ink = ANIM === "A" && AN.dark ? "#F4F5F6" : AN.pl.ink;
+    AN.cl = lines.map((ln, i) => {
+      const d = mk("div", "a-ln", box); d.style.color = ink;
+      const j = hl ? ln.toLowerCase().indexOf(hl.toLowerCase()) : -1;
+      const segs = (j >= 0 ? [[ln.slice(0, j), 0], [ln.slice(j, j + hl.length), 1], [ln.slice(j + hl.length), 0]] : [[ln, 0]]).filter(s => s[0]);
+      return { d, segs: segs.map(([tx, h]) => { const sp = mk("span", "seg" + (h ? " hl" : ""), d); const ty = mk("span", "ty", sp); const re = mk("span", "re", sp); re.textContent = tx; return { sp, ty, re, tx, h }; }),
+               len: ln.length, kt: times[i] };
+    });
+    AN.cur = mk("span", "a-cur", box); AN.cur.style.background = AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}";
+    let fs = 64; const fit = () => box.scrollHeight <= box.clientHeight + 2;
+    AN.cl.forEach(c => c.d.style.fontSize = fs + "px");
+    while (fs > 44 && !fit()) { fs -= 2; AN.cl.forEach(c => c.d.style.fontSize = fs + "px"); }
+    AN.keyTimes = times;
+  }
+
+  // ---- time
+  function camU(t) {   // a 1 to 3 % push across any hold over 2 s, pulled back as the next state lands (motion-craft move 5)
+    const tq = Math.floor(t * 15) / 15;   // ambient motion moves at 15 fps: every other frame, half the unique frames of a hold
+    const ev = AN.events || []; let i0 = -1;
+    for (let k = 0; k < ev.length; k++) { if (ev[k] <= t) i0 = k; else break; }
+    if (i0 < 0) return 0;
+    const e0 = ev[i0], e1 = i0 + 1 < ev.length ? ev[i0 + 1] : AN.dur;
+    let rise = 0;
+    if (e1 - e0 >= 2) { const x = cl01((tq - e0 - 0.35) / (e1 - e0 - 0.35)); rise = (1 - Math.cos(Math.PI * x)) / 2; }
+    let back = 0;
+    if (i0 > 0 && AN.keySet.has(e0) && e0 - ev[i0 - 1] >= 2) back = Math.max(0, 1 - prog(SPR.CARD, e0, t));
+    return Math.max(rise, back);
+  }
+  function animTime(t) {
+    AN.S = []; const S = AN.S;
+    const inHook = AN.hookEnd > 0 && t >= AN.hookStart && t < AN.hookEnd, L = P.layout;
+    const G = groundAt(t);
+    ws(q("#ground"), "height", Math.round(G) + "px");
+    const gap = q("#gap");
+    if (inHook) { const [hy, hh] = L.hook.host; const [gy] = L.hook.guest; ws(gap, "top", (hy + hh) + "px"); ws(gap, "height", Math.max(0, gy - hy - hh) + "px"); ws(gap, "display", "block"); }
+    else ws(gap, "display", "none");
+    const env = envAt(t);
+    // the dark ground lifts from near-black to #15171A while the card is up (the top 300 px and the hook stay near-black:
+    // the pipeline's ink check reads anything within 60 of #1C1C1E above y 290 and on frame 0's band edge as ink)
+    if (AN.lift) ws(AN.lift, "opacity", String(r3(env)));
+    const gcol = AN.dark ? mixHex(DARK.ground, DARK.lift, env) : AN.groundHex;
+    // 29 Oct (the build log, row 192, guest E's M2-animA and -animAd: 798 px of ink in the top 120 on every frame): on ig_between the ground is
+    // 0 high between animations (the face full bleed), so the panel's rounded corners and C's rule sat at y 0 as black
+    // corners and a line; they show only while a real seam is on screen (the ground 300 px or more)
+    const seamOn = !AN.igb || G >= 300;
+    if (AN.corners) AN.corners.forEach(c => ws(c, "display", seamOn ? "block" : "none"));
+    if (AN.rule) ws(AN.rule, "display", seamOn ? "block" : "none");
+    if (AN.corners) AN.corners.forEach((c, k) => { ws(c, "top", Math.round(G) + "px");
+      ws(c, "background", `radial-gradient(circle at ${k ? "0%" : "100%"} 100%, rgba(0,0,0,0) 43.5px, ${gcol} 44.5px)`); });
+    if (AN.rule) ws(AN.rule, "top", Math.round(G) + "px");
+    // title, eyebrow, sub
+    const tv = titleVisAt(t);
+    const creditOn = !!P.credit && P.duration > 0 && t >= Math.max(0, creditEnd() - 6.0) && t < creditEnd();
+    if (creditOn && !AN.igb) tv.v = 0;   // 28 Oct (polish): the credit takes the title's box in the last 6 s
+    // 29 Oct (builder H, guest C's M2 r3): on the drawn looks the title leaves at P.title_until (28 s), never inside the hook
+    if (!AN.igb && P.title_until != null && !inHook && t >= P.title_until) tv.v = Math.min(tv.v, 1 - Math.min(1, (t - P.title_until) / 0.25));
+    const T = q("#title"), E = q("#eyebrow"), SB = q("#sub");
+    if (AN.igb) S.push("ig:" + igTime(t));
+    ws(T, "opacity", String(r3(tv.v))); ws(T, "transform", `translateY(${r1(tv.rise * 26)}px)`); ws(T, "filter", tv.v < 0.999 ? `blur(${r1((1 - tv.v) * 7)}px)` : "none");
+    ws(E, "opacity", String(r3(tv.v)));
+    if (ANIM === "C") ws(q("#mark"), "opacity", String(r3(tv.v)));
+    if (SB.textContent) { const sv = inHook ? 0 : (AN.titleGoes ? tv.v : 1 - env); ws(SB, "display", sv > 0.001 ? "block" : "none"); ws(SB, "opacity", String(r3(sv))); }
+    // the panel
+    if (env <= 0.0005 || AN.mode === "none") {
+      ws(AN.panel, "display", "none"); if (AN.glow) ws(AN.glow, "opacity", "0"); if (AN.amb) ws(AN.amb, "opacity", "0");
+      S.push("off"); return S.join(",");
+    }
+    ws(AN.panel, "display", "block"); ws(AN.panel, "opacity", String(r3(env)));
+    ws(AN.panel, "transform", `translateY(${r1((1 - env) * (ANIM === "B" ? 64 : 34))}px) scale(${r3(0.965 + 0.035 * env)})`);
+    ws(AN.panel, "filter", env < 0.999 ? `blur(${r1((1 - env) * 6)}px)` : "none");
+    const u = camU(t);
+    let focusTarget = null;
+    if (AN.mode === "stack") focusTarget = stackTime(t, env);
+    else if (AN.mode === "doc") focusTarget = docTime(t, env);
+    else if (AN.mode === "card") focusTarget = cardTime(t, env);
+    if (AN.mode !== "doc") ws(AN.cam, "transform", `scale(${(1 + 0.022 * u).toFixed(5)})`);
+    else ws(AN.cam, "transform", `scale(${(1 + 0.03 * u).toFixed(5)})`);
+    // the glow: behind the active item, drifting slowly (dark ground and C); a quiet accent ambience on the dark ground
+    if (AN.glow) {
+      const tq = Math.floor(t * 15) / 15, dxg = 18 * Math.sin(0.42 * tq), dyg = 10 * Math.sin(0.31 * tq + 1.3);
+      const ft = focusTarget || { y: (AN.RB - AN.RT) / 2, col: AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}", k: 0 };
+      const cx = 540 + dxg, cy = AN.RT + ft.y + dyg;
+      const a = AN.dark ? 0.26 : 0.20;
+      const gy0 = AN.igb ? 120 : 300;
+      ws(AN.glow, "transform", `translate(${r1(cx - 620)}px,${r1(cy - gy0 - 420)}px)`);
+      ws(AN.glow, "background", `radial-gradient(ellipse 50% 50% at 50% 50%, ${rgba(ft.col, a)}, ${rgba(ft.col, 0)} 72%)`);
+      ws(AN.glow, "opacity", String(r3(env * cl01(ft.k))));
+      if (AN.amb) { ws(AN.amb, "transform", `translate(${r1(540 - 620 - dxg * 0.5)}px,${r1(AN.RT + (AN.RB - AN.RT) / 2 - gy0 - 420 - dyg * 0.5)}px)`);
+        ws(AN.amb, "background", `radial-gradient(ellipse 60% 55% at 50% 50%, color-mix(in srgb, {{ACCENT_DARK}} 24%, transparent), color-mix(in srgb, {{ACCENT_DARK}} 0%, transparent) 75%)`); ws(AN.amb, "opacity", String(r3(env))); }
+    }
+    return S.join(",");
+  }
+  function stackTime(t, env) {
+    const rows = AN.rows, n = rows.length, Z = AN.Z, pl = AN.pl, per = AN.per, W = AN.W;
+    const act = rows.map(R => { if (R.kt == null || t < R.kt) return 0; const up = prog(SPR.TYPE, R.kt, t), dn = R.nextKt == null ? 0 : prog(SPR.TYPE, R.nextKt, t); return cl01(up * (1 - dn)); });
+    // the window of `per` rows: the active one second from the top when 3 or more fit, sliding on the key that moves it
+    const startFor = idx => n <= per ? 0 : Math.max(0, Math.min(n - per, idx < 0 ? 0 : (per >= 3 ? idx - 1 : idx)));
+    let sc = startFor(-1);
+    for (const ev of AN.keyOrder) { if (ev.t > t) break; sc = lerp(sc, startFor(ev.i), cl01(prog(SPR.TYPE, ev.t, t))); }
+    const hs = rows.map((R, i) => lerp(R.Ls.H, R.Lb.H, act[i]));
+    const Y = [0]; for (let i = 0; i < n; i++) Y.push(Y[i] + hs[i] + Z.gap);
+    const at = x => { const fl = Math.floor(x), fr = x - fl; return lerp(Y[Math.min(n, fl)], Y[Math.min(n, fl + 1)], fr); };
+    const off = at(sc), total = at(Math.min(n, sc + per)) - off - Z.gap;
+    const top0 = (AN.innerH - total) / 2;
+    const yOf = i => Y[i] - off + top0;
+    const visOf = i => cl01(1 - (sc - i)) * cl01(sc + per - i);
+    let fo = 0; const fi = AN.focus;
+    if (fi != null) { const R = rows[fi]; fo = cl01(prog(SPR.CARD, R.kt, t) * (1 - (R.nextKt == null ? 0 : prog(SPR.CARD, R.nextKt, t)))); }
+    let sw = 0, cyw = 0, colw = null;
+    const dk = ANIM === "A";
+    rows.forEach((R, i) => {
+      const a = act[i], kt = R.kt, landed = kt == null || t >= kt, tau = kt == null ? 99 : t - kt;
+      const sharp = kt == null ? 1 : prog(SPR.FADE, kt, t);
+      const vis = visOf(i);
+      let op = (ANIM === "B" ? 1 : 0.35 + 0.65 * cl01(sharp)) * (landed ? 0.85 + 0.15 * a : 1) * vis;
+      if (fi != null && i !== fi) op *= 1 - fo;
+      if (op < 0.002) { ws(R.el, "display", "none"); return; }
+      ws(R.el, "display", "block");
+      let y = yOf(i), scl = 1 + (ANIM === "B" ? 0.012 : 0.035) * a, tS = 1, hI = hs[i];
+      // focus (many become one): the others fade, this one travels to the centre and its words grow (never past the column)
+      if (fi === i && fo > 0) { tS = 1 + (Math.max(1, Math.min(1.16, AN.AW / Math.max(1, R.Lb.right))) - 1) * fo; hI = hs[i] * tS; y = lerp(y, AN.innerH / 2 - hI / 2, fo); }
+      const lift = ANIM === "B" ? 0 : -6 * a;
+      ws(R.el, "top", r1(y) + "px"); ws(R.el, "height", r1(hI) + "px"); ws(R.el, "opacity", String(r3(op)));
+      ws(R.el, "transform", `translateY(${r1(lift)}px) scale(${r3(scl)})`);
+      if (ANIM !== "B") ws(R.el, "filter", sharp < 0.999 ? `blur(${r1(8 * (1 - cl01(sharp)))}px)` : "none");
+      const padY = lerp(R.Ls.padY, R.Lb.padY, a) * tS;
+      ws(R.txt, "top", r1(padY) + "px"); ws(R.txt, "transform", tS > 1.0005 ? `scale(${r3(tS)})` : "none");
+      R.chunks.forEach((c, ci) => { const s0 = R.Ls.out[ci], s1 = R.Lb.out[ci]; if (!s0 || !s1) return;
+        const fc = lerp(s0[2], s1[2], a);
+        if (!c.jump) ws(c.el, "transform", `translate(${r1(lerp(s0[0], s1[0], a))}px,${r1(lerp(s0[1], s1[1], a))}px) scale(${r3(fc / c.bigF)})`);
+        else {   // a word that changes line: 2 copies, each riding its own layout at the current size, dissolving into each other
+          const kb = cl01((a - 0.2) / 0.6), eb = kb * kb * (3 - 2 * kb);
+          ws(c.el, "transform", `translate(${r1(s1[0] * fc / s1[2])}px,${r1(s1[1] * fc / s1[2])}px) scale(${r3(fc / c.bigF)})`);
+          ws(c.el2, "transform", `translate(${r1(s0[0] * fc / s0[2])}px,${r1(s0[1] * fc / s0[2])}px) scale(${r3(fc / c.bigF)})`);
+          ws(c.el, "opacity", String(r3(eb))); ws(c.el2, "opacity", String(r3(1 - eb)));
+          ws(c.el, "filter", eb < 0.999 ? `blur(${r1((1 - eb) * 6)}px)` : "none"); ws(c.el2, "filter", eb > 0.001 ? `blur(${r1(eb * 6)}px)` : "none");
+        }
+        if (ANIM === "B") { if (c.role === "stamp") { const k = landed ? nrm(SP.THUMP, tau - 0.12) : 0; ws(c.inner, "opacity", String(r3(k))); ws(c.inner, "transform", `rotate(-4deg) scale(${r3(1.28 - 0.28 * k)})`); }
+          else { ws(c.tx, "opacity", String(r3(cl01(sharp)))); ws(c.sk, "opacity", String(r3(1 - cl01(sharp))));
+            if (c.el2) { ws(c.tx2, "opacity", String(r3(cl01(sharp)))); ws(c.sk2, "opacity", String(r3(1 - cl01(sharp)))); } } } });
+      const col = R.col;
+      // the flip: the marker goes from outline to fill in 0.1 s on its word, in the said colour
+      const fk = landed ? (kt == null ? 1 : cl01(tau / 0.1)) : 0;
+      if (R.mk) {
+        const m = lerp(Z.MS, Z.MB, a) * tS, cy = padY + lerp(R.Ls.mkC, R.Lb.mkC, a) * tS;
+        ws(R.mk, "left", r1(Z.padL + (Z.MB - m) / 2) + "px"); ws(R.mk, "top", r1(cy - m / 2) + "px"); ws(R.mk, "width", r1(m) + "px"); ws(R.mk, "height", r1(m) + "px");
+        ws(R.mk, "background", fk > 0 ? rgba(col, fk) : "transparent"); ws(R.mk, "borderColor", fk > 0 ? col : pl.pend);
+        ws(R.mk, "boxShadow", ANIM === "B" || fk <= 0 ? "none" : `0 0 ${r1(10 + 22 * a)}px ${rgba(col, 0.3 + 0.5 * a)}`);
+      }
+      // the ping: a ring leaves the marker (or the number) when the item lands, 0 to 3x, fading over 0.5 s
+      if (R.ping) {
+        const on = landed && kt != null && tau < SP.PING.T, pp = on ? nrm(SP.PING, tau) : 0;
+        if (!R.mk) { const n0 = R.Ls.hero, n1 = R.Lb.hero; const hx = lerp(n0[0], n1[0], a) + lerp(n0[2], n1[2], a) / 2, hy = lerp(n0[1], n1[1], a) + lerp(n0[3], n1[3], a) / 2, d = 70;
+          ws(R.ping, "left", r1(hx - d / 2) + "px"); ws(R.ping, "top", r1(hy - d / 2) + "px"); ws(R.ping, "width", d + "px"); ws(R.ping, "height", d + "px"); }
+        ws(R.ping, "opacity", on ? String(r3(0.9 * (1 - pp))) : "0"); ws(R.ping, "transform", `scale(${r3(1 + 2 * pp)})`);
+      }
+      // the landing: a bloom 0 to 40 px in 0.15 s that decays over 0.6 s, plus a resting glow while active (A); the lift card (C);
+      // the tint revealed by the scan line (B)
+      const bloom = landed && kt != null ? (tau < SP.BLOOM.T ? 40 * nrm(SP.BLOOM, tau) : 40 * (1 - nrm(SP.DECAY, tau - SP.BLOOM.T))) : 0;
+      if (ANIM === "A") {
+        const gl = bloom + 14 * a;
+        ws(R.bg, "boxShadow", a <= 0.001 && bloom <= 0.05 ? "none" : `inset 0 0 0 ${r1(1 + 2 * a)}px ${rgba(col, Math.max(a, bloom / 40))}, 0 0 ${r1(gl)}px ${r1(gl * 0.3)}px ${rgba(col, 0.22 + 0.33 * (bloom / 40))}`);
+      } else if (ANIM === "C") {
+        const k = Math.max(a, bloom / 40);
+        ws(R.bg, "background", a > 0.001 ? rgba("#FFFFFF", a) : "transparent");
+        ws(R.bg, "boxShadow", k <= 0.001 ? "none" : `inset 0 0 0 ${r1(3 * a)}px ${rgba(col, a)}, 0 0 0 ${r1(6 * a)}px ${rgba(col, 0.14 * a)}, 0 0 ${r1(bloom + 10 * a)}px ${rgba(col, 0.42 * k)}, 0 ${r1(14 * a)}px ${r1(30 * a)}px rgba(28,28,30,${r3(0.10 * a)})`);
+        if (R.hair) ws(R.hair, "opacity", String(r3(i < n - 1 ? (1 - a) * (1 - act[i + 1]) : 0)));
+      } else {
+        const scanP = kt == null ? 1 : landed ? nrm(SP.SCAN, tau) : 0;
+        ws(R.bg, "background", rgba(col, R.colour ? 0.13 : 0.07)); ws(R.bg, "borderColor", rgba(col, 0.28 + 0.32 * a));
+        ws(R.bg, "clipPath", `inset(0 0 ${r1((1 - scanP) * 100)}% 0 round 14px)`);
+      }
+      // the count: 0 to the said number over 0.6 s on its word, then an underline draws (0.2 s) and one light flash
+      if (R.it.num && R.iNum >= 0) {
+        const c = R.chunks[R.iNum]; const k = kt == null ? 1 : landed ? nrm(SP.CNT, tau) : 0;
+        wtx(c.tx, fmtNum(R.it.num, k));
+        const b0 = R.Ls.out[R.iNum], b1 = R.Lb.out[R.iNum]; const fN = lerp(b0[2], b1[2], a), nx = lerp(b0[0], b1[0], a), ny = lerp(b0[1], b1[1], a), nw = c.w100 * fN / 100;
+        const ulp = kt == null ? 1 : landed ? nrm(SP.UL, tau - SP.CNT.T) : 0;
+        ws(R.ul, "transform", `translate(${r1(nx)}px,${r1(ny + AN.MET.num.bl * fN + 0.07 * fN)}px) scaleX(${r3(ulp)})`); ws(R.ul, "width", r1(nw) + "px"); ws(R.ul, "height", r1(Math.max(5, 0.045 * fN)) + "px");
+        ws(R.ul, "opacity", String(r3(a)));
+        if (R.flash) { const ft = tau - SP.CNT.T, on = landed && kt != null && ft >= 0 && ft < SP.FLASH.T;
+          ws(R.flash, "opacity", on ? String(r3(0.7 * (1 - nrm(SP.FLASH, ft)))) : "0");
+          ws(R.flash, "transform", `translate(${r1(nx - nw * 0.3)}px,${r1(ny - fN * 0.3)}px)`); ws(R.flash, "width", r1(nw * 1.6) + "px"); ws(R.flash, "height", r1(fN * 1.6) + "px"); }
+      }
+      if (R.track) {
+        const fp = kt == null ? 1 : landed ? nrm(SP.CNT, tau) : 0;
+        ws(R.track, "top", r1(lerp(R.Ls.trackY, R.Lb.trackY, a)) + "px"); ws(R.track, "height", r1(lerp(R.Ls.th, R.Lb.th, a)) + "px");
+        ws(R.fill, "transform", `scaleX(${r3(fp)})`);
+      }
+      // the ring: a hand-drawn loop around the item that is the point, drawn 0.3 s after it lands
+      if (R.ring) {
+        const h0 = R.Ls.hero, h1 = R.Lb.hero, hx = lerp(h0[0], h1[0], a), hy = lerp(h0[1], h1[1], a), hw = lerp(h0[2], h1[2], a), hh = lerp(h0[3], h1[3], a);
+        const p = landed ? nrm(SP.DRAW, tau - 0.3) : 0;
+        ws(R.ring, "transform", `translate(${r1(hx - 30)}px,${r1(hy - 18)}px)`); ws(R.ring, "width", r1(hw + 60) + "px"); ws(R.ring, "height", r1(hh + 36) + "px");
+        ws(R.ringPath, "strokeDashoffset", String(r1(100 * (1 - p)))); ws(R.ring, "opacity", p > 0 ? String(r3(0.5 + 0.5 * a)) : "0");
+      }
+      if (a > 0) { const cyy = y + lift + padY + lerp(R.Ls.mkC, R.Lb.mkC, a); sw += a; cyw += a * cyy; colw = colw ? mixHex(colw, col, a / Math.max(sw, 1e-6)) : col; }
+    });
+    // the rail (timeline) and the arrows (scene): each segment draws down to its item on that item's word
+    AN.conns.forEach(cn => {
+      const i = cn.i, Ra = rows[i - 1], Rb = rows[i];
+      const ma = lerp(Z.MS, Z.MB, act[i - 1]), mb = lerp(Z.MS, Z.MB, act[i]);
+      const ya = yOf(i - 1) + lerp(Ra.Ls.padY, Ra.Lb.padY, act[i - 1]) + lerp(Ra.Ls.mkC, Ra.Lb.mkC, act[i - 1]) + ma / 2 + 8;
+      const yb = yOf(i) + lerp(Rb.Ls.padY, Rb.Lb.padY, act[i]) + lerp(Rb.Ls.mkC, Rb.Lb.mkC, act[i]) - mb / 2 - (AN.kind === "scene" ? 20 : 8);
+      const len = Math.max(0, yb - ya), vv = Math.min(visOf(i - 1), visOf(i)) * (fi != null ? 1 - fo : 1);
+      const dp = Rb.kt == null ? 1 : nrm(SP.DRAW, t - (Rb.kt - 0.06));
+      const colC = AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}";
+      ws(cn.el, "left", r1(Z.padL + Z.MB / 2 - 3) + "px"); ws(cn.el, "top", r1(ya) + "px"); ws(cn.el, "height", r1(len) + "px");
+      ws(cn.el, "transform", `scaleY(${r3(dp)})`); ws(cn.el, "opacity", String(r3(dp > 0 ? vv : 0))); ws(cn.el, "color", colC);
+      if (cn.ghost) { ws(cn.ghost, "left", r1(Z.padL + Z.MB / 2 - 3) + "px"); ws(cn.ghost, "top", r1(ya) + "px"); ws(cn.ghost, "height", r1(len) + "px"); ws(cn.ghost, "opacity", String(r3(vv * 0.2))); ws(cn.ghost, "color", AN.dark ? "#F4F5F6" : "#1C1C1E"); }
+    });
+    // the timeline's "now": a ring that travels down the rail to the item being said
+    if (AN.now) {
+      if (sw > 0.01) { const d = Z.MB + 26, cy = cyw / sw;
+        ws(AN.now, "left", r1(Z.padL + Z.MB / 2 - d / 2) + "px"); ws(AN.now, "top", r1(cy - d / 2) + "px"); ws(AN.now, "width", d + "px"); ws(AN.now, "height", d + "px"); ws(AN.now, "opacity", String(r3(cl01(sw)))); }
+      else ws(AN.now, "opacity", "0");
+    }
+    // B's scan line: it runs down the row that is landing and tints it as it passes
+    if (AN.scan) {
+      let si = -1, st = 0; rows.forEach((R, i) => { if (R.kt != null && t >= R.kt && t - R.kt < 0.5 && (si < 0 || R.kt > rows[si].kt)) { si = i; st = t - R.kt; } });
+      if (si < 0) ws(AN.scan, "opacity", "0");
+      else { const p = nrm(SP.SCAN, st), c = rows[si].col;
+        // 29 Oct (builder H, guest O's M1-animB r3: at 8.8 to 9.2 s the line travelled through 'Second reviewer: final' and
+        // read as a strike-through, the opposite of what she says): the line draws in left to right UNDER the row (its foot
+        // plus 4 px) and fades there, never crossing the words
+        ws(AN.scan, "top", r1(yOf(si) + hs[si] + 4) + "px"); ws(AN.scan, "transformOrigin", "0 50%"); ws(AN.scan, "transform", `scaleX(${r3(p)})`);
+        ws(AN.scan, "opacity", String(r3(st < 0.3 ? 1 : 1 - (st - 0.3) / 0.2)));
+        ws(AN.scan, "background", c); ws(AN.scan, "boxShadow", `0 0 18px ${rgba(c, 0.8)}, 0 -24px 40px ${rgba(c, 0.18)}`); }
+    }
+    return { y: AN.ins[0] + (sw > 0.01 ? cyw / sw : AN.innerH / 2), col: colw || (AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}"), k: cl01(sw) };
+  }
+  function docTime(t, env) {
+    const D = AN.drows;
+    let cur = null, prev = null;
+    for (const d of AN.dorder) { if (d.kt <= t) { prev = cur; cur = d; } }
+    // the camera glides from the paragraph said before to the one being said (0.7 s, no overshoot)
+    const yPrev = AN.docY(prev), yCur = AN.docY(cur);
+    const gp = cur ? nrm(SP.GLIDE, t - cur.kt + 0.06) : 0;
+    const rv = AN.reveal ? nrm(SP.REVEAL, t - AN.reveal.at) : 0;
+    const docTy = lerp(lerp(yPrev, yCur, gp), AN.reveal ? AN.reveal.y : 0, rv), docS = lerp(1, AN.reveal ? AN.reveal.s : 1, rv);
+    ws(AN.doc, "transform", `translateY(${r1(docTy)}px) scale(${r3(docS)})`);
+    if (AN.docHd) ws(AN.docHd, "transform", `translateY(${r1(-lerp(yPrev, yCur, gp) * (1 - rv))}px)`);
+    D.forEach(d => {
+      const landed = d.kt == null || t >= d.kt, tau = d.kt == null ? 99 : t - d.kt;
+      const a = d === cur ? 1 : 0;
+      const p = d.kt == null ? 1 : landed ? nrm(SP.SCAN, tau) : 0;
+      ws(d.para.tint, "background", rgba(d.col, 0.14)); ws(d.para.tint, "borderColor", rgba(d.col, landed ? 0.5 + 0.2 * a : 0));
+      ws(d.para.tint, "clipPath", `inset(0 0 ${r1((1 - p) * 100)}% 0 round 14px)`);
+      d.para.bars.forEach(b => ws(b, "background", landed && p > 0.5 ? rgba(d.col, 0.40) : "#E6E3DD"));
+      const k = landed ? nrm(SP.THUMP, tau - 0.15) : 0;
+      ws(d.tag, "opacity", String(r3(k)));
+      ws(d.tag, "transform", `translateY(-50%) ${d.stamp ? "rotate(-5deg) " : ""}scale(${r3((d.stamp ? 1.3 : 1.12) - (d.stamp ? 0.3 : 0.12) * k)})`);
+    });
+    // the scan line on the paragraph being tinted
+    if (cur && t - cur.kt < 0.5) { const st = t - cur.kt, p = nrm(SP.SCAN, st);
+      ws(AN.scan, "top", r1(cur.para.y + cur.para.h * p - 2) + "px"); ws(AN.scan, "opacity", String(r3(st < 0.3 ? 1 : 1 - (st - 0.3) / 0.2)));
+      ws(AN.scan, "background", cur.col); ws(AN.scan, "boxShadow", `0 0 18px ${rgba(cur.col, 0.8)}, 0 -24px 40px ${rgba(cur.col, 0.18)}`); }
+    else ws(AN.scan, "opacity", "0");
+    const yc = cur ? (cur.para.y + cur.para.h / 2) * docS + docTy : (AN.RB - AN.RT) / 2;
+    return { y: yc, col: cur ? cur.col : "{{ACCENT}}", k: cur ? 1 : 0 };
+  }
+  function cardTime(t, env) {
+    let curLine = null, lastKt = null;
+    AN.cl.forEach((c, i) => {
+      const T = Math.max(0.4, Math.min(2.4, c.len / 18));   // speaking pace, about 18 characters a second
+      const k = c.kt == null ? 1 : cl01((t - c.kt) / T);
+      let left = Math.round(c.len * k);
+      c.segs.forEach(s => { const m = Math.max(0, Math.min(s.tx.length, left)); left -= s.tx.length; wtx(s.ty, s.tx.slice(0, m)); wtx(s.re, s.tx.slice(m));
+        if (s.h) { const sp = c.kt == null ? 1 : nrm(SP.SWEEP, t - (c.kt + T + 0.05)); ws(s.sp, "backgroundSize", `${r1(sp * 100)}% 100%`); } });
+      if (c.kt != null && t >= c.kt && k < 1) curLine = c;
+      if (c.kt != null && t >= c.kt && (lastKt == null || c.kt > lastKt)) lastKt = c.kt;
+    });
+    if (curLine) { const k = cl01((t - curLine.kt) / Math.max(0.4, Math.min(2.4, curLine.len / 18))); let left = Math.round(curLine.len * k);
+      let seg = curLine.segs[curLine.segs.length - 1]; for (const s of curLine.segs) { if (left <= s.tx.length) { seg = s; break; } left -= s.tx.length; }
+      if (AN.cur.parentNode !== seg.sp || AN.cur.nextSibling !== seg.re) seg.sp.insertBefore(AN.cur, seg.re);
+      ws(AN.cur, "opacity", "1"); AN.S.push("cur" + AN.cl.indexOf(curLine)); }
+    else ws(AN.cur, "opacity", "0");
+    if (ANIM !== "B" && lastKt != null) { const tau = t - lastKt; const bloom = tau < SP.BLOOM.T ? 40 * nrm(SP.BLOOM, tau) : 40 * (1 - nrm(SP.DECAY, tau - SP.BLOOM.T));
+      const c = AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}"; ws(AN.cardBox, "boxShadow", bloom > 0.05 ? `0 0 ${r1(bloom)}px ${r1(bloom * 0.3)}px ${rgba(c, 0.45)}` : "none"); }
+    return { y: (AN.RB - AN.RT) / 2, col: AN.dark ? "{{ACCENT}}" : "{{ACCENT_DARK}}", k: lastKt != null ? 1 : 0 };
+  }
+
+  // 29 Oct (builder G, guest S's F3 r3: no credit on any frame, the last 6 s were the host's introduction, where the credit
+  // is off): the credit's 6 s end where the introduction starts, on the guest's own last seconds; the short's end otherwise
+  // 29 Oct (builder H, guest E's M2-animA r3): where the guest last speaks before the introduction (P.credit_end), when sent
+  function creditEnd() { if (P.credit_end != null && P.credit_end > 1) return Math.min(+P.credit_end, P.duration); return (P.intro_start != null && P.intro_start > 1) ? Math.min(+P.intro_start, P.duration) : P.duration; }
+  window.setup = async function (payload) {
+    // fonts load lazily on first use, so measure nothing before they are in
+    await Promise.all(['400 50px "DM Serif Display"', '700 50px "Montserrat"', '900 50px "Inter"', '800 50px "Inter"', '400 26px "Menlo"'].map(f => document.fonts.load(f)));
+    Object.assign(P, payload);
+    document.body.className = P.look || "none";
+    ANIM = animWanted(); if (ANIM) await animPre();
+    if (P.look === "ig_native") return igSetup();
+    const g = GROUND[P.look] || GROUND.none, fg = FG[P.look] || FG.none, acc = ACC[P.look] || ACC.none;
+    const fd = FADE[P.look] || g;
+    document.documentElement.style.setProperty("--ground", g);
+    document.documentElement.style.setProperty("--fade", fd);
+    document.documentElement.style.setProperty("--fade-70", hex2rgba(fd, 0.72));
+    document.documentElement.style.setProperty("--fg", fg);
+    document.documentElement.style.setProperty("--accent", acc);
+    document.documentElement.style.setProperty("--mono", fg);
+    if (ANIM) animVars();
+    q("#eyebrow-l").textContent = P.eyebrow || "";
+    q("#mark").style.display = P.look === "whiteboard" ? "block" : "none";
+    const sub = q("#sub"); sub.innerHTML = "";
+    buildTitle();
+    if (P.pov_line || P.held_top || (P.band_text && P.band_text !== P.title)) {
+      const txt = P.pov_line || P.held_top || P.band_text;
+      // the format's own line lives in its own band under the title (y 520 to about 630) and is never dropped
+      // (27 Oct: it was deleted whenever a 2-line title pushed it past 506, so held-line, claim-band and pov-bit all
+      // rendered as the bare title short); the check reads sub_bottom and sub_overflow
+      sub.textContent = txt; sub.style.display = "block"; sub.style.top = Math.max(520, Math.round(P._titleBottom + 18)) + "px";
+      let fs = 44; sub.style.fontSize = fs + "px";
+      while (fs > 44 && sub.getBoundingClientRect().height > 2 * fs * 1.15) { fs -= 2; sub.style.fontSize = fs + "px"; }   // floor 44 (cause 5)
+      P._subOverflow = sub.getBoundingClientRect().bottom > 634;
+      P._titleBottom = sub.getBoundingClientRect().bottom; P._subMode = P.pov_line ? "hook" : "always";
+    }
+    buildGraphic();
+    if (ANIM) animBuild(); else lookWindowsInit();
+    if (P.ig_between) return igSetup();   // 28 Oct (polish): the Instagram stickers carry the title and the captions
+    const tb = q("#title").getBoundingClientRect();
+    return Object.assign({ title_top: tb.top, title_bottom: tb.bottom, title_size: P._titleSize, title_overflow: P._titleOverflow,
+             sub_bottom: sub.textContent ? sub.getBoundingClientRect().bottom : null, sub_overflow: !!P._subOverflow, sub_text: sub.textContent || "",
+             screen_hole: P._screen_hole || null }, typeMin());
+  };
+
+  // ---- time
+  let creditLaid = null;
+  function layCredit() {
+    // (guest C's F2): one line, shrunk to fit its box; (builder A, cause 5: guest U's credit shrank to 40 px): the
+    // floor is 44 px, and a credit that does not fit at 44 breaks onto 2 lines at its dot ('Guest Name' /
+    // 'Their Firm LLC'); on the drawn looks its foot sits at 326, over the title (from 332), never on the face panel
+    const c = q("#credit2"); const ig = P.look === "ig_native" || !!P.ig_between;
+    c.style.display = "block"; c.style.whiteSpace = "nowrap"; c.textContent = P.credit || "";
+    let fs = ig ? 60 : 48; c.style.fontSize = fs + "px";
+    while (fs > 44 && c.scrollWidth > c.clientWidth) { fs -= 2; c.style.fontSize = fs + "px"; }
+    if (c.scrollWidth > c.clientWidth) {
+      const parts = String(P.credit || "").split(/\s*[·|]\s*/);
+      c.innerHTML = parts.length > 1 ? escapeHtml(parts[0]) + "<br>" + escapeHtml(parts.slice(1).join(" · ")) : escapeHtml(P.credit || "");
+      c.style.whiteSpace = "normal"; fs = 44; c.style.fontSize = fs + "px";
+    }
+    // 28 Oct (polish, guest O's option D: "both of the titles at the top seem a little too low"): the title now sits from y 260,
+    // and the credit takes the title's own box in the last 6 s (the title fades under it), as the tutorial look does
+    if (!ig) { c.style.top = "260px"; }
+    const r = c.getBoundingClientRect();
+    // the box of the ink itself (the line boxes), for the pipeline's credit-against-face check
+    const rg = document.createRange(); rg.selectNodeContents(c); const rr = rg.getBoundingClientRect();
+    creditLaid = { fs, box: [Math.round(rr.left), Math.round(r.top), Math.round(rr.right), Math.round(r.bottom)] };
+    c.style.display = "none";
+    return creditLaid;
+  }
+  function creditTime(t) {
+    const c = q("#credit2"); const on = !!P.credit && P.duration > 0 && t >= Math.max(0, creditEnd() - 6.0) && t < creditEnd();
+    if (on && !creditLaid) layCredit();
+    c.style.display = on ? "block" : "none";
+    if (P.look !== "ig_native" && !P.ig_between) { q("#title").style.opacity = on ? "0" : "1"; }   // the credit in the title's place (28 Oct)
+    const mk = q("#mark"); if (mk && P.look !== "ig_native") mk.style.visibility = on ? "hidden" : "";   // the credit takes the mark's corner of the band
+    return on ? 1 : 0;
+  }
+  // (builder A, cause 5): the smallest font this page set on any text of ours but the captions (the title, the sub,
+  // the graphic, the stickers, the credit), and where, for the pipeline's `graphic_type_ok` (44 px or more)
+  function typeMin() {
+    let min = null, where = null;
+    const sel = "#title .w, #sub, #graphic *, #anim *, #ig-title .stk, #ig-callout .stk, #ig-list .stk";
+    const consider = (e, fsOverride) => {
+      const own = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+      if (!own) return;
+      const fs = fsOverride || parseFloat(getComputedStyle(e).fontSize);
+      if (min == null || fs < min) { min = fs; where = (e.id || e.className || e.tagName) + ": " + e.textContent.trim().slice(0, 40); }
+    };
+    document.querySelectorAll(sel).forEach(e => { if (e.closest("#graphic") && getComputedStyle(q("#graphic")).display === "none") return; consider(e); });
+    if (P.look !== "ig_native" && q("#sub").textContent && getComputedStyle(q("#sub")).display === "none") { /* the sub shows from the answer on */ }
+    if (P.credit) { const cl = creditLaid || layCredit(); if (min == null || cl.fs < min) { min = cl.fs; where = "credit2: " + P.credit; } }
+    return { type_min: min, type_min_where: where, credit_box: P.credit ? (creditLaid || layCredit()).box : null };
+  }
+  // 2 Nov 2026 (the creator on a later set: "the title hook doesn't match ... change the top sentence to ... and then
+  // continue"): `title_swaps` [[out s, title, accent], ...] in the payload swaps the title sentence at those times, on
+  // the drawn looks (buildTitle) and the Instagram look (the title stickers); the swap index rides on the frame signature
+  let SWAP_I = -1;
+  function igBuildTitle() {
+    const ig = P.ig || {}; const T = q("#ig-title");
+    const tWords = igTitleCase(P.title).split(/\s+/).filter(Boolean);
+    if (ig.emoji && tWords.length) tWords[0] = ig.emoji + "\u00a0" + tWords[0];
+    stickerLines(T, tWords.join(" "), 56, 44, 856, 2);
+  }
+  function applyTitleSwaps(t) {
+    const sw = P.title_swaps || []; let i = -1;
+    for (let k = 0; k < sw.length; k++) if (t >= sw[k][0]) i = k;
+    if (i === SWAP_I) return i;
+    SWAP_I = i;
+    if (!P._title0) P._title0 = [P.title, P.title_accent || ""];
+    if (i < 0) { P.title = P._title0[0]; P.title_accent = P._title0[1]; } else { P.title = sw[i][1]; P.title_accent = sw[i][2] || ""; }
+    if (P.look === "ig_native") igBuildTitle(); else buildTitle();
+    return i;
+  }
+  window.setTime = function (t) {
+    const si = applyTitleSwaps(t);
+    return setTimeInner(t) + ",sw" + si;
+  };
+  function setTimeInner(t) {
+    const cr = creditTime(t);
+    if (P.look === "ig_native") return igTime(t) + ",c" + cr;
+    if (ANIM) return animTime(t) + ",c" + cr;
+    const S = window.SPR;
+    const hookEnd = P.hook_end == null ? -1 : P.hook_end;
+    // 29 Oct (the build log, row 227, builder G's open point): the drawn looks read the stacked hook from hook_start too; before it (the
+    // aha opener) the frame is the answer's, as the pipeline cuts it
+    const hookStart = P.hook_start || 0;
+    const inHook = hookEnd > 0 && t >= hookStart && t < hookEnd;
+    const L = P.layout;
+    // ground height: hook top band, then the answer top band on a CARD spring at the cut
+    let gh;
+    if (hookEnd <= 0 || (hookStart > 0 && t < hookStart)) gh = L.answer.top_band_h;
+    else if (inHook) gh = L.hook.top_band_h;
+    else { const p = prog(S.CARD, hookEnd, t); gh = L.hook.top_band_h + (L.answer.top_band_h - L.hook.top_band_h) * p; }
+    // 27 Oct (card only while it moves, the creator's ruling): with card_windows the card's band and the graphic are up only
+    // inside a window, springing in over the CARD spring at its start and out over 0.3 s at its end; between windows the
+    // band is the face-only band (layout.answer_full) and the graphic is gone
+    let wp = 1;
+    const CW = P.card_windows || [];
+    if (CW.length && !inHook && L.answer_full) {
+      wp = 0;
+      // (builder A, cause 4): in and out over the same 0.3 s as the footage's crossfade (the window opens where it starts)
+      const ss = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+      for (const w of CW) { if (t >= w[0] && t < w[1]) { wp = ss((t - w[0]) / 0.3); break; } if (t >= w[1] && t < w[1] + 0.3) { wp = Math.max(wp, 1 - ss((t - w[1]) / 0.3)); } }
+      const fullBand = L.answer_full.top_band_h; gh = fullBand + (L.answer.top_band_h - fullBand) * wp;
+    }
+    q("#ground").style.height = Math.round(gh) + "px";
+    const gap = q("#gap");
+    if (inHook) { const [hy, hh] = L.hook.host; const [gy] = L.hook.guest; gap.style.top = (hy + hh) + "px"; gap.style.height = Math.max(0, gy - hy - hh) + "px"; gap.style.display = "block"; }
+    else gap.style.display = "none";
+    // the title is whole from frame 0: the first frame is the designed title frame (the build brief's checks)
+    titleWords.forEach((w) => { w.style.opacity = 1; w.style.transform = "none"; });
+    const sub = q("#sub");
+    if (sub.textContent) sub.style.display = inHook ? "none" : "block";   // the sub's band (520 to 630) is under the hook's host panel, so it shows from the answer on
+    // graphic: hidden in the hook, drawn in on MASK after the cut, rows light on their key
+    const G = q("#graphic"), src = q("#source");
+    const gStart = hookEnd > 0 ? hookEnd : 0.0;
+    const gp = prog(S.MASK, gStart + 0.05, t);
+    G.style.opacity = inHook ? 0 : 1; src.style.opacity = inHook ? 0 : gp;
+    // 27 Oct (pass 2, set AB): a 2-line sub collided with the credit (S5, guest E's F1): the credit sits under the sub's
+    // measured bottom; on the duo (story-proof) the credit shows between the 2 faces (wave1-03 had none)
+    const aTopNow = L.answer.top_band_h;
+    if (sub.textContent && !inHook) { const sb = sub.getBoundingClientRect().bottom; src.style.top = Math.max(aTopNow - 40, Math.round(sb + 6)) + "px"; }
+    else if (!P.story_proof) src.style.top = (aTopNow - 40) + "px";
+    // (pass 3, guest D's F1: the credit between the 2 faces lay across the host's shirt): on the duo the credit sits
+    // under the title when the band has room, else on the host panel's top edge as a chip on the ground colour
+    if (P.story_proof) { const hy = L.hook.host[0]; const tb = Math.round(P._titleBottom || 0);
+      if (tb + 8 + 34 <= hy) { src.style.top = (tb + 8) + "px"; src.classList.remove("chip"); } else { src.style.top = (hy + 10) + "px"; src.classList.add("chip"); }
+      src.style.opacity = 1; }
+    G.style.clipPath = inHook ? "inset(0 100% 0 0)" : `inset(0 ${Math.round((1 - gp) * 100)}% 0 0)`;
+    if (CW.length && !inHook) { G.style.opacity = wp; G.style.transform = `translateY(${Math.round((1 - wp) * 40)}px)`; src.style.opacity = Math.min(src.style.opacity || 1, wp); }
+    let lit = 0; const sig = [Math.round(gh), inHook ? 1 : 0, Math.round(gp * 60), Math.round(wp * 60)];
+    // 29 Oct (builder H, guest C's M2 r3: the drawn title held to 47 s): the title leaves at P.title_until (28 s on every
+    // short, never inside the stacked question) over 0.25 s, as on the Instagram looks; the credit still takes its box
+    if (P.title_until != null && !inHook && t >= P.title_until) { const k = Math.min(1, (t - P.title_until) / 0.25); const T0 = q("#title");
+      T0.style.opacity = Math.min(parseFloat(T0.style.opacity === "" ? "1" : T0.style.opacity), 1 - k).toFixed(3); sig.push("tu" + Math.round(k * 40)); }
+    // the window: the earliest rows slide off once more than PAGE have lit
+    if (page && rows.length > page.per) {
+      let litN = 0; rows.forEach((row, i) => { const kt = rowKeyTimes[i]; if (kt != null && t >= kt) litN = i + 1; });
+      const start = Math.max(0, litN - page.per); sig.push(start);
+      rows.forEach((row, i) => { const vis = i >= start && i < start + page.per; row.style.display = vis ? "" : "none"; if (vis) row.style.top = ((i - start) * page.rh + (page.off || 0)) + "px"; });
+    }
+    rows.forEach((row, i) => {
+      const kt = rowKeyTimes[i]; const p = kt == null ? 1 : prog(S.MASK, kt, t); const drawn = kt == null ? 1 : prog(S.FADE, kt + 0.05, t);
+      const pending = kt != null && t < kt; if (!pending && kt != null) lit++;
+      row.className = "row " + (pending ? "pending" : "lit");
+      const dimEl = row.querySelectorAll(".idx, .lab, .box, .dot");
+      dimEl.forEach(e => e.style.opacity = pending ? 0.32 : (0.32 + 0.68 * drawn));
+      const tint = row.querySelector(".tint"); if (tint) tint.style.transform = `scaleX(${pending ? 0 : p})`;
+      const hair = row.querySelector(".hair"); if (hair) hair.style.transform = `scaleX(${gp})`;
+      const path = row.querySelector(".box path"); if (path) path.style.strokeDashoffset = pending ? 50 : 50 * (1 - prog(S.MASK, (kt || 0) + 0.1, t));
+      const idx = row.querySelector(".idx"); if (idx) idx.style.color = pending ? "" : "var(--accent)";
+      const box = row.querySelector(".box"); if (box) box.style.borderColor = pending ? "" : "var(--accent)";
+      const dot = row.querySelector(".dot"); if (dot) { dot.style.background = pending ? "transparent" : "var(--accent)"; dot.style.borderColor = pending ? "" : "var(--accent)"; }
+      // (pass 3, guest Z's 13 s and guest T's 4 s of blank panel): a pending whiteboard row shows its number, its outline and a dim label from frame 0
+      const num = row.querySelector(".num"); if (num) { num.style.borderColor = pending ? "" : "{{ACCENT_DARK}}"; num.style.background = pending ? "" : "{{ACCENT_DARK}}"; num.style.color = pending ? "" : "#fff"; num.style.opacity = pending ? 0.32 : drawn; }
+      const wob = row.querySelector(".wob"); if (wob) { const st = wob.querySelector(".stroke"), fl = wob.querySelector(".fill"); const len = parseFloat(st.style.strokeDasharray);
+        st.style.strokeDashoffset = pending ? 0 : len * (1 - prog(S.MASK, kt || 0, t)); fl.style.fillOpacity = pending ? 0 : 0.55 * drawn; st.style.stroke = pending ? "#1C1C1E" : "{{ACCENT_DARK}}"; st.style.opacity = pending ? 0.32 : 1;
+        const lab = row.querySelector(".lab"); if (lab) lab.style.opacity = pending ? 0.32 : drawn; }
+      sig.push(Math.round(p * 60), Math.round(drawn * 60));
+    });
+    // the ACTIVE chip (the latest key reached) is in the accent, the ones already said keep an accent outline, the rest wait dim
+    let active = -1; chips.forEach((c, i) => { const kt = rowKeyTimes[i]; if (kt != null && t >= kt) active = i; });
+    if (flow && chips.length > flow.perRow) {   // the scene's window
+      const start = Math.max(0, active - (flow.perRow - 1)); sig.push(start);
+      chips.forEach((chip, i) => { const vis = i >= start && i < start + flow.perRow; chip.style.display = vis ? "" : "none";
+        if (vis) { const x = (i - start) * (flow.cw + flow.gapx); chip.style.left = x + "px"; if (chip._arrow) { chip._arrow.style.left = (x + flow.cw + 6) + "px"; chip._arrow.style.display = (i - start < flow.perRow - 1 && i < chips.length - 1) ? "" : "none"; } }
+        else if (chip._arrow) chip._arrow.style.display = "none"; });
+    } else if (flow) { chips.forEach((chip, i) => { if (chip._arrow) chip._arrow.style.display = i < chips.length - 1 ? "" : "none"; }); }
+    if (actor && flow) {   // the actor rides to the active chip's centre on a UI spring
+      const start = chips.length > flow.perRow ? Math.max(0, active - (flow.perRow - 1)) : 0;
+      const cx = i => (i - start) * (flow.cw + flow.gapx) + flow.cw / 2;
+      let ax = cx(Math.max(0, start));
+      if (active >= 0) { const kt = rowKeyTimes[active]; const p = kt == null ? 1 : prog(S.UI, kt, t); const prev = Math.max(start, active - 1); ax = cx(prev) + (cx(active) - cx(prev)) * p; }
+      actor.style.left = Math.round(ax - 15) + "px"; actor.style.opacity = active >= 0 ? 1 : 0.4; sig.push(Math.round(ax));
+    }
+    chips.forEach((chip, i) => {
+      const kt = rowKeyTimes[i]; const pending = kt != null && t < kt; const p = kt == null ? 1 : prog(S.UI, kt, t);
+      const isActive = i === active || (kt == null && active < 0);
+      chip.style.opacity = pending ? 0.3 : 1; chip.style.transform = `scale(${pending ? 0.96 : 0.96 + 0.06 * p})`;
+      chip.style.background = pending ? "#FFFFFF" : (isActive ? "{{ACCENT_DARK}}" : "#FFFFFF");
+      chip.style.color = pending ? "" : (isActive ? "#FFFFFF" : "{{ACCENT_DARK}}"); chip.style.borderColor = pending ? "" : "{{ACCENT_DARK}}";
+      if (chip._arrow) chip._arrow.style.opacity = pending ? 0.25 : 1;
+      sig.push(Math.round(p * 60), isActive ? 1 : 0);
+    });
+    cardLines.forEach((d, i) => { const kt = rowKeyTimes[i]; const p = kt == null ? 1 : prog(S.UI, kt, t); const pending = kt != null && t < kt;
+      d.style.opacity = pending ? 0.12 : 0.12 + 0.88 * p; d.style.transform = `translateY(${(1 - p) * 8}px)`; sig.push(Math.round(p * 60)); });
+    if (tl) {
+      tl.line.style.transform = `scaleX(${gp})`;
+      let lastX = tl.xs[0], lastI = -1;
+      if (tl.items.length > tl.slots) {   // the timeline's window: the latest PAGE events on the line
+        let litN = 0; tl.items.forEach((it, i) => { const kt = rowKeyTimes[i]; if (kt != null && t >= kt) litN = i + 1; });
+        const start = Math.max(0, litN - tl.slots); sig.push(start);
+        tl.items.forEach((it, i) => { const vis = i >= start && i < start + tl.slots; it.dot.style.display = vis ? "" : "none"; it.lab.style.display = vis ? (it.side ? "flex" : "") : "none";
+          if (vis) { const x = tl.slotX(i - start); tl.xs[i] = x; it.dot.style.left = (x - 17) + "px"; it.lab.style.left = (x - tl.lw / 2) + "px"; } });
+      }
+      tl.items.forEach((it, i) => {
+        const kt = rowKeyTimes[i]; const pending = kt != null && t < kt; const p = kt == null ? 1 : prog(S.UI, kt, t);
+        if (it.dot.style.display === "none") { sig.push(0); return; }
+        it.dot.style.opacity = pending ? 0.25 : 1; it.dot.style.background = pending ? "" : "var(--accent)"; it.dot.style.borderColor = pending ? "" : "var(--accent)";
+        it.dot.style.transform = `scale(${pending ? 0.8 : 0.8 + 0.35 * p})`;
+        it.lab.style.opacity = pending ? 0 : p; it.lab.style.transform = `translateY(${(1 - p) * 10}px)`;
+        if (!pending) { lastI = i; }
+        sig.push(Math.round(p * 60));
+      });
+      if (lastI >= 0) { const kt = rowKeyTimes[lastI]; const p = kt == null ? 1 : prog(S.UI, kt, t); const prevX = lastI > 0 ? tl.xs[lastI - 1] : tl.xs[0]; lastX = prevX + (tl.xs[lastI] - prevX) * p; }
+      tl.pin.style.left = Math.round(lastX - 16) + "px"; tl.pin.style.opacity = lastI >= 0 ? 1 : 0.35; sig.push(Math.round(lastX));
+    }
+    bars.forEach((b, i) => { const kt = rowKeyTimes[i]; const p = kt == null ? 1 : prog(S.CARD, kt, t); b.fill.style.transform = `scaleX(${p})`; b.val.style.opacity = p; b.el.style.opacity = kt != null && t < kt ? 0.35 : 1; sig.push(Math.round(p * 60)); });
+    q("#count").textContent = "";
+    sig.push("c" + cr);
+    if (AN.lookWins) lookWindowsTime(t, sig);
+    return sig.join(",");
+  };
+})();
+</script>
+</body>
+</html>

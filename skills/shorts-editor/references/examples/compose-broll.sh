@@ -34,7 +34,7 @@ ffmpeg -y -i "$CUT" -i "$CARDS" -framerate 12 -i "$CAPT/%05d.png" -i broll/repor
  -map "[final]" -map 0:a -c:v libx264 -preset medium -crf 21 -pix_fmt yuv420p -c:a aac -b:a 160k -shortest "$OUT.noaudio.mp4"
 
 ffmpeg -y -i "$OUT.noaudio.mp4" -i "$MUSIC" -filter_complex \
-"[0:a]loudnorm=I=-16:TP=-1.5:LRA=11[vo];[1:a]atrim=start=4,asetpts=PTS-STARTPTS,volume=$MUSIC_VOL,afade=in:st=0:d=0.5,afade=out:st=$FOUT:d=2[m];[vo][m]amix=inputs=2:duration=first:normalize=0[a]" \
+"[0:a]loudnorm=I=-14:TP=-1.5:LRA=11[vo];[1:a]atrim=start=4,asetpts=PTS-STARTPTS,volume=$MUSIC_VOL,afade=in:st=0:d=0.5,afade=out:st=$FOUT:d=2[m];[vo][m]amix=inputs=2:duration=first:normalize=0[a]" \
 -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$OUT"
 rm -f "$OUT.noaudio.mp4"
 echo "DONE -> $OUT"

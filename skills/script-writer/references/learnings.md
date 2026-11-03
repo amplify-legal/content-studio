@@ -203,6 +203,44 @@ not a gate; the launch step checks each promise against the description itself.
 
 ---
 
+## A hook carries stakes, and it passes the hardest critic before the creator sees it
+
+**What happened.** 2 machine hooks reached the creator for a long tutorial. Their words: *"Both
+those hooks suck. They carry no stakes at all."* The person who had stopped them on earlier
+hooks always asked the same 2 questions: why are we even talking about this, and what is
+important about it. The machine had not asked them.
+
+**The rule.** A hook carries stakes in its first 2 sentences: what the viewer loses by not
+watching, or what is at risk in the story on screen. Showing the output first is the picture; the
+stakes are the words over it. Before a hook reaches the creator, a separate adversarial pass takes
+on the persona of the toughest reviewer of past hooks (the questions they asked on earlier review
+calls, and the hook lines in `content/taste/lessons.md` and `content/taste/cut-feedback/`) and
+iterates the hook until it answers them. Keep the pass log (hook, objection, rewrite) beside the
+script so the next writer learns from it. And the script itself is bullets, not prose: no
+connective prose, no restating the plan, no sentence that only explains why a beat exists. The
+written hook stays word for word.
+
+**Cost.** A script round thrown back whole.
+
+---
+
+## No time-to-result number in a hook unless the creator writes it
+
+**What happened.** A hook carried "in under 60 minutes". The creator struck it 2 days later:
+an exact time promise is the kind of claim a viewer holds you to, and the reviewer's standing
+advice had been no exact numbers in hooks.
+
+**The rule.** A hook never carries an "in under N minutes", "in N hours" or "N times faster"
+claim written by the machine, and a qualifier ("once the records are in") does not rescue it: the
+number comes out. What a hook may carry: the outcome, the pain, who it is for, authority, the
+stages, the guarantee. A measured number from a real run may be said inside the video where the
+run is on screen, never promised in the hook. If the creator writes a number into a hook, it is
+theirs and it stays.
+
+**Cost.** A hook rewritten after it had been approved.
+
+---
+
 ## No live date said on camera
 
 A date that will be stale by the time the video is watched turns the video into an expired ad.

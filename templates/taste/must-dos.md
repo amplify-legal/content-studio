@@ -16,6 +16,7 @@
 | 4 | **The right mic is the selected input**, checked in the input picker before the first take, every time. | <...> | Rule |
 | 5 | **The mic distance is checked before the take**, close enough that the room is not on the recording. Echo can only be fixed in post while nothing clips. | <...> | Rule |
 | 6 | **A long run is started before the take, so the camera never waits on it.** Anything over about 2 minutes runs before record, or is pre-run with the output ready to show. | <...> | Rule |
+| 6b | **The director's 7 questions are answered in the brief before the record** (how you want to come across, the goal, the one learning, what the viewer gets, why they should care, a free resource or not, an intro or straight in), and the frame is said back in 3 lines. The questions live in `director.md`. | <...> | Rule |
 
 ## B. The intro beats
 
@@ -61,8 +62,14 @@ The answer is a page, not a chat reply: pickups to shoot now, things that can be
 | 19 | **Every promise made on camera is a live link in the description, fetched and returning 200 in the launch session.** An open flag in a description file is not a gate. A promised resource that never appears reads as clickbait and costs trust. | <...> | Rule |
 | 20 | **Every frame is checked at full resolution before it can be posted**: faces of people who did not agree to appear, name labels, customer names, private UI behind the work. Cropping off a webcam column is often the whole fix. | <...> | Rule |
 | 21 | **The end screen carries the subscribe ask and the next video.** Nothing interrupts the take to ask. | <...> | Rule |
-| 22 | **Your own links open every description**, in a fixed order: <line 1, for example your profile link>, <line 2: the booking or resource link that matches what this video actually asks for, read off the transcript>, <line 3>. Then guest details, then 2 or 3 short paragraphs, then chapters. If the transcript's ask is unclear, ask. | <...> | <...> |
-| 23 | **Chapters, and the same chapter list everywhere** (description, any on-screen section bar). | <...> | <...> |
+| 22 | **The search phrase opens the description on lines 1 and 2, and your own links sit right under it.** The 2 phrase lines are plain sentences in your voice that say what the video teaches, line 1 carrying the video's search phrase and line 2 carrying it only where it fits a sentence (forcing it into both reads as phrase stuffing), with no link in them. Then your links in a fixed order: <for example your profile link>, <the booking or resource link that matches what this video actually asks for, read off the transcript>, <your site>. A video that promises "the first link below" on camera keeps that link first. Then guest details, then 2 or 3 short paragraphs, then chapters. If the transcript's ask is unclear, ask. Why the phrase goes first: the first lines are what search and the preview show (`search-visibility`, `reference/youtube-seo.md`); links-first is the older default and stays an option. | <...> | <...> |
+| 23 | **Chapters, and the same chapter list everywhere** (description, any on-screen section bar), the first one at 0:00. A starting default worth trying: a quiet section progress bar on every long video, one segment per chapter, the current one filling as it plays, built from the same chapter list so the two always agree. | <...> | <...> |
+
+## F. After it publishes
+
+| # | The must-do | Where it came from | Rule or guideline |
+|---|---|---|---|
+| 24 | **Every person the piece names, quotes or shows hears from you the day it goes live, with the links, so they can share it with their network.** One message per person per piece, never per platform, on the channel you already use with them. Why: a guest quoted in 3 pieces in 2 days was never told, and nothing in the plan could record whether they had been. | <...> | Rule |
 
 ## Not must-dos yet, yours to rule
 

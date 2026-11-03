@@ -13,11 +13,11 @@ Open Claude Code in the folder you do content work in (your project), and paste:
 > Install Content Studio into this project with me, one step at a time.
 >
 > 1. Clone `https://github.com/amplify-legal/content-studio.git` to `~/content-studio` (or `git pull` there if it already exists). Read its `START-HERE.md` and `SETUP.md` before doing anything else.
-> 2. Before you change anything, check what I already have: ffmpeg, ffprobe, node, python3 (3.10 or newer), yt-dlp, an existing `.claude/skills/` in this project, an existing `CLAUDE.md`, an existing `content/taste/` folder, and which of these keys are set in `.env` or my environment: ELEVENLABS_API_KEY, DEEPGRAM_API_KEY, MIXROUTE_API_KEY. Show me what is there and what is missing. Never print a key's value.
-> 3. Copy, following the table at the top of `SETUP.md`: `skills/*` into `.claude/skills/`, `scripts/*` into `scripts/`, `reference/*.md` into `content/reference/`, `reference/PRINCIPLES.md` into `content/PRINCIPLES.md` (only if I do not have one), `reference/frameworks/*` into `content/frameworks/`, `templates/taste/*` into `content/taste/` and `templates/brand.md` into `content/brand.md`. Use `cp -n` for anything under `content/taste/`, `content/brand.md` and `content/PRINCIPLES.md`, so nothing of mine is ever overwritten. If a skill folder of the same name already exists and differs, show me the difference and ask before replacing it.
+> 2. Before you change anything, check what I already have: ffmpeg, ffprobe, node, python3 (3.10 or newer), yt-dlp, Playwright with a Chrome or Chromium (optional), an existing `.claude/skills/` in this project, an existing `CLAUDE.md`, an existing `content/taste/` folder, and which of these keys are set in `.env` or my environment: ELEVENLABS_API_KEY, DEEPGRAM_API_KEY, MIXROUTE_API_KEY. Show me what is there and what is missing. Never print a key's value.
+> 3. Copy, following the table at the top of `SETUP.md`: `skills/*` into `.claude/skills/`, `scripts/*` into `scripts/`, `reference/*.md` into `content/reference/`, the `reference/edit-lab/` folder into `content/reference/edit-lab/`, `reference/PRINCIPLES.md` into `content/PRINCIPLES.md` (only if I do not have one), `reference/frameworks/*` into `content/frameworks/`, `templates/taste/*` (the `kinds/` folder included) into `content/taste/` `templates/brand.md` into `content/brand.md` and `routines/*.md` into `routines/`. Leave `examples/` in the clone: I copy an example pipeline into a video's folder when I need it (`SETUP.md` step 13b). Use `cp -n` for anything under `content/taste/`, `routines/`, `content/brand.md` and `content/PRINCIPLES.md`, so nothing of mine is ever overwritten. If a skill folder of the same name already exists and differs, show me the difference and ask before replacing it.
 > 4. Add the lines from `SETUP.md` step 5 to this project's `CLAUDE.md`, never to `~/.claude/CLAUDE.md`.
 > 5. Make sure `.env` is in this project's `.gitignore`.
-> 6. Run every self-test in `SETUP.md` step 13 and show me the output. Use `PYTHONDONTWRITEBYTECODE=1`.
+> 6. Run every self-test in `SETUP.md` step 13 and show me the output. Use `PYTHONDONTWRITEBYTECODE=1`. Run the page check's self-test only if Playwright is installed, and say plainly which tests you skipped and why.
 >
 > I **[do / don't]** want the video half (ffmpeg, node, transcription). I **[do / don't]** want media-gen, which spends money. Ask before installing any system package. Never delete anything: if something is in the way, tell me. Do not summarise the repo back to me.
 
@@ -79,6 +79,12 @@ No image key? Add: *"I have no image key, so give me the directions as briefs I 
 
 ---
 
+## 5b. Right before you record
+
+> Run `director` for **[the piece]**. The brief is at **[path]**. Ask me only what the brief does not already answer, one question at a time, print the must-dos that bear on this video, and write my answers into the brief as the frame before I turn the camera on.
+
+---
+
 ## 6. A long recording you have not touched
 
 > Use `long-form-editor` on `**[path to the recording]**`. Tell me which recording shape it is and show me a real frame with its true duration and dimensions. Before you transcribe, ask me for the names, companies, products and terms on this tape and pass them as key terms. Then run the privacy pass: sample any screen share at 1 frame per second at full resolution and list every face, name label and piece of private interface you find, with what you would crop, blur or freeze. Render nothing until I have seen that list. Then mark the moments worth keeping with one sentence each and stop. I am picking, not you.
@@ -90,6 +96,10 @@ For a podcast episode, add: *"Follow `content/reference/podcast-edit-runbook.md`
 ## 7. Making a short
 
 > Make a vertical short from `**[path to clip]**` with `shorts-editor`. Read `content/brand.md` for my colours and fonts. Transcribe with Scribe and this key-terms file: `**[path]**`. Run the safe-area and caption-size checks and `cut-review` before you show me anything.
+
+For a podcast or tutorial short, use this instead:
+
+> Read the "Before you build a short" section of `.claude/skills/shorts-editor/SKILL.md` and the files it names, in that order. Then copy `~/content-studio/examples/podcast-shorts-pipeline/` into `content/videos/**[set]**/pipeline/`, set up its `config.json` with me, and run its `--selftest`. My picks are **[the brief's picks list, or the timestamps]**. Write one spec per short, run `--plan` on each and show me the plans before anything renders. A checker that did not build a short reads it at full resolution before I see it.
 
 Expect a round or 2 of "tighten this pause, fix this word". **Say why each time.** The skill writes your correction into its own table, and that is how it compounds.
 
@@ -115,7 +125,7 @@ Expect a round or 2 of "tighten this pause, fix this word". **Say why each time.
 
 ## 11. One recording into many pieces
 
-> Run `content-waterfall` on `**[path to the finished video]**`. Plan the pieces per platform and show me the plan. Post nothing. Anything I write or pick stays exactly as I wrote or picked it.
+> Run `content-waterfall` on `**[path to the finished video]**`. Plan the pieces per platform and show me the plan, with the search pack (the searched phrase, chapters from 0:00, the description and tags) from `search-visibility`. Post nothing and change nothing live. Anything I write or pick stays exactly as I wrote or picked it.
 
 ---
 
@@ -137,4 +147,4 @@ Add this to any correction:
 
 ## 14. Updating
 
-> Run `git pull` in `~/content-studio`, show me what changed, then redo the copy from `SETUP.md` step 4. Never overwrite anything in `content/taste/`, `content/brand.md` or `content/PRINCIPLES.md`. If I edited a skill, show me the difference before replacing it.
+> Run `git pull` in `~/content-studio`, read `CHANGELOG.md` and show me what changed, then redo the copy from `SETUP.md` step 4. Never overwrite anything in `content/taste/`, `content/brand.md` or `content/PRINCIPLES.md`. If I edited a skill, show me the difference before replacing it.

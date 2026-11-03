@@ -16,8 +16,9 @@ Same contract as captions.py: transparent PNG sequence at FPS, consumed by compo
 transcript of the ALREADY-CUT video. Patch transcriber typos in the JSON first (and, on a
 Deepgram transcript, turn spelled-out numbers into digits).
 
-Size: the default is 78, the caption floor (Montserrat 78px at 1080 wide = a capital H
-35px tall; check_caption_size.py gates it). A phrase that does not fit in 2 lines is
+Size: the default is 78, the caption floor (PIL sizes are the em: Montserrat at 78 draws a
+capital H 55px tall here, over the 47px floor check_caption_size.py gates; measured with PIL
+on both the variable and the static Bold face). A phrase that does not fit in 2 lines is
 shrunk to fit, and the script warns when that takes it under the floor, so you can
 re-cut the phrase rather than ship small type.
 

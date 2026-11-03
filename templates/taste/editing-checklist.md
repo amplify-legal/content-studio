@@ -16,10 +16,12 @@
 6. **Spoken options go on screen.** Whenever the speaker says "option A or option B" or "3 options", the options appear as a few words. Mechanical check: search the transcript for those phrases and confirm each has an on-screen counterpart.
 7. **On-screen text for quoted audio is 2 or 3 word phrases**, never one-word flashes.
 8. **No subscribe interruptions.** The ask lives on the end screen; the retention curve is the ask.
-9. **Calls to action match the brief.** Count and placement as the brief says. <Your rule on how many asks a video gets.>
+9. **Calls to action match the brief.** Count and placement as the brief says. A starting default: one call to action per video, placed between 30% and 40% of the runtime, never stacked. <Your rule on how many asks a video gets and where.>
 10. **Every resource named out loud is shown on screen**, and every on-camera promise has a live link in the description (see `must-dos.md`).
 11. **Every frame that will be posted is checked at full resolution** for faces of people who did not agree to appear, name labels, customer names, and private UI behind the work (sidebars, conversation titles, file paths).
 12. **The best part is in the cut, and reached fast.**
+13. **Every section boundary has a bridge.** A jump from one idea to the next with no spoken or shown transition fails, and so does a join where a removed section broke a count or a promise (see `editing-rules.md`).
+14. **Sync is checked against the original tape**, never against the previous cut (both can carry the same fault).
 
 ## Mine
 

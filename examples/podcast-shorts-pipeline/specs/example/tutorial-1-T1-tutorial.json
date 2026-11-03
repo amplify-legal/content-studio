@@ -1,0 +1,103 @@
+{
+  "_comment": "An INVENTED sidecar for tutorial_look.py, in the exact shape its loader reads. Every value is made up: a fictional screen recording of a notes app with a webcam box. A real sidecar is written from frames of your own recording pulled with ffmpeg -nostdin, every box and time measured on them. It sits beside its spec as <spec id>-tutorial.json (here the spec would be specs/example/tutorial-1-T1.json); a -hook2 twin reads its base's sidecar. Keys ending in _note, label, what and why are for people and are never read by the code.",
+  "id": "tutorial-1-T1",
+  "look": "tutorial",
+  "measured_on": "an example: frames of tutorials/tutorial-1/screen.mp4 (1920x1080) pulled with ffmpeg -nostdin at 120, 122, 124, 127, 130, 133, 136, 140, 144, 148, 152, 156",
+  "screen_file": "tutorials/tutorial-1/screen.mp4",
+  "face_file": "tutorials/tutorial-1/screen.mp4",
+  "face_region": [1548, 708, 336, 336],
+  "face_region_note": "the webcam is a rounded square x 1536..1896, y 696..1056 bottom right; inset 12 px so its rounded corners and the screen behind them stay out of the face search",
+  "bounds": [420, 180, 1080, 820],
+  "bounds_note": "the app's main column: the crop never shows the sidebar (x under 400) or the webcam box (x over 1520)",
+  "fill": [252, 252, 250],
+  "text_cap_px": 16,
+  "private": [
+    {"box": [0, 0, 1920, 28], "what": "the system menu bar with the clock"},
+    {"box": [0, 60, 400, 1020], "what": "the sidebar with the creator's own document titles"},
+    {"box": [1500, 40, 400, 110], "what": "a notification toast", "between": [131.0, 135.5]},
+    {"box": [460, 940, 620, 40], "what": "a local file path in the status line"}
+  ],
+  "private_masks": [
+    {"box": [1500, 40, 400, 110], "between": [131.0, 135.5], "fill": [252, 252, 250], "what": "the toast, painted in the page's own background"},
+    {"box": [460, 940, 620, 40], "fill": [245, 245, 243], "what": "the status line's path, on every frame"}
+  ],
+  "regions": [
+    {
+      "at": 120.0,
+      "crop": [440, 200, 640, 44],
+      "label": "the note's heading 'Weekly plan'",
+      "marks": [{"id": "heading", "at": 121.1, "box": [446, 204, 380, 36], "kind": "outline", "cap_px": 24}]
+    },
+    {
+      "at": 123.9,
+      "src_at": 129.0,
+      "crop": [440, 300, 520, 34],
+      "label": "the typed prompt, shown frozen at 129.0 (live, the composer is still empty here)",
+      "marks": [{"id": "prompt1", "at": 124.6, "box": [446, 302, 300, 30], "kind": "highlighter", "grow": 1.2}],
+      "block": [440, 296, 960, 150],
+      "block_note": "the 4-line prompt he reads aloud: lines read from their first word, the view pans only as he reads past the visible line"
+    },
+    {
+      "at": 126.8,
+      "src_at": 129.0,
+      "crop": [440, 338, 900, 34],
+      "label": "'turn every heading into a checklist'",
+      "marks": [{"id": "prompt2", "at": 127.2, "box": [446, 340, 880, 30], "kind": "highlighter", "grow": 2.4}],
+      "block": [440, 296, 960, 150]
+    },
+    {
+      "at": 131.6,
+      "crop": [1120, 860, 330, 52],
+      "align": "left",
+      "label": "the 2 buttons: Keep both and Replace",
+      "marks": [{"id": "keep", "at": 132.3, "box": [1124, 866, 150, 40], "kind": "ring", "cap_px": 15}]
+    },
+    {
+      "at": 136.2,
+      "crop": [440, 420, 1040, 300],
+      "dim": true,
+      "label": "the long generated text he says to skip",
+      "marks": [{"id": "skip", "at": 136.5, "box": [446, 424, 1028, 292], "kind": "wash", "label": "SKIP THIS", "read": false}]
+    },
+    {
+      "at": 140.9,
+      "crop": [440, 730, 700, 40],
+      "max_scale": 2.4,
+      "label": "the one line that matters: the checklist count",
+      "marks": [{"id": "count", "at": 141.4, "box": [446, 734, 420, 32], "kind": "outline", "cap_px": 17, "until": 146.0, "until_note": "the page scrolls at 146.0"}],
+      "bounds": [420, 600, 1080, 400],
+      "bounds_note": "below the generated text: a crop never shows half a paragraph"
+    },
+    {
+      "at": 147.3,
+      "crop": [440, 260, 860, 120],
+      "label": "the finished checklist",
+      "marks": [{"id": "done", "at": 148.0, "box": [446, 264, 600, 110], "kind": "dim-rest", "cap_px": 18}],
+      "fill": [250, 250, 248]
+    },
+    {
+      "at": 152.5,
+      "crop": [440, 200, 1040, 600],
+      "label": "the whole note, wide, for the close",
+      "marks": []
+    }
+  ],
+  "card": {
+    "at": 141.6,
+    "until": 144.4,
+    "eyebrow": "WHAT IT DOES",
+    "line": "Counts what is left",
+    "points_to": "count",
+    "why": "an example: the card restates his line in 4 words, and its arrow points at the mark with id 'count'"
+  },
+  "notes": [
+    "123.9 to 130.0 show the screen frozen at 129.0 (src_at): the prompt as typed, while he reads it aloud before he types it.",
+    "The toast at 131.0 to 135.5 is painted out in the page's own background; the status line's path is painted out on every frame."
+  ],
+  "layout_pick": {
+    "layout": "A",
+    "runner_up": "C",
+    "why": "an example: he reads a multi-line prompt aloud, and A keeps the page light and the card wide enough for the highlighter to follow each clause; C renders as the compare."
+  },
+  "cap_note": "capitals measured on the frames (ink rows of one capital letter): an example value per mark in cap_px, text_cap_px the default"
+}

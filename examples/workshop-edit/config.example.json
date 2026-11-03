@@ -79,10 +79,10 @@
   "splits": {"condensed": [1379.4]},
 
   "chapters": [
-    [571.5, "Why we ran this session"],
-    [793.0, "What you will be able to answer"],
-    [920.0, "The 4 problems, one by one"],
-    [2886.0, "What to do this week"]
+    [571.5, "{CHAPTER_1_TITLE}"],
+    [793.0, "{CHAPTER_2_TITLE}"],
+    [920.0, "{CHAPTER_3_TITLE}"],
+    [2886.0, "{CHAPTER_4_TITLE}"]
   ],
   "_chapters": "Raw seconds to title. A chapter lands on the first kept frame at or after its time (within 30 s) and is written on the DELIVERED (sped) timeline.",
 

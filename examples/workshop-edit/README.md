@@ -17,7 +17,7 @@ Tested end to end on a synthetic 30 second recording (every stage below ran gree
 
 ```bash
 mkdir -p content/videos/<slug>/raw content/videos/<slug>/build
-cp examples/workshop-edit/*.py examples/workshop-edit/config.example.json examples/workshop-edit/keyterms.example.txt content/videos/<slug>/build/
+cp ~/content-studio/examples/workshop-edit/*.py ~/content-studio/examples/workshop-edit/config.example.json ~/content-studio/examples/workshop-edit/keyterms.example.txt content/videos/<slug>/build/
 cd content/videos/<slug>/build
 cp config.example.json config.json            # then edit it
 cp keyterms.example.txt keyterms.txt          # then replace every {PLACEHOLDER} with the names on this tape
@@ -37,7 +37,7 @@ Every script finds its config through `--config <path>`, then the `WORKSHOP_CONF
 | 4 | Slide reveals | `python3 slides.py build`, then `python3 slides.py audit <cut>` | No unit "cuts through a build"; extend any that does |
 | 5 | Plan | `python3 build.py plan <cut>` | Segment count and runtime at 1.0x and at the delivered speed |
 | 6 | Probe | `python3 build.py probe` | Open every probe PNG at full size: blur soft but present, every name strip unreadable, presenters sharp, deck below the browser bar |
-| 7 | Render | `scripts/render_detached.sh start <slug>-render --watch ../renders -- "python3 build.py render <cut>"` | The joined file's video and audio durations agree within a frame |
+| 7 | Render | `../../../../scripts/render_detached.sh start <slug>-render --watch ../renders -- "python3 build.py render <cut>"` | The joined file's video and audio durations agree within a frame |
 | 8 | Captions | `python3 build.py captions <cut>` | Read the caption text back across every join: no word cut in half, nothing over a mouth |
 | 9 | Finalise | `python3 build.py finalize <cut>` | Captions burn first, then the speed pass, then loudnorm |
 | 10 | Chapters | `python3 build.py chapters <cut>` | On the delivered timeline; spot-check 2 against the file |

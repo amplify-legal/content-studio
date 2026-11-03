@@ -47,6 +47,8 @@
 #
 set -o pipefail
 
+case "${1:-}" in -h|--help) sed -n '3,46p' "$0"; exit 0 ;; esac
+
 PY="${PYTHON:-$(command -v python3)}"
 YTDLP="$(command -v yt-dlp)"
 if [ -z "$YTDLP" ]; then

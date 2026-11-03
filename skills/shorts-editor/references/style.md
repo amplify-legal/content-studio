@@ -24,11 +24,11 @@ Shared DNA: talking-head at the bottom, glass schemas in the upper half, one-wor
 - **cta**: accent-bordered card with a keyword + a meter bar that fills up.
 
 ## Animations
-- Snappy entrances (0.15-0.25s, ease `back.out` or `power3.out`). NEVER a pulsing loop on the boxes.
+- Snappy entrances (0.15-0.25s, ease `power3.out`; no `back.out`, no overshoot on type or content: the springs and the reason are in `content/reference/edit-lab/motion.md`). NEVER a pulsing loop on the boxes.
 - Graphs/sparklines: stroke-dashoffset 760→0 in ~1s.
 - Count-up: tween on a proxy {v} with onUpdate → textContent.
 - Decorative (always on, deterministic loops on a scrubbed timeline): particles y-drift + opacity, streaks x-translate, glow scale/move, grid background-position.
 
 ## Music + audio mix
 `assets/bg-music.m4a` if you put one there (nothing ships: see `assets/README.md`), or any track you point `MUSIC=` at. Default: from second 0:04 of the track, from the start of the short, final fade-out (see compose.sh). With no track at all, compose.sh renders voice only.
-**The voice must DOMINATE**: compose.sh normalizes the voice to dialogue level (loudnorm I=-16) and keeps the music LOW (**volume 0.02, which is 2% and the shipping level**, override with `MUSIC_VOL=`). Both 0.15 and 0.06 are RETIRED defaults, named here only so nobody reinstates one: 0.15 drowned out the voice, and 0.06 was still called way too loud on a real review.
+**The voice must DOMINATE**: compose.sh normalizes the voice to -14 LUFS (loudnorm I=-14, the same target as every shorts pipeline; it was -16) and keeps the music LOW (**volume 0.02, which is 2% and the shipping level**, override with `MUSIC_VOL=`). Both 0.15 and 0.06 are RETIRED defaults, named here only so nobody reinstates one: 0.15 drowned out the voice, and 0.06 was still called way too loud on a real review.

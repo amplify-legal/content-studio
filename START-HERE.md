@@ -1,6 +1,6 @@
 # Start here
 
-**This document is addressed to the AIOS (the Claude Code session), not to the person running it.**
+**This document is addressed to the Claude Code session, not to the person running it.**
 
 You have been pointed at Content Studio. Do not summarise it back to them. Work out which situation below you are in and do that.
 
@@ -39,10 +39,14 @@ Never ask them to paste an API key into the chat. Tell them which file (`.env` i
 
 Run `.claude/skills/content/SKILL.md`. It is the one door. Read their taste files before your first question and never ask something a file already answers.
 
+## Situation 2b: they are about to record
+
+Run `.claude/skills/director/SKILL.md` before the camera turns on. It asks only what the brief has not answered, prints the must-dos that bear on this video, and writes the answers into the brief as the frame. Every later step (the edit, the cut review, the shorts) reads that frame and the kind's sheet in `content/taste/kinds/` first.
+
 ## Situation 3: they have a recording to edit
 
 - A long raw recording (a call, a podcast, a workshop, a screen share): `.claude/skills/long-form-editor/`, then `content/reference/podcast-edit-runbook.md` or `content/reference/workshop-edit.md`. The privacy pass runs before anything renders. `examples/workshop-edit/` is a working pipeline to adapt.
-- A picked clip to a vertical short: `.claude/skills/shorts-editor/`. A human picks the clips. This is not an auto-clipper.
+- A picked clip to a vertical short: `.claude/skills/shorts-editor/`. A human picks the clips. This is not an auto-clipper. For podcast and tutorial shorts, read its "Before you build a short" section, then copy `examples/podcast-shorts-pipeline/` into the video's own folder and read its `README.md`. The method behind every number is in `content/reference/edit-lab/`.
 - A finished cut: `.claude/skills/cut-review/` before they watch it.
 
 ## Situation 4: they want to change how it works
@@ -59,8 +63,8 @@ That is their taste, not a setting. Write their words into the right file in `co
 | 2 | Taste | `taste-builder` | Their taste files, in their words |
 | 3 | The door | `content` | A week of one entry point for everything |
 | 4 | Packaging and the board | `media-gen`, `design-dna`, `on-camera-board` | A thumbnail that passed the 4 questions, and the board they film from |
-| 5 | The edit | `long-form-editor`, `shorts-editor`, `cut-review`, `scripts/verify_loop.py` | A watchable cut, a finished short, a review gate |
-| 6 | The waterfall and the morning routine | `content-waterfall`, `routines/content-briefing.md` | One recording into many pieces, and a briefing that fires before they sit down |
+| 5 | The recording and the edit | `director`, `long-form-editor`, `shorts-editor`, `cut-review`, `scripts/verify_loop.py` | A frame written before the camera turns on, a watchable cut, a finished short, a review gate |
+| 6 | The waterfall and the morning routine | `content-waterfall` (it calls `search-visibility`), `routines/content-briefing.md` | One recording into many pieces, findable in search, and a briefing that fires before they sit down |
 
 Recommend sitting 1 if they have no preference. If they have a long recording doing nothing, start sitting 5 there, because it is the fastest way they see this produce something real.
 
@@ -87,12 +91,15 @@ They perform this check, not you. A self-review that comes back green proves not
 
 | Path in this repo | Installed to | For |
 |---|---|---|
-| `skills/` | `.claude/skills/` | 12 skills, one folder each |
+| `skills/` | `.claude/skills/` | 14 skills, one folder each |
 | `scripts/` | `scripts/` | Render discipline, the verify loop, the copy check, the video server |
 | `reference/` | `content/reference/` | How the system fits, the edit runbooks, the lessons |
+| `reference/edit-lab/` | `content/reference/edit-lab/` | The edit lab book: how each technique was got to work and what failed |
 | `reference/PRINCIPLES.md` | `content/PRINCIPLES.md` | The constitution |
 | `reference/frameworks/` | `content/frameworks/` | Shapes for a short, a pillar video, a carousel, a brief |
 | `templates/taste/` | `content/taste/` | Their taste files, empty until they fill them |
+| `templates/taste/kinds/` | `content/taste/kinds/` | One sheet per kind of video, starting defaults they change |
 | `templates/brand.md` | `content/brand.md` | Their colours, fonts, logo and photo paths |
-| `examples/` | stays in the clone | A working workshop edit pipeline |
+| `examples/workshop-edit/` | stays in the clone, copied into a video's folder when used | A working workshop edit pipeline |
+| `examples/podcast-shorts-pipeline/` | stays in the clone, copied into `content/videos/<set>/pipeline/` when used | The reference podcast and tutorial shorts builder |
 | `routines/` | their scheduler | The morning content briefing |

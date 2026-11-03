@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The slide-state timeline of the shared deck, read off the frames, not the transcript.
 
-Why: a cut once left a slide reading "5 actions is all it takes" before the fourth action appeared, because the
+Why: a cut once left a slide reading "3 steps is all it takes" before the third step appeared, because the
 spine was picked off the transcript and a transcript cannot see a reveal. This samples the deck region at 4 fps,
 measures how much of the picture changed frame to frame, and records every change as a `slide` (a large change)
 or a `reveal` (a card or a band appearing).

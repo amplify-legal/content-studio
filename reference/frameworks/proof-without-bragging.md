@@ -62,7 +62,7 @@ yours.
   number nobody can argue with, and it removes the need for a statistic you
   have not researched.
 - **Keep the odd numbers odd.** Specific figures read as measured, round ones
-  read as invented. Write 1,468, not "about 1,500".
+  read as invented. Write 1,327, not "about 1,300".
 
 ---
 

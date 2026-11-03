@@ -398,8 +398,8 @@ def small(tok):
 
 
 def numeralize(words):
-    """Spoken number runs become numerals: 'sixty-five percent' -> 65%, 'nine thousand dollars' -> $9,000,
-    'two point five million' -> 2.5 million. A standalone 'one' or 'a' stays a word: 'one' is a pronoun
+    """Spoken number runs become numerals: 'forty-two percent' -> 42%, 'three thousand dollars' -> $3,000,
+    'one point five million' -> 1.5 million. A standalone 'one' or 'a' stays a word: 'one' is a pronoun
     ("see them one by one"), and converting it shipped "1 by 1" 15 times in one cut."""
     out, i = [], 0
     while i < len(words):
@@ -683,9 +683,9 @@ def selftest():
         return [{"t": t, "s": i * 0.3, "e": i * 0.3 + 0.25, "spk": 0} for i, t in enumerate(toks)]
 
     txt = lambda ws: " ".join(x["t"] for x in numeralize(ws))
-    ok(txt(w("sixty-five", "percent")) == "65%", "sixty-five percent -> 65%")
-    ok(txt(w("nine", "thousand", "dollars")) == "$9,000", "nine thousand dollars -> $9,000")
-    ok(txt(w("two", "point", "five", "million")) == "2.5 million", "two point five million -> 2.5 million")
+    ok(txt(w("forty-two", "percent")) == "42%", "forty-two percent -> 42%")
+    ok(txt(w("three", "thousand", "dollars")) == "$3,000", "three thousand dollars -> $3,000")
+    ok(txt(w("one", "point", "five", "million")) == "1.5 million", "one point five million -> 1.5 million")
     ok(txt(w("see", "them", "one", "by", "one")) == "see them one by one", "'one' stays a pronoun")
     ok(txt(w("the", "big", "one,")) == "the big one,", "'the big one,' is left alone")
     ok(txt(w("twenty", "twenty-six")) == "2026", "twenty twenty-six -> 2026")

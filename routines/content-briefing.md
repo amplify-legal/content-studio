@@ -232,6 +232,17 @@ The number to watch is not how good the drafts are. It is how often you engaged:
 
 If you run a weekly posting plan, `routines/posting-refresh.md` is a nightly pass that adjusts the unposted part of the week from the latest numbers, without ever touching your own words or picks. It is optional; the content-waterfall skill explains the weekly-skeleton idea it belongs to.
 
+## Optional: the briefing stays open as the day's content conversation
+
+A shape one creator chose after a few weeks of briefings: the morning run writes the briefing, then the same session stays open as the content conversation of the day, the one place they tap into to get content done, while any day board only prioritises. If you try it, these are the parts that mattered, and the parts that are untested:
+
+- **An ownership record.** One small file says which session owns today's content (its id, its last heartbeat, its next wake). A second session that finds it alive does the content work it was asked for and leaves posting to the owner; it takes over only on your word. 2 sessions never both own a post.
+- **Wakes before anything that needs your hand.** The session arms one-shot timed wakes in the same conversation: about 20 minutes before each post that needs your eye or your hand, after each slot that needs a read-back, at your call ends while a hand post is still open, and a close in the evening. Pin each to today, never on minute :00 or :30 (one-shot jobs there could fire up to 90 seconds early), merge wakes within 10 minutes, at most about 12 a day. Each wake does about 20 minutes of work at most: get out what can go out, put the paste and the file in front of you for what cannot, fix any fault in the posting machine and prove the fix on its next tick.
+- **A busy note before a long job.** Before anything over 20 minutes (a waterfall when a cut is approved), the session writes a heartbeat saying when it expects to finish, so a fallback firing does not read it as dead and take over mid-job.
+- **When you type in it, it is no longer unattended.** From your first message, it asks you questions like any session, and checks again for its question tool, because some apps withhold it from a scheduled run.
+- **Untested here, and worth testing on a harmless task first:** whether a long idle (hours) between wakes survives your app and any watchdog that closes idle sessions. One hourly keep-alive was added for that reason, unproven.
+- **The close:** 3 lines on what went out, what is waiting, what moved; the wakes are deleted.
+
 ## What this routine is not
 
 - Not a publisher. Nothing goes live from a scheduled run.

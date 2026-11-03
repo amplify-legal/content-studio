@@ -12,8 +12,16 @@ Usage
     python3 watch.py "<url>" --detail deep          scene-aware, uncapped
     python3 watch.py "<url>" --start 2:15 --end 2:45
     python3 watch.py local.mp4 --timestamps 4:32,7:10
+    python3 watch.py --self-test                    offline check of the download cache
 
 Prints a report to stdout ending in a list of frame paths. Read those paths.
+
+A downloaded video is reused only through the `source.json` written beside it
+when the download finished, and only for the same link (the same YouTube id
+counts). Until 2026-10-11 any `video.*` in the work folder was handed back as
+"cached", so an `--out-dir` reused for a second link returned the first link's
+file, and the frames and transcript described the wrong video. Nothing here
+deletes; a reused folder gets a new download subfolder instead.
 """
 from __future__ import annotations
 
@@ -25,6 +33,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -42,7 +51,7 @@ from frames import (  # noqa: E402
     parse_time,
     parse_timestamps,
 )
-from transcript import is_url, resolve as resolve_transcript  # noqa: E402
+from transcript import is_url, resolve as resolve_transcript, youtube_id  # noqa: E402
 from vtt import filter_range, format_transcript  # noqa: E402
 
 DETAIL_CAPS = {
@@ -54,6 +63,14 @@ DETAIL_CAPS = {
 VIDEO_SUFFIXES = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v", ".flv", ".ts"}
 HOOK_DEFAULT_SECONDS = 15.0
 HOOK_FPS = 2.0
+
+# The record written beside a finished download, and the prefix of the
+# subfolders a reused work folder gets for a second link.
+SOURCE_RECORD = "source.json"
+DOWNLOAD_PREFIX = "video-"
+
+# Where --self-test works: the system temp folder, never your project.
+SELF_TEST_ROOT = Path(tempfile.gettempdir()) / "watch-selftest"
 
 
 def say(message: str) -> None:
@@ -78,6 +95,80 @@ def work_dir_for(source: str, explicit: str | None) -> Path:
     return path
 
 
+def same_source(record: dict, source: str) -> bool:
+    """Whether a download record belongs to this link. A YouTube link matches on
+    its id, so youtu.be/X and watch?v=X share one download; anything else must be
+    the exact same link."""
+    vid = youtube_id(source)
+    if vid:
+        return record.get("youtube_id") == vid
+    return record.get("youtube_id") is None and record.get("source") == source
+
+
+def read_record(folder: Path) -> dict | None:
+    try:
+        record = json.loads((folder / SOURCE_RECORD).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
+def cached_download(source: str, work: Path) -> Path | None:
+    """A video this work folder already holds for THIS link, or None.
+
+    Looks in the folder and in its download subfolders, and trusts a file only
+    through the record beside it: the record must name this link, and the file it
+    names must still be there at the size recorded. A `video.*` with no record (a
+    download from an older version of this script, or one that never finished)
+    is never reused.
+    """
+    folders = [work] + sorted(
+        p for p in work.glob(f"{DOWNLOAD_PREFIX}*") if p.is_dir()
+    )
+    for folder in folders:
+        record = read_record(folder)
+        if not record or not same_source(record, source):
+            continue
+        video = folder / Path(str(record.get("video") or "")).name
+        if (video.name and video.suffix.lower() in VIDEO_SUFFIXES and video.is_file()
+                and video.stat().st_size == record.get("size")):
+            return video
+    return None
+
+
+def download_dir_for(source: str, work: Path) -> Path:
+    """Where a new download goes: the work folder itself while it holds no video
+    and no record (the usual first run in a per-link folder), otherwise a new
+    subfolder named for the link.
+
+    Never the occupied folder, because yt-dlp told to write video.mp4 beside an
+    existing video.mp4 keeps the old file, reports "has already been downloaded"
+    and prints that file's path as the result (read in yt-dlp's own
+    yt_dlp/YoutubeDL.py, 2026-10-11).
+    """
+    occupied = any(work.glob("video.*")) or (work / SOURCE_RECORD).exists()
+    if not occupied:
+        return work
+    key = youtube_id(source) or hashlib.sha256(source.encode()).hexdigest()[:12]
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    return Path(tempfile.mkdtemp(prefix=f"{DOWNLOAD_PREFIX}{key}-{stamp}-", dir=str(work)))
+
+
+def write_record(video: Path, source: str, quality: str, via: str) -> None:
+    """Written only after a download finished, so its presence means the file
+    beside it is complete and belongs to `source`."""
+    record = {
+        "source": source,
+        "youtube_id": youtube_id(source),
+        "video": video.name,
+        "size": video.stat().st_size,
+        "quality": quality,
+        "via": via,
+        "downloaded_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    (video.parent / SOURCE_RECORD).write_text(json.dumps(record, indent=2), encoding="utf-8")
+
+
 def fetch_video(source: str, work: Path, quality: str) -> tuple[Path | None, str]:
     """Get the file. URLs go through the self-healing yt-dlp wrapper that ships
     beside this script, which upgrades yt-dlp and retries when YouTube hands
@@ -88,17 +179,25 @@ def fetch_video(source: str, work: Path, quality: str) -> tuple[Path | None, str
             raise SystemExit(f"No such file: {local}")
         return local, "local file"
 
-    existing = [p for p in work.glob("video.*") if p.suffix.lower() in VIDEO_SUFFIXES]
-    if existing:
-        return existing[0], "cached (already downloaded this run dir)"
+    cached = cached_download(source, work)
+    if cached:
+        return cached, "cached (downloaded earlier for this same link)"
 
+    video, via = download(source, download_dir_for(source, work), quality)
+    write_record(video, source, quality, via)
+    return video, via
+
+
+def download(source: str, dest: Path, quality: str) -> tuple[Path, str]:
+    """Download `source` into `dest` as video.<ext>. `dest` holds no other video
+    (download_dir_for sees to that), so whatever lands there is this link's."""
     wrapper = Path(__file__).resolve().parent / "yt_download.sh"
     if wrapper.exists() and shutil.which("zsh") is None:
         detail = "yt_download.sh needs zsh, which is not installed here"
     elif wrapper.exists():
         proc = subprocess.run(
             ["zsh", str(wrapper), source, "--quality", quality,
-             "--codec", "h264", "--out", str(work), "--name", "video"],
+             "--codec", "h264", "--out", str(dest), "--name", "video"],
             capture_output=True, text=True, timeout=3600,
         )
         tail = (proc.stdout or "").strip().splitlines()
@@ -117,10 +216,12 @@ def fetch_video(source: str, work: Path, quality: str) -> tuple[Path | None, str
         ["yt-dlp", "-f",
          f"bv*[vcodec^=avc1][height<={quality}]+ba/b[vcodec^=avc1][height<={quality}]"
          f"/bv*[height<={quality}]+ba/b[height<={quality}]/b",
-         "--merge-output-format", "mp4", "-o", str(work / "video.%(ext)s"), source],
+         "--merge-output-format", "mp4", "-o", str(dest / "video.%(ext)s"), source],
         capture_output=True, text=True, timeout=3600,
     )
-    files = [p for p in work.glob("video.*") if p.suffix.lower() in VIDEO_SUFFIXES]
+    # stem "video" only: a merge that died leaves format parts like video.f137.mp4.
+    files = [p for p in dest.glob("video.*")
+             if p.stem == "video" and p.suffix.lower() in VIDEO_SUFFIXES]
     if not files:
         err = (proc.stderr or "").strip().splitlines()
         raise SystemExit(
@@ -163,7 +264,144 @@ def hook_timestamps(seconds: float, duration: float) -> list[float]:
     return out
 
 
+def _self_test() -> int:
+    """No network. `download` is swapped for a stub that behaves like yt-dlp on
+    the one point that matters here: pointed at a folder that already holds
+    video.mp4, it keeps that file and hands it back as the result."""
+    failures: list[str] = []
+    passed = 0
+
+    def check(name, fn):
+        nonlocal passed
+        try:
+            fn()
+            passed += 1
+        except AssertionError as exc:
+            failures.append(f"{name}: {exc}")
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"{name}: unexpected {type(exc).__name__}: {exc}")
+
+    SELF_TEST_ROOT.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    base = Path(tempfile.mkdtemp(prefix=f"{stamp}-", dir=str(SELF_TEST_ROOT)))
+
+    # Made-up ids in the YouTube shape; no real video is named here.
+    vid_a, vid_b = "AAAAAAAAAa1", "BBBBBBBBBb2"
+    link_a = f"https://www.youtube.com/watch?v={vid_a}"
+    link_b = f"https://www.youtube.com/watch?v={vid_b}"
+    calls: list[tuple[str, Path]] = []
+
+    def pixels(source: str) -> str:
+        return f"pixels of {source}\n"
+
+    def fake_download(source: str, dest: Path, quality: str) -> tuple[Path, str]:
+        calls.append((source, dest))
+        target = dest / "video.mp4"
+        if target.exists():
+            return target, "stub (kept the file already there, as yt-dlp does)"
+        target.write_text(pixels(source))
+        return target, "stub download"
+
+    def out_dir(name: str, source: str) -> Path:
+        """A work folder the way `--out-dir <folder>` makes it."""
+        return work_dir_for(source, str(base / name))
+
+    saved = globals()["download"]
+    globals()["download"] = fake_download
+    try:
+        def legacy_file_refused():
+            # The folder as a reused --out-dir left it before this fix: link A's
+            # video.mp4 at the top, with no record beside it.
+            work = out_dir("legacy", link_b)
+            stale = work / "video.mp4"
+            stale.write_text(pixels(link_a))
+            video, note = fetch_video(link_b, work, "720")
+            assert video != stale, f"handed back the other link's file ({note})"
+            assert video.read_text() == pixels(link_b), f"{video} holds {video.read_text()!r}"
+            assert video.parent.parent == work, f"not a subfolder of the work folder: {video}"
+            assert video.parent.name.startswith(f"{DOWNLOAD_PREFIX}{vid_b}-"), video.parent.name
+            assert read_record(video.parent)["youtube_id"] == vid_b, "record missing"
+            assert stale.read_text() == pixels(link_a), "the old file was touched"
+
+        check("a reused --out-dir holding another link's video.mp4 does not return it",
+              legacy_file_refused)
+
+        def recorded_other_link_refused():
+            work = out_dir("reused", link_a)
+            first, _ = fetch_video(link_a, work, "720")
+            assert first == work / "video.mp4", f"first download went to {first}"
+            second, note = fetch_video(link_b, work, "720")
+            assert second != first, f"link B got link A's download ({note})"
+            assert second.read_text() == pixels(link_b), f"{second} holds {second.read_text()!r}"
+            assert first.read_text() == pixels(link_a), "link A's download was overwritten"
+
+        check("a recorded download of link A is never reused for link B",
+              recorded_other_link_refused)
+
+        def same_link_reused():
+            work = out_dir("same", link_a)
+            first, _ = fetch_video(link_a, work, "720")
+            before = len(calls)
+            again, note = fetch_video(link_a, work, "720")
+            short, _ = fetch_video(f"https://youtu.be/{vid_a}?t=30", work, "720")
+            assert again == first == short, f"{first} / {again} / {short}"
+            assert len(calls) == before, "downloaded the same link twice"
+            assert note.startswith("cached"), f"note was {note!r}"
+
+        check("the same video, in any YouTube link shape, reuses its download", same_link_reused)
+
+        def switching_back_and_forth():
+            work = out_dir("switch", link_a)
+            a1, _ = fetch_video(link_a, work, "720")
+            b1, _ = fetch_video(link_b, work, "720")
+            before = len(calls)
+            a2, _ = fetch_video(link_a, work, "720")
+            b2, _ = fetch_video(link_b, work, "720")
+            assert (a2, b2) == (a1, b1), f"A {a1} then {a2}, B {b1} then {b2}"
+            assert a2.read_text() == pixels(link_a), f"link A's file holds {a2.read_text()!r}"
+            assert b2.read_text() == pixels(link_b), f"link B's file holds {b2.read_text()!r}"
+            assert len(calls) == before, "re-downloaded a link the folder already held"
+
+        check("switching links in one folder returns each link's own file",
+              switching_back_and_forth)
+
+        def changed_file_refused():
+            work = out_dir("changed", link_a)
+            first, _ = fetch_video(link_a, work, "720")
+            first.write_text("a different video put here by hand, longer than the first\n")
+            again, note = fetch_video(link_a, work, "720")
+            assert again != first, f"trusted a file whose size changed ({note})"
+            assert again.read_text() == pixels(link_a), f"{again} holds {again.read_text()!r}"
+
+        check("a recorded file whose size changed is downloaded again", changed_file_refused)
+
+        def exact_link_off_youtube():
+            one, two = "https://vimeo.com/123456", "https://vimeo.com/654321"
+            work = out_dir("vimeo", one)
+            v1, _ = fetch_video(one, work, "720")
+            v2, _ = fetch_video(two, work, "720")
+            v1_again, _ = fetch_video(one, work, "720")
+            assert v1 != v2 and v1_again == v1, f"{v1} / {v2} / {v1_again}"
+            assert v2.read_text() == pixels(two), f"{v2} holds {v2.read_text()!r}"
+
+        check("a link off YouTube matches only on the exact link", exact_link_off_youtube)
+    finally:
+        globals()["download"] = saved
+
+    if failures:
+        print("SELF-TEST FAILED")
+        for line in failures:
+            print("  -", line)
+        print(f"  (scratch left in {base})")
+        return 1
+    print(f"watch self-test: {passed} cases pass (scratch left in {base})")
+    return 0
+
+
 def main() -> int:
+    if "--self-test" in sys.argv[1:]:
+        return _self_test()
+
     ap = argparse.ArgumentParser(description="Watch a video (frames + transcript)")
     ap.add_argument("source", help="Video URL or local file path")
     ap.add_argument("--detail", choices=list(DETAIL_CAPS), default="balanced",
@@ -183,6 +421,8 @@ def main() -> int:
     ap.add_argument("--no-dedup", action="store_true", help="Keep near-identical frames")
     ap.add_argument("--no-whisper", action="store_true", help="Skip the local whisper fallback")
     ap.add_argument("--json", action="store_true", help="Emit machine-readable json instead")
+    ap.add_argument("--self-test", action="store_true",
+                    help="Offline check that a reused work folder never hands back another link's video")
     args = ap.parse_args()
 
     missing = preflight()
@@ -285,6 +525,12 @@ def main() -> int:
     transcript_text = format_transcript(segments) if segments else ""
     if transcript_text:
         (work / "transcript.txt").write_text(transcript_text, encoding="utf-8")
+    elif (work / "transcript.txt").exists():
+        # A reused work folder still holds an earlier link's words; overwrite them
+        # so nobody opening the folder reads another video's transcript as this one's.
+        (work / "transcript.txt").write_text(
+            f"No transcript on any route for {args.source}\n", encoding="utf-8"
+        )
 
     payload = {
         "source": args.source,
@@ -313,6 +559,8 @@ def main() -> int:
     out: list[str] = []
     out.append(f"Source     {args.source}")
     out.append(f"Duration   {payload['duration']}  ({fetch_note})")
+    if video_path:
+        out.append(f"Video      {video_path}")
     span = ""
     if start is not None or end is not None:
         span = f"  [{format_time(start or 0)} → {format_time(end) if end else 'end'}]"

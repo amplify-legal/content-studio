@@ -86,6 +86,8 @@ Never propose the spine first. Their sequencing is the argument. On a series, as
 
 **Never offer "keep it abstract" as a serious option.** Authority is built, sold and delivered, never gestured at. When a layer threatens the runtime, propose asymmetric depth (one item at full depth, the rest at one constraint each) rather than cutting the layer.
 
+**5b. The director's questions, only the ones steps 1 to 5 have not answered** (`content/taste/director.md`: how they want to come across, the goal, the one learning, what the viewer gets, why the viewer should care, a free resource or not, an intro or straight in). Run the `director` skill here or ask them in this batch; the answers go into the brief's frame section, 1 sentence each, in their words.
+
 **6. Packaging candidates.** 3 to 5 title framings and a thumbnail direction, drawn from `content/taste/thumbnails.md` and the teardowns in `content/taste/packaging/`. **Ask which is true, not which is best.**
 
 **When the brief reaches for a story**, from their bank in `content/taste/stories.md` or anywhere else, pick it for the viewer's situation, never for its drama. Ask: would someone in this audience see themselves in this? A dramatic story the viewer will never live through cannot help them avoid the mistake.
@@ -112,7 +114,7 @@ Pull their mined language and the buyer language from `content/signal.md`. Find 
 
 ## Script
 
-**Load first:** `content/taste/script-format.md`, the shape they record from (full written hook, guide bullets per section, key lines verbatim and visually distinct, transitions offered, analogies placed).
+**Read the brief's frame section back before writing the hook** (the director's 7 answers and the 3-line frame). A hook that does not serve the frame is wrong however good it reads, and the intro-or-straight-in answer decides whether the hook opens on the intro beats or goes straight in. **Load first:** `content/taste/script-format.md`, the shape they record from (full written hook, guide bullets per section, key lines verbatim and visually distinct, transitions offered, analogies placed).
 
 **ASK, by name:**
 

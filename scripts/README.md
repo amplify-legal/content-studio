@@ -4,7 +4,7 @@
 
 | Script | What it does | Offline proof |
 |---|---|---|
-| `copy_check.py` | Checks copy before it ships: always-on form rules (no em dashes, no bare `host/path` link without `https://`), an editable table of banned phrases and claims, optional rules under `--strict`, and an advisory voice tier that never fails a run | `--self-test` |
+| `copy_check.py` | Checks copy before it ships: always-on form rules (no em dashes, no bare `host/path` link without `https://`), an editable table of banned phrases and claims, optional rules under `--strict`, and an advisory voice tier (the 4 machine constructions plus 5 AI tells) that never fails a run | `--self-test` |
 | `first_taste_check.py` | The check after your first taste-file sitting: the file exists, 3 separate entries, 3 passages in your own words, a rule written under them, no template brackets left | run it on your file |
 | `verify_loop.py` | Render, check, repair from a bounded table, render again, and wake a model only for what a script cannot settle. Drives the 4-file build convention; `--scaffold` writes stubs | `--selftest` |
 | `render_detached.sh` | Runs a long job outside the conversation: its own process session, keep-awake, memory gate, runaway-file guard, 60 second status trail, one retry, `stop` for the whole process group | |

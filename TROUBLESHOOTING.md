@@ -106,7 +106,7 @@ This is the correction worth making tonight, because it gets harder every week: 
 
 ### The skills do not show up in Claude Code
 
-Skills install into your project's own `.claude/skills/`, so they load only when Claude Code is opened in that project. Check you started `claude` from your project folder, then `ls .claude/skills` and expect 12 folders: `content`, `content-waterfall`, `cut-review`, `design-dna`, `long-form-editor`, `media-gen`, `on-camera-board`, `post-writer`, `script-writer`, `shorts-editor`, `taste-builder`, `watch`.
+Skills install into your project's own `.claude/skills/`, so they load only when Claude Code is opened in that project. Check you started `claude` from your project folder, then `ls .claude/skills` and expect 14 folders: `content`, `content-waterfall`, `cut-review`, `design-dna`, `director`, `long-form-editor`, `media-gen`, `on-camera-board`, `post-writer`, `script-writer`, `search-visibility`, `shorts-editor`, `taste-builder`, `watch`.
 
 ### `.claude/skills/` has loose files like `SKILL.md` in it
 
@@ -124,6 +124,17 @@ ls content/PRINCIPLES.md content/taste/hooks.md
 
 Every path a skill names is relative to your project root. A session opened in another folder cannot see them.
 
+### A skill points at `content/reference/edit-lab/` and the folder isn't there
+
+You installed before the edit lab book existed, or ran an older copy line: `cp reference/*.md` copies files, not folders. From your project root:
+
+```bash
+cp -R ~/content-studio/reference/edit-lab content/reference/
+ls content/reference/edit-lab
+```
+
+It lists 6 files. The kind sheets come with the taste copy (`cp -Rn ~/content-studio/templates/taste/* content/taste/`), which adds `content/taste/kinds/` without touching your own files.
+
 ### I updated and my taste file was replaced
 
 It should not be: every copy into `content/taste/`, `content/brand.md` and `content/PRINCIPLES.md` uses `cp -n`, which never overwrites. If a copy without `-n` ran, your previous version is in git if your project is a repository (`git log -- content/taste/`), or in your machine's backups. Add `-n` to that line so it cannot happen again.
@@ -136,7 +147,20 @@ Homebrew is a program that installs other programs and it is not on a Mac by def
 
 ### `command not found: ffmpeg` after `brew install` said it worked
 
-Almost always the same cause as above: Homebrew installed, but your terminal does not yet know where it put things. Close the terminal window, open a new one, and try again. If it still fails, run `brew install ffmpeg` on its own and read the last 5 lines it prints.
+Almost always the same cause as above: Homebrew installed, but your terminal does not yet know where it put things. Close the terminal window, open a new one, and try again. If it still fails, run `brew install ffmpeg-full` on its own, read the last 5 lines it prints, and check the PATH line from SETUP step 8 is in `~/.zshrc`.
+
+### `No such filter: 'ass'`, or `ffmpeg rendered no frame from that style line, so there is nothing to measure.`
+
+Your ffmpeg has no libass, so it can't burn captions. The plain Homebrew `ffmpeg` formula is built without libass and freetype; `ffmpeg-full` has both. The caption-size gate, the podcast karaoke burn and the workshop pipeline all stop on it. On macOS:
+
+```bash
+brew install ffmpeg-full
+brew unlink ffmpeg 2>/dev/null
+echo 'export PATH="$(brew --prefix ffmpeg-full)/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+ffmpeg -filters | grep -wE "ass|subtitles|drawtext"
+```
+
+The last line prints 3 lines when it worked. If it still prints nothing, `which ffmpeg` names the copy your terminal finds first: open a new terminal and check it points inside `ffmpeg-full`. On Linux, the distribution's `ffmpeg` package normally carries libass; run the same check. If the 3 lines print and the caption check still says no frame, the `Style:` line is malformed: the message prints a known-good line to compare.
 
 ### `error: externally-managed-environment`
 
@@ -145,7 +169,7 @@ This is python refusing a plain `pip install`, and it is not a fault in the repo
 ```bash
 python3 -m venv ~/.content-studio-venv
 source ~/.content-studio-venv/bin/activate
-python3 -m pip install --upgrade pip pillow requests numpy
+python3 -m pip install --upgrade pip pillow numpy scipy requests yt-dlp
 ```
 
 ### `ModuleNotFoundError: No module named 'PIL'` (or `numpy`, or `requests`)
@@ -213,7 +237,13 @@ One trap underneath that: `transcribe.py` caches on the filename. A re-run on th
 
 ### The captions stop and the message names a caption font
 
-No font. `.claude/skills/shorts-editor/assets/` ships empty on purpose, because fonts are not ours to redistribute. Download Montserrat from Google Fonts, take the variable `.ttf` out of the zip, and put it at `.claude/skills/shorts-editor/assets/fonts/Montserrat-VariableFont_wght.ttf`. Or set `BRAND_CAPTION_FONT` (in `.env` or `content/brand.md`) to the full path of the font you want. `.claude/skills/shorts-editor/assets/README.md` lists every place the scripts look.
+No font. `.claude/skills/shorts-editor/assets/` ships empty on purpose, because fonts are not ours to redistribute. Download Montserrat from Google Fonts, take the variable `.ttf` out of the zip, and put it at `.claude/skills/shorts-editor/assets/fonts/Montserrat-VariableFont_wght.ttf`. Or set `BRAND_CAPTION_FONT` (in `content/brand.md`, or exported in your shell as `BRAND_CAPTION_FONT` or `CAPTION_FONT`) to the full path of the font you want. `.claude/skills/shorts-editor/assets/README.md` lists every place the scripts look.
+
+The example shorts pipeline burns its captions with the **static** face instead: `Montserrat-Bold.ttf`, from the `static/` folder of the same zip, in the same fonts folder. The variable face and the static face draw different sizes at the same point size (the static one about 25% smaller), so the caption floor is a measured 47px capital H, not a point size.
+
+### `MISSING gsap.min.js: put it in .claude/skills/shorts-editor/assets/vendor/`
+
+`gen.py` copies GSAP beside every card page so a render never waits on a network. The files aren't shipped (someone else's code, under its own licence). Get them once with the 2 `curl` lines in `SETUP.md` step 11. Without them the card page renders with no motion, which is easy to miss on a still frame.
 
 ### A logo renders as an empty gap, or renders black on black
 
@@ -230,6 +260,46 @@ Expected. No music ships with this repo, because music licensing does not travel
 ### The video will not open after export
 
 It should already carry the fast-start flag. If you remuxed it by hand, add `-movflags +faststart` and remux again.
+
+---
+
+## The example shorts pipeline
+
+`examples/podcast-shorts-pipeline/`, copied into `content/videos/<set>/pipeline/`. Run every command from that folder, with `PYTHONDONTWRITEBYTECODE=1`.
+
+### `selftest needs the caption font Montserrat-Bold.ttf in ... not found.`
+
+The self-test exits 2 before it tests anything, because a caption calibrated on the wrong face is worse than no test. Put the static `Montserrat-Bold.ttf` in `.claude/skills/shorts-editor/assets/fonts/`, or set `SHORTS_FONT_DIR` (or `font_dir` in `config.json`) to the folder that holds it. `python3 paths.py` prints which font folder it resolved and where that came from.
+
+### `--plan` on the example spec fails with `wav16 failed` and `Error opening input file .../guest-cfr.mp4`
+
+Expected. The example specs are invented: there's no tape behind them, and `--plan` reads the audio and the words, so it stops at the first missing track. Point a spec of your own at your own tracks. Media paths in a spec are read from `media_root` (default `~/media-cache`), so if a real spec fails the same way, run `python3 paths.py` and check that folder holds the file the error names, at that exact path.
+
+### `overlay page looks.html: files it loads are missing on this machine: ['/System/Library/Fonts/Menlo.ttc']`
+
+You're not on a Mac. The graphic pages load macOS's Menlo, and the build stops on any face it can't load rather than burn a fallback face into every frame. Add one line to `config.json`, no page edit needed:
+
+```json
+"path_remap": [["/System/Library/Fonts/Menlo.ttc", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"]]
+```
+
+(`sudo apt install fonts-dejavu-core` gives you that file; any monospace `.ttf` works.) The same message naming a `.ttf` in your fonts folder means a Google font is missing: the pages also load DM Serif Display (regular and italic), Inter and Lexend Exa. `anim_selftest.py` only notes the missing Menlo and carries on, so a pass there doesn't prove the build will find it.
+
+### `font faces not loaded on this machine`
+
+The file exists and the browser still refused it, usually a damaged download or the wrong file under the right name. Download the font again from Google Fonts and check it opens in your system's font viewer.
+
+### `cannot run: playwright is not installed` or `cannot run: no Chrome or Chromium for Playwright`
+
+`anim_selftest.py` and the graphic layer need Playwright and a browser: `python3 -m pip install playwright`, then `python3 -m playwright install chromium`. The test exits 2 when it can't run, which is different from a fail (exit 1).
+
+### The disk filled up while a batch of shorts rendered
+
+Check where the render cache is. It defaults to `~/.cache/shorts-pipeline/work`; if `work_dir` points inside a folder a sync tool mirrors, every frame is copied while it renders and the disk fills twice as fast. Keep the cache outside synced folders. The lane runner holds the next line (it writes a note to `HELD.md` and polls every 5 minutes) while free disk is under its floor, `HOLD_GB`, 25 GB unless you set it: free space and it carries on. Nothing is deleted to make room.
+
+### I stopped a lane runner and every build in it died
+
+`scripts/render_detached.sh stop` stops the whole process group, the builds with it. To stop a runner and keep its builds, stop its supervisor processes first, then the runner. Never `stop` a runner with builds in flight, and restart under a new name.
 
 ---
 
@@ -326,6 +396,18 @@ A still image fed into an encoder with a loop flag and no duration encodes dupli
 ### Several overnight jobs all died
 
 Do not start 3 encodes at once. The kernel kills the biggest process and that is always the encoder. Use `render_queue.sh`, which runs them one at a time through the same protections, and close what you can spare before you go to bed.
+
+### `supervisor exited before it was ready; read .../launch.log`
+
+`render_detached.sh start` now waits up to 20 seconds for its own supervisor to report ready, and exits 1 if it died first, so a failed start can't look like a running job. Read the `launch.log` the message names: it holds whatever the supervisor printed before it died. `supervisor did not acknowledge startup within 20s` means it may still be running: check `scripts/render_detached.sh status <name>` and the pid file before you start it again, or you'll run it twice.
+
+### The queue log says `deferred (renders paused), retrying in 5 min`
+
+A start was refused with exit 75 because your `RENDER_PAUSE_CHECK` command said renders must wait. That's not a failure: `render_queue.sh` retries that job every 5 minutes until the pause clears. Any other failed start is written as `NOT STARTED` and the queue moves on to the next job, instead of waiting forever.
+
+### A render has 0% CPU and `ps` shows its state as `T`
+
+`T` means stopped, not stuck. If you run a disk or memory guard that freezes renders (SIGSTOP) when space runs low, this is it working. **Never kill a frozen job, and never send it SIGCONT yourself**: free disk, and the guard resumes it. A timeout around a render should count only the time the job is actually running, or a freeze kills a healthy job. A 0% CPU render whose state is not `T` is the deadlock described earlier on this page ("A segment render has been going for 20 minutes").
 
 ### The verify loop says a build file is missing
 
@@ -426,6 +508,14 @@ Correct and expected. A rules file quotes the banned phrases in order to ban the
 ### The design battery fails on a page I know is right
 
 Also expected, and it is the whole method. A test that fails on the original is a broken test, not a broken page. Edit the number in `dna.json`. Never edit the page to satisfy the battery.
+
+### `page_check: could not render ...`
+
+`page_check.py` renders the page in a real browser. It uses Google Chrome at its macOS default path when that exists, or the path in `CHROME`, and Playwright's own Chromium otherwise. Install Playwright and the browser (`SETUP.md` step 9), or on Linux set `CHROME=/usr/bin/chromium` (or wherever yours is). Its self-test takes about 2 minutes, which is normal: it renders 19 small pages.
+
+### The copy checker prints warnings and still passes
+
+Correct. The AI-tell lines are advisory: they warn and never fail the run. Read each one and decide; a fixed rule can't tell a good sentence from a tell every time.
 
 ---
 

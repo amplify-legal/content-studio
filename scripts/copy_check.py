@@ -488,6 +488,39 @@ VOICE_PATTERNS = [
         "a closing clause whose only job is to sound wise",
         "cut the last clause",
     ),
+    # AI tells: shapes measured recurring in machine drafts and rare in the
+    # same writers' own hand-written messages. Warnings only, the shapes a
+    # regex can see; the rest is a reader's job.
+    (
+        "interest-for-question",
+        re.compile(r"\bI(?:'d| would) (?:love|like) to (?:hear|know|learn) (?:how|what|whether|if|which|where|why|about)\b|\bI(?:'d| would) be curious (?:how|what|whether|if|to)\b", re.I),
+        "announces interest where a question should be",
+        "ask it: 'How does your team use it?'",
+    ),
+    (
+        "remembered-point",
+        re.compile(r"\bstuck with (?:me|us|both of us)\b|\bcaught my eye\b|\bmade me think of\b|\bI keep coming back to\b|\bhas stayed with me\b", re.I),
+        "the remembered-point compliment, a measured AI shape",
+        "say what they said or what it changed",
+    ),
+    (
+        "benefit-idiom",
+        re.compile(r"\boff (?:your|their) plate\b|\bhand(?:s)? (?:back|you back) (?:hours|time)\b|\bpull(?:s|ing)? (?:its|their) weight\b|\bfree(?:s)? up (?:your|their) (?:time|team|week)\b|\bwithout (?:sacrificing|losing)\b", re.I),
+        "a stock benefit idiom about AI",
+        "say what it does",
+    ),
+    (
+        "category-framing",
+        re.compile(r"\bis (?:exactly )?the kind of \w+ (?:that|AI|where)\b|\bone of the first places we look\b|\bthat's exactly (?:where|the kind of)\b", re.I),
+        "frames the fact as a category instead of stating it",
+        "state the fact",
+    ),
+    (
+        "matters-flag",
+        re.compile(r"\b(?:this|that|it) matters\b|\bwhy (?:this|it) matters\b|\bmatters because\b", re.I),
+        "flags importance instead of showing it",
+        "show the consequence",
+    ),
 ]
 
 
@@ -723,6 +756,22 @@ SELF_TEST = [
 ]
 
 
+# Advisory cases for the AI-tell warnings, run through check_warnings:
+# (text, expected warning id or None). The None cases are plain asks that must
+# stay quiet.
+WARN_SELF_TEST = [
+    ("Your point about the 400 invoices stuck with both of us.", "remembered-point"),
+    ("I'd love to hear how your team uses it today.", "interest-for-question"),
+    ("It plugs into the scheduler and takes the admin off your plate.", "benefit-idiom"),
+    ("A 2,000-file archive is the kind of library AI can search.", "category-framing"),
+    ("Here's why this matters for the edit.", "matters-flag"),
+    ("If one of your clients asks what to do with AI, I'd love an intro.", None),
+    ("How does your team use it today?", None),
+]
+AI_TELLS = {"interest-for-question", "remembered-point", "benefit-idiom",
+            "category-framing", "matters-flag"}
+
+
 def self_test():
     """Prove each rule refuses what it was written for, and passes clean copy."""
     failures = []
@@ -735,10 +784,14 @@ def self_test():
                 failures.append((text, "expected clean", sorted(got)))
         elif want not in got:
             failures.append((text, f"expected {want}", sorted(got) or ["nothing"]))
+    for text, want in WARN_SELF_TEST:
+        got = {f[0] for f in check_warnings(text)} & AI_TELLS
+        if (want is None and got) or (want is not None and want not in got):
+            failures.append((text, f"expected {want or 'clean'} (warning)", sorted(got) or ["nothing"]))
     for text, want, got in failures:
         print(f"FAIL  {want}, got {got}")
         print(f"      {text}")
-    total = len(SELF_TEST)
+    total = len(SELF_TEST) + len(WARN_SELF_TEST)
     print(f"\nself-test: {total - len(failures)}/{total} cases pass")
     return 1 if failures else 0
 

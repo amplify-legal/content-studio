@@ -36,6 +36,8 @@ These came from real runs on the system this pack was built from. They are writt
 
 - **A deletion is a decision.** Never rebuild killed work from version control or from a live document that still points at it; fix the pointer and add a row to `content/graveyard.md`. (Home: `references/intents.md`.)
 
+- **When the creator asks for the elements of a great hook, give the frame, not lines.** One creator, mid-script: *"just give me the elements and structure of a great hook for me to come up with my own."* The machine had answered their hook with box-by-box changes and a rewrite from a different opener. Their own version sits on top of the machine's; a refinement is a sprinkle on their version, never a new version. (Home: `content/taste/script-format.md`.)
+
 - **The retro is never self-review.** A separate reviewer sub-agent reads the whole conversation and the session hands its list over unedited. (Home: `SKILL.md` section 8.)
 
 ---

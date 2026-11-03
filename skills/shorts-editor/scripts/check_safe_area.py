@@ -21,7 +21,7 @@ Safe area enforced on a 1080x1920 short:
     face    the lower third of the face box (mouth and chin) below y=1500 is unsafe
 
 "Ink" = BRIGHT graphic pixels (cards, captions, numbers) sitting well above the sampled
-local background. Bright-only is deliberate: mid-tone footage is not an ink breach -- a
+local background. Bright-only is deliberate: mid-tone footage is not an ink breach; a
 white caption or a card edge is. The FACE test covers the footage: it finds the largest
 face per sampled frame and fails when any of the box's lower third (where the mouth and
 chin are) sits below the bottom line. Method, printed in the output:

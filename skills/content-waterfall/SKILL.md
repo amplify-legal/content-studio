@@ -11,7 +11,9 @@ description: >-
   derivative map", "what clips are in here", "mine the calls", "plan the posting week", or a
   finished recording arriving with no instruction. Call it through the content skill, which
   owns the interview posture. Drafts only: every piece passes a person, and nothing posts
-  without an explicit approval. NOT for cutting the clips themselves (that is shorts-editor).
+  without an explicit approval. Calls `search-visibility` for the search half (the search
+  pack, captions, live fixes, the watch page, the blog and newsletter post, the weekly search
+  measure). NOT for cutting the clips themselves (that is shorts-editor).
   NOT for deciding what to record (that is content, at the brief stage).
 ---
 
@@ -23,7 +25,7 @@ relevant `content/frameworks/*.md`, and `content/live.md` for what is in motion 
 Taste is data and this skill is the engine: never restate a taste rule here, read it from the
 file.
 
-One recording becomes a week of output across every surface, governed by the creator's taste.
+One long form becomes about 2 weeks of output across every surface, governed by the creator's taste.
 This is an engine, not a door. The `content` skill owns the interview posture and routes here;
 arriving directly is fine when you already know which engine you want, but the posture still
 applies.
@@ -57,6 +59,33 @@ back is a failure, however well formatted.
   figure comes from. Anything else is flagged, not written.
 - **Clients and customers are described by shape, never named**, unless they have said in
   writing that they can be.
+- **Cut-review runs before any cut or short reaches the creator**, and **a short goes on the
+  posting plan only after the creator has seen it or cut-review has cleared it.** Shorts once
+  went onto a plan before the creator had watched them, and the creator had to hold the week.
+- **Every promise made on camera is a live URL returning 200 before publish** (`content/taste/must-dos.md`).
+- **Titles and thumbnails are proposals; the creator picks.** Captions, chapters, the playlist,
+  tags and description lines on a live video the machine may fix, each with an undo line, and
+  report after. **Nothing goes live on your own website without your go.**
+- **A go on a video is not a go on its words.** Every caption is read in full before the week is
+  approved, and the creator's dictated words and picks are locked so no later automated pass can
+  change them.
+
+---
+
+## The 3 clocks
+
+| Clock | What runs | Who acts |
+|---|---|---|
+| **Per long form, when the cut is approved** | Engine 3, every piece at once, then the posting plan filled for its 2 weeks | The machine builds; the creator picks the title, the thumbnail and the clips and approves the words; the editor owns the cut |
+| **Per week** | Next week's skeleton laid, filled from the bench of cleared pieces, approved by the creator with every caption read (`routines/posting-refresh.md`) | The machine builds; the creator approves |
+| **Per day** | One standing content conversation, if you run one: the day's posts, a reminder before every post that needs a hand with the paste ready, read-backs of what went out, the waterfall when a cut is approved | The machine runs; the creator's hand on anything posted by hand |
+| Weekly review (inside the week) | Engine 5, with the weekly search measure | The creator and the editor on the call |
+
+**If you run a standing content conversation all day, a second session never owns a post the
+standing one owns.** Before touching a posting leg, a fresh session checks whether the standing
+conversation is alive and acted recently; if it is, do the content work asked for and leave
+posting to it, or make the one change through the same commands it uses and say in one line what
+changed.
 
 ---
 
@@ -91,6 +120,7 @@ machine thinks.
 | A video idea, a topic, a thought | `content/seeds.md`, verbatim | the riff above |
 | A link, a screenshot, a creator, "I like this thumbnail" | `content/taste/packaging/inbox.md`, verbatim, with `by:` who sent it and their words on why | the packaging teardown |
 | Both in one dump | both, split by sentence, nothing lost | both |
+| An idea for an off-site mention (a host to ask, a thread, a publication) | `content/seeds.md`, verbatim, tagged `search` | nothing is sent |
 
 **The packaging teardown, the same shape every time** so the corpus stays comparable: actually
 look at the thumbnail (download it), the title, the first 90 seconds of transcript, then how the
@@ -129,6 +159,9 @@ their lane, internal working calls. Write tagged entries into `content/signal.md
   is often a peer, a vendor or a guest. Check who they are first.
 - **Carry the standing question: which question came up on a call this week?** Sales and client
   calls are the best content feedback channel there is, and the transcripts already answer it.
+- **Every question your audience asked is also a candidate page question** for the watch page of
+  the video that answers it (`search-visibility`, `reference/aeo.md`): tag it `page-q` with its
+  receipt, and keep people's names out of anything public.
 
 The creator's own seeds are reviewed first, the mined signal second. A clickable board works
 better than a document for shortlisting dozens of entries in one sitting.
@@ -143,6 +176,17 @@ in their order, what to leave out (and what to keep that a shorter version would
 packaging candidates, the call to action and its slot, the derivative map with the beat in each
 spine piece expected to become a short, and the key lines co-created with them.
 
+**The searched phrase and the open searches.** Among the honest title framings, offer the one
+that carries the phrase your audience actually types (`search-visibility`,
+`reference/youtube-seo.md`), and name the searches nobody owns yet that this video could honestly
+serve (`reference/geo.md`). The creator picks; their framing can beat the search one, and the
+packaging still passes its 4 questions (`content/PRINCIPLES.md`). Record both in the brief's
+header as `phrase:` and `open searches:`, so the search pack is built from their answer and not
+from a guess.
+
+**The frame.** The `director`'s answers (`content/taste/director.md`) go in the brief's frame
+section before the camera turns on.
+
 Then write the document **as the record of that conversation**, from the template in
 `.claude/skills/script-writer/references/brief.md` (Part 2), at
 `content/briefs/YYYY-MM-DD-<slug>.md`:
@@ -151,7 +195,7 @@ Then write the document **as the record of that conversation**, from the templat
 2. Write down what they said, in their words. This is a record, not a proposal.
 3. Key lines are co-created, never planted by the machine, and stay in their words.
 4. Do the retrieval without asking: timestamps checked against the raw, sources, the number
-   check.
+   check, the must-dos that bear on this video (`content/taste/must-dos.md`).
 5. Anything they did not settle stays visibly `OPEN:` with the question. An honest, unfinished
    brief beats a complete one that invented their opinion.
 
@@ -173,6 +217,10 @@ better 40 seconds later.
 
 Come out of this step with the real moments, timestamped, a sentence each on why that one.
 
+**Before the chain: claim it** in `content/in-flight.md` if you keep one, and if a standing
+conversation runs, say in it how long you expect to be busy, so nothing else takes the job over
+mid-way.
+
 ### Step 2. Ask for the picks, with the whole map
 
 Read the derivative map from the brief back to them, then **offer the whole tape map as
@@ -188,6 +236,12 @@ Then confirm the map before anything is written:
 Their answer to "what are you actually trying to get out of this" (in the taste README) decides
 its shape. A creator optimising for clients gets a different map from one optimising for reach.
 
+**The title and thumbnail candidates go to them at the same time, rendered, never described**
+(`media-gen` on real frames, `content/taste/thumbnails.md`). The picks (title, thumbnail,
+clips) are the only decisions that block, so ask them first and run everything else while the
+creator is away. At most 5 open decisions in chat; the rest go on one board with a stated
+default each.
+
 ### Step 3. The chains
 
 Run only the ones the map says. Each chain loads the transcript, the surface's framework, and
@@ -201,6 +255,19 @@ another surface's output**: every chain goes back to the recording.
 | Carousel | `content/frameworks/carousel.md` | Slide-by-slide copy, one idea per slide, the last slide lands the point | The creator approves the cover |
 | Community or newsletter post | `content/frameworks/youtube-pillar.md` | The same argument at the length that surface rewards | Whoever posts it |
 | Send artifact | `content/frameworks/send-artifact.md` | One page built with `design-dna` | Whoever sends it |
+| Word-level transcript of the final cut | `shorts-editor`'s `transcribe.py` with a key-terms file of the names on the tape | Passed on to every row below | none |
+| The promise check | `content/taste/must-dos.md` | Every on-camera promise matched to a live URL that returns 200 | The creator, only when a promised resource does not exist yet |
+| Search pack: the phrase (from the brief), 3 title candidates, chapters from 0:00 labelled like searches, the description, tags, language, captions file | `search-visibility`, `reference/youtube-seo.md` | One search pack file per video | **The creator picks the title and thumbnail**; the rest the machine sets |
+| Live fixes once the video is up: captions, chapters, tags, description lines, playlist | `search-visibility` | A dry run read in full, then apply, one undo line per change | Reads the report |
+| Watch page on your site: video first, one h1, every word static, questions from real calls and workshops | `search-visibility`, `reference/watch-page.md` and `reference/aeo.md` | A rendered page | **Your go before it goes live** |
+| Blog article, answering a different question than the watch page | `search-visibility`, `reference/blog-substack.md` | A draft, voice-checked | The creator approves; your go before live |
+| Newsletter post, shorter, first person, linking home | `search-visibility`, `reference/blog-substack.md` | A draft and a hand card | The creator approves and posts it by hand |
+| Fill the posting plan for its 2 weeks of slots | `routines/posting-refresh.md` | Each approved piece on a slot, the search pack's tags and chapters on the long form | The week's approval, every caption read |
+
+**The order that saves the creator's time:** the transcript and the promise check first; the
+search pack and the shorts together, because the picks block; then everything else runs while
+they are away. The pages go live the same day the video goes public, once you have said go; the
+newsletter post follows 1 to 7 days later.
 
 **Never auto-clip.** A person picks. If nobody has picked, stop and ask.
 
@@ -230,7 +297,10 @@ to be honest, and warmth matches how well they actually know the person. The lis
 person's call, never a generated list sent blind. Drafts only.
 
 Whoever engages back (a reply, a meeting, a mention) gets logged against that person the same
-day, and their questions feed next week's mine.
+day, and their questions feed next week's mine. A question the video answers is a candidate
+question for that video's watch page. **Check the video is public and its link returns 200 in
+the same session before anything goes out**, and put the batch size and the pace to the creator
+before a bulk of sends starts.
 
 ---
 
@@ -243,9 +313,13 @@ Run it as a visual, clickable board on the weekly review call, not as a prose ag
    **days since the last publish**, both read from the live channel, never a status file.
 2. The judgment cells left empty to fill on the call: conversations and bookings traced to
    content, the people who engaged back, and the one improvement for next week.
-3. 3 standing questions: which opening kept attention, which point created comments, which
+3. **The weekly search measure** (`search-visibility`, `reference/geo.md`): on how many of your
+   fixed list of audience queries you appear, per surface, and your best positions, against your
+   first baseline; the week's search terms from your analytics and any AI-assistant referrers.
+   **Read it as a trend over weeks, never one run.**
+4. 3 standing questions: which opening kept attention, which point created comments, which
    question came up on a call.
-4. The one improvement chosen on the call gets written into the skill or checklist it concerns
+5. The one improvement chosen on the call gets written into the skill or checklist it concerns
    the same day, and next week opens with whether it held. The choice is the creator's; never
    pre-fill it.
 
@@ -353,6 +427,14 @@ reviewing itself.
 - **Trust the transcript you were handed over a health summary of it.** A transcript reported as
   having named speakers came back with anonymous labels on 2 separate pulls. Read the labels
   yourself before quoting, and mark attribution as inferred when they are anonymous.
+- **A short reaches the posting plan only after the creator has seen it or cut-review cleared
+  it.** Shorts once went on a plan unwatched and the creator held the week.
+- **A rule that lives only in notes is not a rule.** A long form shipped with its first chapter at
+  00:31 because the 0:00 rule lived only in the editor's notes. The rule became a check: the
+  plan check and the search pack check refuse chapters that do not start at 0:00.
+- **When the posting setup, a lane rule or a tool changes, grep this file for the old surface in
+  the same session and fix the row.** This file once described a retired publishing path for 6
+  weeks while posting had moved elsewhere.
 - **Report the source split every mining run.** In one window, 1 call of 29 was with a real member
   of the audience and it produced every useful entry; the workshops produced none because the
   room was the wrong audience.

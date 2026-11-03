@@ -90,10 +90,24 @@ case "${1:-}" in
         continue
       fi
       echo "$(date '+%F %T') start $name" >> "$Q/queue.log"
-      # shellcheck disable=SC2086
-      RENDER_GATE=strict RENDER_DIR="$RENDER_DIR" RENDER_ROOT="$RENDER_ROOT" \
-        "$DETACHED" start "$name" $args < /dev/null >> "$Q/queue.log" 2>&1
-      # stdin is taken off jobs.tsv above, or a job can eat the rest of the list
+      # The wrapper exits 75 and writes no exit file while renders are paused
+      # (RENDER_PAUSE_CHECK). Waiting on the exit file after that hung a real
+      # drain forever, so a paused start is retried every 5 minutes instead, and
+      # any other failed start skips the job rather than waiting on it.
+      while :; do
+        # shellcheck disable=SC2086
+        RENDER_GATE=strict RENDER_DIR="$RENDER_DIR" RENDER_ROOT="$RENDER_ROOT" \
+          "$DETACHED" start "$name" $args < /dev/null >> "$Q/queue.log" 2>&1
+        rc=$?
+        # stdin is taken off jobs.tsv above, or a job can eat the rest of the list
+        [ "$rc" -ne 75 ] && break
+        echo "$(date '+%F %T') $name deferred (renders paused), retrying in 5 min" >> "$Q/queue.log"
+        sleep 300
+      done
+      if [ "$rc" -ne 0 ]; then
+        echo "$(date '+%F %T') $name NOT STARTED: render_detached exit $rc" >> "$Q/queue.log"
+        continue
+      fi
       # Serial by waiting on the exit file the wrapper writes. Waiting on a
       # process name instead is how 3 supervisors once matched each other and
       # each other's shells, and ran a stale job nobody asked for.

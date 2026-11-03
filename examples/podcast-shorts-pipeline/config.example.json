@@ -1,0 +1,24 @@
+{
+  "_comment": "Copy to config.json and edit. Every path is relative to this file unless absolute; null means the default in paths.py. Every value here is an EXAMPLE.",
+  "project_root": null,
+  "specs_dir": "specs",
+  "out_dir": null,
+  "work_dir": null,
+  "media_root": null,
+  "font_dir": null,
+  "skill_scripts": null,
+  "brand": {
+    "accent": "#4F9DFF",
+    "accent_dark": "#1F4F8F",
+    "logo_svg": null,
+    "mascot_png": null
+  },
+  "own_names": ["Your Brand", "Your Show"],
+  "tutorial_credit": null,
+  "host_eyebrow": null,
+  "word_fixes": {"yourbrand": "YourBrand"},
+  "firms": {
+    "podcast-guest-a": "Example Advisory LLC"
+  },
+  "path_remap": []
+}

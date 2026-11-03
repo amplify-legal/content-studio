@@ -167,7 +167,8 @@ question, and stays that way until they answer.
 
 Interview: full (date) / skipped, "just draft it" / re-run of (date)
 Shaped by: <who answered>
-Record date: YYYY-MM-DD · Launch slot: YYYY-MM-DD · Type: flagship / guest / workshop
+Record date: YYYY-MM-DD · Launch slot: YYYY-MM-DD · Type: tutorial / masterclass / short / podcast / live
+phrase: <the searched phrase the creator picked> · open searches: <searches nobody owns yet that this video could serve>
 ```
 
 ## The promise, in their words
@@ -246,7 +247,21 @@ audience, and the call to action they want shown on screen, with the exact handl
 - The thumbnail board: rendered, never described. Each render captioned with one of the titles
   above, because the title and the thumbnail are one story. Their pick goes here.
 
-## Vision handoff (filled right after recording)
+## The frame (director, asked before the record)
+
+Asked by the `director` (`content/taste/director.md`) before the camera turns on; only the ones the sections above have not answered. Their words, 1 sentence each. Date and who asked:
+
+1. How they want to come across:
+2. The goal with the video:
+3. The most important thing or learning:
+4. What the viewer is getting:
+5. Why the viewer should care:
+6. Free resource (yes, named and where it lives, or no):
+7. Intro or straight in (the intro beats, or straight in and why, and where name and authority go instead):
+
+The frame in 3 lines (who is talking to whom; what the viewer leaves with; what the cut has to protect):
+
+## Vision handoff (filled right after recording, against the frame above)
 
 The creator records about 10 minutes straight after the shoot: what the great version looks like,
 the feeling, the cuts they already know, what matters most. The transcript goes here. Nobody

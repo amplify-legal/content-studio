@@ -5,7 +5,7 @@
 # scripts/gen.py is the template that reads your brand from content/brand.md.
 # reel2 v2: second pass on review feedback. Orange accent.
 import json, re, html, sys
-A="#f0813f"; AB="#ffa766"; AD="rgba(240,129,63,0.45)"; GL="rgba(240,129,63,0.16)"
+A="#D97757"; AB="#E8957A"; AD="rgba(217,119,87,0.45)"; GL="rgba(217,119,87,0.16)"  # one orange everywhere (#f0813f and #ffa766 retired)
 RED="#ff5470"; REDD="rgba(255,84,112,0.5)"; GREY="#8b938e"; WARN="#ffb454"
 d=json.load(open(sys.argv[1] if len(sys.argv)>1 else "cut_transcript.json"))
 WS=[w for w in d["words"] if w.get("type")!="spacing" and w.get("start") is not None]
@@ -274,8 +274,8 @@ HTML=f'''<!doctype html><html lang="en"><head><meta charset="UTF-8"/>
 html,body{{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:"Montserrat","Inter",sans-serif}}
 #root{{position:relative;width:1080px;height:1920px}}
 #bgz{{position:absolute;top:0;left:0;width:1080px;height:864px;overflow:hidden}}
-#grid{{position:absolute;inset:-40px;background-image:linear-gradient(rgba(240,129,63,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(240,129,63,0.05) 1px,transparent 1px);background-size:110px 110px}}
-#glow{{position:absolute;top:120px;left:280px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(240,129,63,0.24),transparent 65%);filter:blur(22px)}}
+#grid{{position:absolute;inset:-40px;background-image:linear-gradient(rgba(217,119,87,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(217,119,87,0.05) 1px,transparent 1px);background-size:110px 110px}}
+#glow{{position:absolute;top:120px;left:280px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,87,0.24),transparent 65%);filter:blur(22px)}}
 .pt{{position:absolute;border-radius:50%;background:{A};box-shadow:0 0 12px {A}}}
 .stk{{position:absolute;left:0;width:520px;height:2px;background:linear-gradient(90deg,transparent,{A},transparent);opacity:0.3}}
 .beat{{position:absolute;top:0;left:0;width:1080px;height:864px}}
@@ -285,7 +285,7 @@ html,body{{width:1080px;height:1920px;overflow:hidden;background:#000;font-famil
 /* claudehero */
 .inner.claudehero{{align-items:center;justify-content:center}}
 .chwrap{{display:flex;flex-direction:column;align-items:center;gap:34px}}
-.cclogo{{width:860px;max-width:96%;object-fit:contain;border-radius:16px;border:4px solid {A};box-shadow:0 0 48px rgba(240,129,63,0.5)}}
+.cclogo{{width:860px;max-width:96%;object-fit:contain;border-radius:16px;border:4px solid {A};box-shadow:0 0 48px rgba(217,119,87,0.5)}}
 .princrow{{position:relative;display:inline-block}}
 .princ{{color:#fff;font-size:96px;font-weight:900;letter-spacing:-1px;text-transform:uppercase;text-shadow:0 0 26px {GL}}}
 .strike{{position:absolute;left:-10px;right:-10px;top:52%;height:12px;background:{RED};border-radius:8px;transform-origin:left center;transform:scaleX(0);box-shadow:0 0 22px {REDD}}}
@@ -314,7 +314,7 @@ html,body{{width:1080px;height:1920px;overflow:hidden;background:#000;font-famil
 .wmd{{margin-left:auto;color:#1a0f06;background:{A};font-size:20px;font-weight:900;border-radius:7px;padding:3px 10px}}
 .wbody{{padding:26px 30px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}}
 .asciibody{{min-height:560px;display:flex;align-items:center;justify-content:center}}
-.asciipre{{color:{AB};font-size:30px;line-height:1.18;font-weight:600;white-space:pre;text-shadow:0 0 10px rgba(240,129,63,0.35)}}
+.asciipre{{color:{AB};font-size:30px;line-height:1.18;font-weight:600;white-space:pre;text-shadow:0 0 10px rgba(217,119,87,0.35)}}
 .cur{{color:{A};animation:blink 1s steps(1) infinite}}@keyframes blink{{50%{{opacity:0}}}}
 .term{{min-height:520px}}
 .tprompt{{color:#e7efe9;font-size:38px;font-weight:700;margin-bottom:22px}}

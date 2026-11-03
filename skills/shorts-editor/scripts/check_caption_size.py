@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Caption floor gate for any 1080x1920 short.
 
-The floor: Montserrat 78px at 1080 wide, which renders a capital H 35px tall. 52px was far too small in
-the hand. A research finding or a review that wants a different size is reported as a conflict for a person
+The floor: a capital H 47px tall at 1080 wide. That is Montserrat 78 in the variable face, the face the
+floor was set on; the static Montserrat Bold face draws about 25% smaller at the same size (78 gives 35px, so it
+needs 104 for 47px). So the gate measures the capital, never the font size: until it did, it passed 35px and let a
+week of static-face shorts ship small. 52px was far too small in the hand. A research finding or a review that wants a different size is reported as a conflict for a person
 to settle; it never moves this number on its own. The floor once lived in one episode's build script instead
 of in the skill, and 12 of 15 renders repeated the miss three days later.
 
 Two modes:
-  --style "<ASS Style: line>" [--fontsdir DIR]   exact: renders H, measures cap height, fails under 35px
+  --style "<ASS Style: line>" [--fontsdir DIR]   exact: renders H, measures cap height, fails under 47px
   <render.mp4> [--band 1100 1750] [--out DIR]   for eyes, not a gate: writes <name>-caption-375.png, the caption
                                                  band of the inkiest frame scaled to 375px wide, so a person reads
                                                  it at phone size. Ink-run measurement is fooled by a face or a
@@ -22,7 +24,7 @@ except ImportError:
     sys.exit("numpy is not installed. Run:  python3 -m pip install numpy\n"
              "(inside the virtual environment SETUP.md makes).")
 
-CAP_FLOOR_PX = 35      # capital H, 1080-wide frame, = Montserrat 78. Raised by a person, never by a script.
+CAP_FLOOR_PX = 47      # capital H, 1080-wide frame, = Montserrat 78 variable / 104 static Bold. Raised by a person, never by a script.
 
 STYLE_EXAMPLE = ("Style: Brand,Montserrat,78,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,"
                  "0,0,0,0,100,100,0,0,1,3,0,2,60,60,120,1")
@@ -56,10 +58,12 @@ Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Dialogue: 0,0:00:00.00,0:00:01.00,{name},,0,0,0,,{{\\pos(540,960)}}H
 """
-    tmp = pathlib.Path("_capcheck.ass"); tmp.write_text(ass)
+    tmpdir = pathlib.Path(tempfile.mkdtemp(prefix="capcheck-"))
+    tmp = tmpdir / "capcheck.ass"; tmp.write_text(ass)
     fd = f":fontsdir={fontsdir}" if fontsdir else ""
-    out = subprocess.run(f'ffmpeg -nostdin -v error -f lavfi -t 1 -i color=c=black:s=1080x1920:r=1 -vf "ass=_capcheck.ass{fd}" -frames:v 1 -f rawvideo -pix_fmt gray -', shell=True, capture_output=True).stdout
+    out = subprocess.run(f'ffmpeg -nostdin -v error -f lavfi -t 1 -i color=c=black:s=1080x1920:r=1 -vf "ass={tmp}{fd}" -frames:v 1 -f rawvideo -pix_fmt gray -', shell=True, capture_output=True).stdout
     tmp.unlink(missing_ok=True)
+    tmpdir.rmdir()
     if len(out) < 1920 * 1080:
         sys.exit("ffmpeg rendered no frame from that style line, so there is nothing to measure.\n"
                  "Usual causes: ffmpeg is not installed or has no libass, or the Style: line is "
@@ -94,7 +98,7 @@ def main():
     if a.style:
         h = cap_height(a.style, a.fontsdir)
         ok = h >= CAP_FLOOR_PX
-        print(f"cap height {h}px (floor {CAP_FLOOR_PX}px = Montserrat 78 at 1080): {'OK' if ok else 'TOO SMALL'}")
+        print(f"cap height {h}px (floor {CAP_FLOOR_PX}px = Montserrat 78 variable at 1080): {'OK' if ok else 'TOO SMALL'}")
         sys.exit(0 if ok else 1)
     if not a.render:
         ap.error("give a render or --style")

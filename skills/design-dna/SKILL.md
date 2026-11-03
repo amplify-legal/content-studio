@@ -55,12 +55,24 @@ Keep a small state table at the top of `RULINGS.md`: each surface, and whether i
 
 On a fresh install none of these files exist yet: start at job 2, measure a page you like, and run `scripts/dna_check.py --example` to see the check working.
 
+0. **Brief the page in 4 lines before building:**
+   - **Reference:** the page or file you already like, by path or URL.
+   - **Idea:** what this page must make the reader do, in one sentence.
+   - **Style:** the surface, the register, and anything that must not appear.
+   - **Examine:** the 5 to 7 checks the result must pass, written as things a person can see ("the hero number is 7x body"), never adjectives.
+
+   On a new surface, build 5 versions and keep the simplest that passes.
 1. Read `RULINGS.md`, then `core.json`, then the surface's `PROMPT.md`. Do **not** read `dna.json` to build; it is the record.
 2. Build. If generating with code, take fonts and guarded copy from one tokens module so they come from one place.
-3. `python3 .claude/skills/design-dna/scripts/dna_check.py content/brand/dna/<surface> <page.html>`
-4. Render it and **look at it** before handing it over, at 1728x1080, 1920x1080 and phone width.
+3. **Finish:** run `references/finish.md` on the built page. It is where a page stops looking assembled.
+4. **Check:** `python3 .claude/skills/design-dna/scripts/page_check.py <page.html>` (1440 and 390), then `python3 .claude/skills/design-dna/scripts/dna_check.py content/brand/dna/<surface> <page.html>` where the surface is measured. A failing page check is fixed before anyone sees it.
+5. Render it and **look at it** before handing it over, at 1728x1080, 1920x1080 and phone width, or open the first-screen and full-page screenshots `page_check.py` wrote at each width (it prints their paths).
+
+A page that is worth the tokens can also go through the three-critic loop, a pilot: `references/critic-loop.md`.
 
 ### 2. MEASURE an existing design into DNA
+
+**An outside reference is recorded in motion before it is measured.** A still cannot show an entrance animation or a clickable hero. Capture a 25 to 40 second screen recording at 1440x900: the page's own entrance, 6 to 8 scroll steps with 2 seconds of rest, hovers, and the first screen's controls clicked. Save it as an MP4 plus a 6-frame strip; the reference sheet carries the clip beside the still, and how much motion the reference uses is read off the recording, never off the code.
 
 Only ever measure something that **shipped and that the creator liked**. Full method in `references/method.md`. In short: render it, count pixels for colour share, parse the source for sizes, convert every size to a ratio of the body size (keeping the pixel beside it), name the one weird move, write down the refusals and the deliberate absences, write tests a bad copy would fail, then compile the payload.
 
@@ -80,7 +92,16 @@ Build them with the same content, render them, hand over the images. The creator
 
 ### 4. CHECK a page
 
-`dna_check.py` has a source half (always runs, standard library only) and a pixel half (runs when the spec has a `pixels` block, needs Pillow plus Chrome or Chromium; set `CHROME=/path` if it is not found). Source checks: type floor, type tiers, shadows, required signatures and CSS, bans (em dashes, dark mode, gradients, emoji), counted phrases, and the full-screen layout rule. Pixel checks: ground share, colour-family shares per declared register (`<meta name="dna-register" content="...">`), and connected-region counts. A missing renderer is reported as **SKIP**, never as a pass.
+On any surface, first:
+
+```bash
+python3 .claude/skills/design-dna/scripts/page_check.py <page.html>        # 1440 and 390
+python3 .claude/skills/design-dna/scripts/page_check.py --self-test        # 19 fixtures, about 1 to 2 minutes
+```
+
+It reads the finish off the render (`references/finish.md` section 6): sideways scroll on the page and inside every box, text under the floor (18px default, `--floor N` to read a surface against its own measured floor), at most 6 sizes, contrast, controls and links under 44px, the reduced-motion, focus and selection rules, no dark mode, no gradient. Exit 1 on any fail. A link inside a line of prose is counted and exempt; a link standing on its own is a target. It needs Playwright (`pip install playwright`, then `playwright install chromium`, or set `CHROME=/path`).
+
+Then, on a measured surface, `dna_check.py`. It has a source half (always runs, standard library only) and a pixel half (runs when the spec has a `pixels` block, needs Pillow plus Chrome or Chromium; set `CHROME=/path` if it is not found). Source checks: type floor, type tiers, shadows, required signatures and CSS, bans (em dashes, dark mode, gradients, emoji), counted phrases, and the full-screen layout rule. Pixel checks: ground share, colour-family shares per declared register (`<meta name="dna-register" content="...">`), and connected-region counts. A missing renderer is reported as **SKIP**, never as a pass.
 
 **When the battery fails on a page you know is right, the test is wrong.** That is what the first run against the original is for.
 

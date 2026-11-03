@@ -1,12 +1,12 @@
 # assets/, and why it arrives empty
 
-This folder ships with nothing in it but this file. The scripts expect up to 3 kinds of
-file here, and none of them is ours to hand you: a caption font, a background music
-track, and optional logo SVGs. This page says exactly what goes where, the filenames the
+This folder ships with nothing in it but this file. The scripts expect up to 4 kinds of
+file here, and none of them is ours to hand you: a caption font, the animation library
+the cards load (GSAP), a background music track, and optional logo SVGs. This page says exactly what goes where, the filenames the
 scripts look for, where to get free ones, how to point the scripts elsewhere, and what
 breaks if you skip each one.
 
-Add the caption font and the whole pipeline runs. The music and the logos are optional.
+Add the caption font and GSAP and the whole pipeline runs. The music and the logos are optional.
 
 ## What belongs here
 
@@ -17,6 +17,9 @@ assets/
 │   │   or Montserrat-VariableFont_wght.ttf  ← the tested default, found automatically
 │   ├── <display font>.ttf                   ← optional: BRAND_FONT_DISPLAY from content/brand.md
 │   └── <body font>.ttf                      ← optional: BRAND_FONT_BODY from content/brand.md
+├── vendor/                                  ← GSAP for the cards, loaded locally, never from a CDN
+│   ├── gsap.min.js
+│   └── MotionPathPlugin.min.js
 ├── logos/                                   ← optional: SVG marks you have the right to use
 │   └── <name>.svg                           (gen.py names whatsapp, claude, openai, github; the examples name logo, github, model-a to model-c)
 └── bg-music.m4a                             ← optional: the default music bed
@@ -47,9 +50,10 @@ default is [Montserrat](https://fonts.google.com/specimen/Montserrat): "Get font
 for the one-word renderer, 700 for the phrase renderer). A static font still works, at its
 own weight.
 
-**The size floor goes with the font.** The floor is a capital H at least 35px tall on a
-1080-wide frame, which is Montserrat at 78px. With another font, check the height, not the
-point size: `python3 scripts/check_caption_size.py --style "<your ASS Style line>" --fontsdir assets/fonts`.
+**The size floor goes with the font.** The floor is a capital H at least 47px tall on a
+1080-wide frame: Montserrat 78 in the variable face, 104 in the static Montserrat Bold face
+(the static face draws about 25% smaller at the same size). With another font, check the
+height, not the point size: `python3 scripts/check_caption_size.py --style "<your ASS Style line>" --fontsdir assets/fonts`.
 
 **Licensing:** Google Fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 or similar open licences. You can use them commercially and redistribute them. Keep the
@@ -115,11 +119,33 @@ here. Put only marks you have the right to use in this folder:
 
 Open every logo over a black background and look at it before you render.
 
+## 5. GSAP, the animation library the cards load (do this one too)
+
+`scripts/gen.py` writes a card page that loads `gsap.min.js` and `MotionPathPlugin.min.js` from
+the page's own folder, and copies them there from `assets/vendor/`. **No network inside a
+render**: a page that loads its library from a CDN can stall the whole render when the CDN is
+slow, and it did, twice, on a real build. So the library is vendored once and copied beside
+every page. It is not shipped here because it is someone else's code under its own licence.
+
+Get it once (any recent 3.x works; the pipeline was tested on 3.15.0):
+
+```bash
+mkdir -p assets/vendor
+curl -L -o assets/vendor/gsap.min.js https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js
+curl -L -o assets/vendor/MotionPathPlugin.min.js https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/MotionPathPlugin.min.js
+```
+
+Or `npm pack gsap@3.15.0` and copy the 2 files out of `dist/`. Read GSAP's licence on its
+site before you ship anything commercially. Without the files `gen.py` prints `MISSING` and
+the card page renders with no motion. The 2 example generators in `references/examples/` still
+load GSAP from a CDN: swap their 2 `<script src>` lines for the local file names the same way.
+
 ## What breaks with an empty folder
 
 | Missing | What happens |
 |---|---|
 | The caption font | **The captions stop.** Both caption scripts exit with a message naming `CAPTION_FONT`. Nothing renders past step 11. This is the one to fix. |
+| GSAP in `vendor/` | `gen.py` prints `MISSING`; the cards render as still frames with no motion. Fix it before a real render. |
 | The card fonts | Nothing breaks. The cards render in a system fallback face; look at a frame and decide. |
 | The music | Nothing breaks. `compose.sh` says no track is present and renders voice only. |
 | The logos | Only cards that ask for a logo break, and visually: a broken-image gap in the band. Cards built from type, numbers, graphs, terminals or lists are unaffected, which is most of the schema vocabulary. |

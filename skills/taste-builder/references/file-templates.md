@@ -29,8 +29,14 @@
 | `bio.md` | round 5 | the canonical first-person bio, a short version, and its fact ledger | `script-writer`, `post-writer`, `content`, `content-waterfall` |
 | `clip-bar.md` | round 6 | what makes a moment a clip, and the 6 craft rules for how a cut lands, grounded in their own clips | `shorts-editor`, `script-writer`, `cut-review`, `content`, `content-waterfall` |
 | `shorts-formats.md` | round 6 | the vertical safe frame, caption floors and look, crops, their format family | `shorts-editor`, `cut-review`, `content`, `content-waterfall` |
+| `shorts-profiles.md` | round 6, when shorts start | which shorts profile a recording gets (its caption, card and crop defaults) | `shorts-editor`, `cut-review`, `content` |
 | `editing-rules.md` | round 6 | the durable cuts: starting defaults, their "every edit" rules, contextual taste, how they like to be worked with | `long-form-editor`, `shorts-editor`, `cut-review`, `content` |
 | `editing-checklist.md` | round 6, grown on every fault | the mechanical pass, one line per thing that has gone wrong once | `cut-review`, `long-form-editor`, `shorts-editor` |
+| `director.md` | round 7, before the first recording | the 7 questions asked before the camera turns on, and the 3-line frame | `director`, `content`, `cut-review` |
+| `kinds/README.md`, `kinds/<kind>.md` | round 7, before the first recording of each kind | one sheet per kind of video: what it is for, the frame, opening, pacing, packaging, the CTA, the review lines with receipts | `director`, `content`, `cut-review`, `shorts-editor`, `long-form-editor` |
+| `motion-craft.md` | round 7, before the first animation | how an animated piece moves: springs, overlap, handoffs, the camera, known traps | `media-gen`, `long-form-editor`, `shorts-editor` |
+| `on-screen-graphics.md` | round 7, before the first on-camera graphic | a board shown beside a live demo: steps left to right, headlines, the human box | `on-camera-board`, `media-gen`, `design-dna` |
+| `live-training.md` | round 7, before the first live | how a live session runs: conversation, recaps, the roadmap, prep | `content`, `on-camera-board`, `long-form-editor` |
 | `story-animations.md` | round 7, before the first animation | animations that teach the sentence, never mood footage; which tool for which job | `media-gen`, `long-form-editor`, `shorts-editor`, `content`, `on-camera-board` |
 | `podcast-hosting.md` | round 7, before the first guest | the run sheet: intro, frame, anatomy, cut test, guest mode | `content`, `script-writer`, `long-form-editor` |
 | `comments-and-pinned-comment.md` | round 7, before the first launch | the comment ask, the pinned comment, the closing line | `script-writer`, `content`, `content-waterfall`, `post-writer` |

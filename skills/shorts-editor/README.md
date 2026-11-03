@@ -15,6 +15,8 @@ a face crop set once for a whole tape, card type sized for a laptop and unreadab
 phone, a mouth hidden under the platform overlay that a safe-area check passed. That table
 is worth more than the scripts.
 
+**For podcast and tutorial shorts there is a full builder.** This skill's pipeline below is the single-clip route (one talking head, cards on top). Podcast shorts (separate tracks per speaker, a stacked question hook, the native look, animation directions) and tutorial shorts (the screen as the subject, masked frame by frame) are built by the reference pipeline in the pack's `examples/podcast-shorts-pipeline/`, under the 10 rules in `SKILL.md`, "Before you build a short". The method under both, with every failed try, is the edit lab book (`reference/edit-lab/` in the pack, `content/reference/edit-lab/` once copied).
+
 **It is not an auto-clipper.** A human picks the clips. Hand it timestamps, or it stops and
 asks. Which 20 seconds are worth cutting is the one judgment worth keeping human.
 
@@ -49,7 +51,8 @@ shorts-editor/
 │   ├── card-snippets.md          ← copy-paste code for ready-made cards
 │   └── examples/                 ← 2 complete working card generators + a B-roll composite
 └── assets/
-    └── README.md                 ← what to put here. Nothing is bundled. Read this first.
+    └── README.md                 ← what to put here (the caption font, GSAP in vendor/, music,
+                                    logos). Nothing is bundled. Read this first.
 ```
 
 ## Setup (once, about 10 minutes)
@@ -62,11 +65,14 @@ anything"*. It runs the steps below and checks what is already there.
 
 macOS with Homebrew:
 ```bash
-brew install ffmpeg node python yt-dlp
+brew install ffmpeg-full node python yt-dlp
+brew unlink ffmpeg 2>/dev/null
+echo 'export PATH="$(brew --prefix ffmpeg-full)/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 ```
+The plain `ffmpeg` formula has no libass, so it can't burn captions. Check with `ffmpeg -filters | grep -wE "ass|subtitles|drawtext"`: it prints 3 lines.
 Debian or Ubuntu: `sudo apt install ffmpeg nodejs npm python3 python3-pip`, and `yt-dlp` via pip if it is not packaged.
 
-- **ffmpeg / ffprobe**: the whole video pipeline. Required.
+- **ffmpeg / ffprobe**: the whole video pipeline, built with libass and freetype. Required.
 - **node**: provides `npx`, which renders the cards (`npx hyperframes render`). Required. npx downloads `hyperframes` itself on first run.
 - **python** 3.10 or newer: runs every script. Required.
 - **yt-dlp**: only to download a reference reel you want to copy the style from. Optional. For some YouTube URLs it also needs `deno` (`brew install deno`), otherwise you get a 403.
@@ -82,6 +88,7 @@ python3 -m pip install faster-whisper     # optional: only for the last-resort l
 ### 3. The caption font and your brand
 
 - Put a caption font at `assets/fonts/` (Montserrat from Google Fonts is the tested default). [assets/README.md](assets/README.md) has the exact filenames.
+- Put GSAP's 2 files in `assets/vendor/` (section 5 of [assets/README.md](assets/README.md) has the 2 download lines). The card pages load it locally, never from a CDN, because a CDN load inside a render can stall the render.
 - Fill in `content/brand.md` (installed from the repo's `templates/brand.md`). The scripts read these keys from it: `BRAND_ACCENT`, `BRAND_ACCENT_DARK`, `BRAND_RED`, `BRAND_NEUTRAL`, `BRAND_FONT_DISPLAY`, `BRAND_FONT_BODY`, `BRAND_CAPTION_FONT`. A line like `BRAND_ACCENT: #RRGGBB` is enough; table rows work too.
 - Check what was picked up: `python3 .claude/skills/shorts-editor/scripts/brand.py`.
 

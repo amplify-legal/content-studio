@@ -46,18 +46,18 @@ ffmpeg -y -i "$CUT" -i "$CARDS" -framerate 12 -i "$CAPT/%05d.png" -filter_comple
 "[0:v]scale=1080:-2,crop=1080:1056:0:$CY[v];color=c=black:s=1080x1920[bg];[bg][v]overlay=0:864:shortest=1[stage];[1:v]crop=1080:864:0:0[ctop];[stage][ctop]overlay=0:0[wc];[wc][2:v]overlay=0:78[final]" \
 -map "[final]" -map 0:a -c:v libx264 -preset medium -crf 21 -pix_fmt yuv420p -c:a aac -b:a 160k -shortest "$OUT.noaudio.mp4"
 
-# Audio: VOICE normalized to dialog level (loudnorm I=-16, robust for loud or quiet voice),
+# Audio: VOICE normalized to -14 LUFS, the same target as every shorts pipeline (was -16; loudnorm, robust for loud or quiet voice),
 # MUSIC low (default 2%; 6% is the retired legacy default), the track from its 0:04 second, fade in/out.
 # +faststart => moov atom up front: the file opens in QuickTime/Preview and streams online instantly.
 # With no track present we keep the voice pass and skip the bed, rather than failing the render.
 if [ -f "$MUSIC" ]; then
   ffmpeg -y -i "$OUT.noaudio.mp4" -i "$MUSIC" -filter_complex \
-  "[0:a]loudnorm=I=-16:TP=-1.5:LRA=11[vo];[1:a]atrim=start=4,asetpts=PTS-STARTPTS,volume=$MUSIC_VOL,afade=in:st=0:d=0.5,afade=out:st=$FOUT:d=2[m];[vo][m]amix=inputs=2:duration=first:normalize=0[a]" \
+  "[0:a]loudnorm=I=-14:TP=-1.5:LRA=11[vo];[1:a]atrim=start=4,asetpts=PTS-STARTPTS,volume=$MUSIC_VOL,afade=in:st=0:d=0.5,afade=out:st=$FOUT:d=2[m];[vo][m]amix=inputs=2:duration=first:normalize=0[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$OUT"
 else
   echo "note: no music track at $MUSIC. Set MUSIC=/path/to/track.m4a or see assets/README.md. Rendering voice only."
   ffmpeg -y -i "$OUT.noaudio.mp4" -filter_complex \
-  "[0:a]loudnorm=I=-16:TP=-1.5:LRA=11[a]" \
+  "[0:a]loudnorm=I=-14:TP=-1.5:LRA=11[a]" \
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$OUT"
 fi
 rm -f "$OUT.noaudio.mp4"

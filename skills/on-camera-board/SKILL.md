@@ -145,7 +145,7 @@ The spec shape that has survived a lot of boards:
 ```
 
 `key` is only needed on items a connector points at; the builder resolves keys to whatever ids
-the tool hands back. The builder needs 4 behaviours and your AIOS can write it in one sitting:
+the tool hands back. The builder needs 4 behaviours and Claude Code can write it in one sitting:
 
 1. **A `--dry-run` that prints the layout without touching the board.** Geometry bugs are
    cheaper to find in a table than on a canvas.
@@ -185,7 +185,7 @@ tool, and the result is identical. The API pays for itself only when you are bui
 set every week, or when you want the spec in git so a board can be rebuilt after somebody
 deletes half of it.
 
-The sane middle is to have your AIOS write the spec as a JSON file and a preview page, read the
+The sane middle is to have Claude Code write the spec as a JSON file and a preview page, read the
 preview, and then place the frames by hand from it. You keep the thinking and skip the OAuth.
 
 ---

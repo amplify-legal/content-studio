@@ -18,10 +18,13 @@ Everything gets copied into your project like this:
 | `skills/*` | `.claude/skills/` |
 | `scripts/*` | `scripts/` |
 | `reference/*.md` | `content/reference/` |
+| `reference/edit-lab/` | `content/reference/edit-lab/` |
 | `reference/PRINCIPLES.md` | `content/PRINCIPLES.md` |
 | `reference/frameworks/*` | `content/frameworks/` |
-| `templates/taste/*` | `content/taste/` (never over your own files) |
+| `templates/taste/*` (the `kinds/` folder included) | `content/taste/` (never over your own files) |
 | `templates/brand.md` | `content/brand.md` (never over your own file) |
+| `routines/*.md` | `routines/` (never over your own filled-in copies) |
+| `examples/podcast-shorts-pipeline/` | `content/videos/<set>/pipeline/`, only when you build podcast or tutorial shorts (step 13b) |
 
 Skills live in the project's own `.claude/skills/`, so they load only when you work in that project.
 
@@ -98,27 +101,31 @@ From your project folder:
 
 ```bash
 cd ~/my-content
-mkdir -p .claude/skills scripts content/reference content/frameworks content/taste content/videos outputs
+mkdir -p .claude/skills scripts routines content/reference content/frameworks content/taste content/videos outputs
 cp -R ~/content-studio/skills/* .claude/skills/
 cp -R ~/content-studio/scripts/* scripts/
 cp ~/content-studio/reference/*.md content/reference/
+cp -R ~/content-studio/reference/edit-lab content/reference/
 cp -n ~/content-studio/reference/PRINCIPLES.md content/PRINCIPLES.md
 cp ~/content-studio/reference/frameworks/*.md content/frameworks/
 cp -Rn ~/content-studio/templates/taste/* content/taste/
 cp -n ~/content-studio/templates/brand.md content/brand.md
+cp -n ~/content-studio/routines/*.md routines/
 chmod +x scripts/*.sh .claude/skills/*/scripts/*.sh 2>/dev/null
 ```
 
-`-n` means never overwrite. Your taste files, your brand file and your edited constitution are never replaced when you run this again to update.
+`-n` means never overwrite. Your taste files, your brand file, your filled-in routines and your edited constitution are never replaced when you run this again to update. A taste template that is new in the clone (a new kind sheet, say) is still added, because `-n` only skips files you already have.
 
 **Check it:**
 
 ```bash
 ls .claude/skills
-ls content/taste | head -30
+ls content/taste | head -40
+ls content/taste/kinds content/reference/edit-lab
+ls routines
 ```
 
-The first prints 12 folders: `content`, `content-waterfall`, `cut-review`, `design-dna`, `long-form-editor`, `media-gen`, `on-camera-board`, `post-writer`, `script-writer`, `shorts-editor`, `taste-builder`, `watch`. The second prints the taste templates.
+The first prints 14 folders: `content`, `content-waterfall`, `cut-review`, `design-dna`, `director`, `long-form-editor`, `media-gen`, `on-camera-board`, `post-writer`, `script-writer`, `search-visibility`, `shorts-editor`, `taste-builder`, `watch`. The second prints the taste templates. The third prints 6 kind files (`README.md`, `live.md`, `masterclass.md`, `podcast.md`, `short.md`, `tutorial.md`) and the 6 edit lab files (`README.md`, `captions.md`, `motion.md`, `picture.md`, `privacy-and-pipeline.md`, `sound.md`). The fourth prints `content-briefing.md` and `posting-refresh.md`.
 
 **If you see loose files like `SKILL.md` directly in `.claude/skills/`,** you copied the contents instead of the folders. Run the `cp -R ~/content-studio/skills/*` line again exactly as written.
 
@@ -159,15 +166,18 @@ This is the step everyone wants to skip and the one that decides whether your co
 **macOS** (needs Homebrew from brew.sh):
 
 ```bash
-brew install ffmpeg node python yt-dlp
+brew install ffmpeg-full node python yt-dlp
+brew unlink ffmpeg 2>/dev/null
+echo 'export PATH="$(brew --prefix ffmpeg-full)/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 ```
+
+The plain `ffmpeg` formula has no libass and no freetype, so it can't burn captions or draw text. `ffmpeg-full` has both, and it installs out of the way of other tools (keg-only), which is why the PATH line is there.
 
 **Linux** (Debian or Ubuntu):
 
 ```bash
 sudo apt update
 sudo apt install ffmpeg nodejs npm python3 python3-venv python3-pip
-python3 -m pip install --user yt-dlp
 ```
 
 **Check it:**
@@ -177,9 +187,10 @@ ffmpeg -version | head -1
 ffprobe -version | head -1
 node -v
 python3 --version
+ffmpeg -filters | grep -wE "ass|subtitles|drawtext"
 ```
 
-Each prints a version. Python must be 3.10 or newer. **If one prints `command not found`,** re-run the install line and read what it says about that tool.
+Each of the first 4 prints a version. Python must be 3.10 or newer. The last prints 3 lines, 1 each for `ass`, `subtitles` and `drawtext`: without them the caption gate, the karaoke burn and the workshop pipeline all stop. **If it prints fewer than 3,** your ffmpeg has no libass or freetype: on macOS run the 3 install lines above again and open a new terminal, then `which ffmpeg` should point inside `ffmpeg-full`. **If one prints `command not found`,** re-run the install line and read what it says about that tool.
 
 ## 9. Python packages, in a private box
 
@@ -188,12 +199,21 @@ A virtual environment keeps these packages away from the rest of your machine, a
 ```bash
 python3 -m venv ~/.content-studio-venv
 source ~/.content-studio-venv/bin/activate
-python3 -m pip install --upgrade pip pillow numpy requests
+python3 -m pip install --upgrade pip pillow numpy scipy requests yt-dlp
 ```
 
 To activate it in every new terminal: `echo 'source ~/.content-studio-venv/bin/activate' >> ~/.zshrc` (or `~/.bashrc` on Linux).
 
-**Check it:** `python3 -c "import PIL, numpy, requests; print('python packages ok')"` prints `python packages ok`.
+**Check it:** `python3 -c "import PIL, numpy, scipy, requests, yt_dlp; print('python packages ok')"` prints `python packages ok`.
+
+**Optional, for the page check and the example shorts pipeline:** Playwright drives a local Chrome or Chromium to read a rendered page, and OpenCV reads faces.
+
+```bash
+python3 -m pip install playwright opencv-python
+python3 -m playwright install chromium
+```
+
+`design-dna`'s `page_check.py` uses Google Chrome at its macOS default path when it's there, or the path in `CHROME`, and Playwright's own Chromium otherwise. **Check it:** `python3 -c "import playwright, cv2; print('optional packages ok')"`.
 
 ## 10. Transcription keys
 
@@ -228,7 +248,16 @@ The first prints how many keys you set. The second makes sure `.env` never reach
 
 ## 11. Fonts, music and your brand
 
-Open `.claude/skills/shorts-editor/assets/README.md`. It names the exact files the scripts look for. The short version: put a caption font at `.claude/skills/shorts-editor/assets/fonts/` (Montserrat from Google Fonts is the tested default), and optionally a music bed you have a licence for at `.claude/skills/shorts-editor/assets/bg-music.m4a`. No fonts, music or logos ship with this repo.
+Open `.claude/skills/shorts-editor/assets/README.md`. It names the exact files the scripts look for. The short version: put a caption font at `.claude/skills/shorts-editor/assets/fonts/` (Montserrat from Google Fonts is the tested default: the variable file, and the static `Montserrat-Bold.ttf` from the zip's `static/` folder too if you'll use the example shorts pipeline), GSAP in `.claude/skills/shorts-editor/assets/vendor/` (the animated cards load it from their own folder, never from a CDN), and optionally a music bed you have a licence for at `.claude/skills/shorts-editor/assets/bg-music.m4a`. No fonts, music, logos or GSAP ship with this repo.
+
+```bash
+cd ~/my-content
+mkdir -p .claude/skills/shorts-editor/assets/vendor
+curl -L -o .claude/skills/shorts-editor/assets/vendor/gsap.min.js https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js
+curl -L -o .claude/skills/shorts-editor/assets/vendor/MotionPathPlugin.min.js https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/MotionPathPlugin.min.js
+```
+
+Read GSAP's licence on its site before you ship anything commercially.
 
 Then fill in `content/brand.md`: your accent colour, fonts, caption style and the folder of real photographs of you (`content/brand/people/`) that every image generation points at.
 
@@ -236,10 +265,10 @@ Then fill in `content/brand.md`: your accent colour, fonts, caption style and th
 
 ```bash
 python3 .claude/skills/shorts-editor/scripts/brand.py --self-test
-ls .claude/skills/shorts-editor/assets/fonts/
+ls .claude/skills/shorts-editor/assets/fonts/ .claude/skills/shorts-editor/assets/vendor/
 ```
 
-The first ends `self-test: PASS`. The second lists your font.
+The first ends `self-test: PASS`. The second lists your font and the 2 GSAP files.
 
 ## 12. Media generation, only if you want it
 
@@ -268,12 +297,55 @@ python3 scripts/serve_outputs.py --selftest
 python3 .claude/skills/shorts-editor/scripts/brand.py --self-test
 python3 .claude/skills/media-gen/scripts/media_gen.py selftest
 python3 .claude/skills/design-dna/scripts/dna_check.py --selftest
+python3 .claude/skills/watch/scripts/transcript.py --self-test
+python3 .claude/skills/watch/scripts/watch.py --self-test
 bash scripts/render_preflight.sh
 ```
 
-**Check it:** each Python line ends in a pass line (`53/53 cases pass`, `all pass`, `PASS`, `selftest passed`). The preflight prints free disk and whether ffmpeg is found. None of them needs a network or a key.
+**Check it:** each Python line ends in a pass line (`60/60 cases pass`, `all pass`, `PASS`, `selftest passed`, `11 cases pass`, `6 cases pass`). The preflight prints free disk and whether ffmpeg is found. None of them needs a network or a key.
+
+If you installed Playwright in step 9, add the page check's own test. It renders 19 small pages in a headless browser and takes about 2 minutes:
+
+```bash
+python3 .claude/skills/design-dna/scripts/page_check.py --self-test
+```
+
+It ends `self-test: 19 of 19 fixtures behave as expected`.
 
 **If one fails,** paste the whole output into Claude Code and ask it to read `TROUBLESHOOTING.md` first.
+
+## 13b. The example shorts pipeline, only when you build podcast or tutorial shorts
+
+`examples/podcast-shorts-pipeline/` is the reference builder behind the 10 rules in `shorts-editor`'s "Before you build a short". Copy it into the folder of the set of shorts you're building, so the code and its specs travel together:
+
+```bash
+cd ~/my-content
+mkdir -p content/videos/<set>/pipeline
+cp -R ~/content-studio/examples/podcast-shorts-pipeline/* content/videos/<set>/pipeline/
+cd content/videos/<set>/pipeline
+cp config.example.json config.json
+python3 paths.py
+```
+
+Edit `config.json` first: your accent, your own brand and show names, your guests' firms. `python3 paths.py` prints every folder and value it resolved and where each came from. It needs the shorts-editor skill installed (step 4), the fonts (step 11, plus `DMSerifDisplay-Regular.ttf`, `DMSerifDisplay-Italic.ttf`, `Inter[opsz,wght].ttf` and `LexendExa[wght].ttf`, all free from Google Fonts, in the same fonts folder), Playwright and OpenCV (step 9), and an `ffmpeg` built with libass (`ffmpeg -filters | grep -wE "ass|subtitles|drawtext"` prints 3 lines; if it doesn't, see step 8).
+
+**On Linux, the monospace font.** The graphic pages load macOS's Menlo from `/System/Library/Fonts/Menlo.ttc`, and a page that can't load a face stops the build with the face's name, on purpose. Point it at a monospace font you have, without editing the page, with one line in `config.json`:
+
+```json
+"path_remap": [["/System/Library/Fonts/Menlo.ttc", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"]]
+```
+
+(`sudo apt install fonts-dejavu-core` gives you that file.) Or change the `@font-face` line for Menlo near the top of `looks.html`.
+
+**Check it,** from that pipeline folder:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 pipeline.py --selftest
+PYTHONDONTWRITEBYTECODE=1 python3 pipeline.py --status
+PYTHONDONTWRITEBYTECODE=1 python3 anim_selftest.py
+```
+
+The first ends `selftest: PASS` (no footage, no network). The second lists the 2 invented example shorts under `TO GO`. The third ends `ALL PASS`. `--plan` and `--build` on the invented examples stop at the first missing track, because there's no footage behind them: that's the expected result until you write a spec for your own tapes. The example's `README.md` has the spec, the stages, the checks and the lessons.
 
 ## 14. See a video page play
 
@@ -289,7 +361,7 @@ Then open `http://localhost:4200/` in your browser.
 
 ## 15. The morning routine, optional
 
-`routines/content-briefing.md` is the one thing that fires without you. Run it by hand once first, in a normal session, and fill every `[SQUARE BRACKET]` with your answer and a full path. Then ask Claude Code: *"Create a scheduled task named content-briefing that runs every weekday at 06:30 with the contents of routines/content-briefing.md as its prompt. Show me when it next fires."* Pick a time when the machine is awake.
+`routines/content-briefing.md` is the one thing that fires without you. Run it by hand once first, in a normal session, and fill every `[SQUARE BRACKET]` with your answer and a full path. Then ask Claude Code: *"Create a scheduled task named content-briefing that runs every weekday at 06:30 with the prompt between the lines in routines/content-briefing.md as its prompt. Show me when it next fires."* Pick a time when the machine is awake.
 
 **Check it:** the morning after, a briefing file dated today is in the folder the routine names.
 
@@ -311,4 +383,4 @@ Then open `http://localhost:4200/` in your browser.
 cd ~/content-studio && git pull
 ```
 
-Then run step 4 again from your project. The `-n` copies never touch your taste files, brand file or constitution; skills and scripts are replaced with the current versions. If you edited a skill, copy your version somewhere safe first.
+Read `CHANGELOG.md` in the clone first: it says what changed since the last version. Then run step 4 again from your project. The `-n` copies never touch your taste files, brand file or constitution; skills, scripts and the edit lab book are replaced with the current versions. If you edited a skill, copy your version somewhere safe first. A pipeline you copied out of `examples/` into a video's folder is yours and is never touched: compare it with the new example by hand if you want the changes.

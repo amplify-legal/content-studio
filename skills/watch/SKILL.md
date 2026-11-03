@@ -1,16 +1,6 @@
 ---
 name: watch
-description: >
-  Actually watch a video instead of skimming its transcript. Pulls the file, slices it into
-  timestamped frames, gets the transcript by whichever route works, and hands both to Claude
-  together. Use for - a YouTube link dropped with a reaction, "watch this", "what's in this
-  video", "break down this hook", "why does this intro work", "tear down this thumbnail",
-  "what did they say at 4:30", a competitor's video, a conference talk, a podcast episode,
-  a tool demo, a local mp4 on this machine, or any moment where what is ON SCREEN matters
-  and a transcript alone would miss it. NOT for reviewing your own cut before the person
-  whose taste decides watches it (that is cut-review). NOT for rendering or editing (that is
-  shorts-editor or long-form-editor). NOT for a transcript you only need as text (pull that straight from the
-  platform).
+description: "Actually watch a video: frames plus transcript together, when what is ON SCREEN matters. Use for - a YouTube link with a reaction, \"watch this\", \"break down this hook\", \"tear down this thumbnail\", \"what did they say at 4:30\", a competitor's video, a talk, a demo, a local mp4. NOT for reviewing your own cut before the person whose taste decides watches it (cut-review), editing (shorts-editor, long-form-editor), or a text-only transcript (pull it from the platform)."
 user-invocable: true
 ---
 
@@ -80,6 +70,7 @@ the reason somebody sent it is the part worth keeping.
 | `--no-dedup` | Keep near-identical frames. Only when judging subtle motion. |
 | `--no-whisper` | Skip the local transcription fallback. |
 | `--json` | Machine-readable instead of the report. |
+| `--self-test` | Offline check that a reused work folder never hands back another link's video. No network, no footage. |
 
 Frame sampling never exceeds 2 fps, whatever you ask for.
 
@@ -94,16 +85,20 @@ So: run once, read the transcript, pick the moments yourself, re-run pinned.
 ```bash
 python3 .claude/skills/watch/scripts/watch.py "$URL" --detail transcript
 # read it, choose the moments, then:
-python3 .claude/skills/watch/scripts/watch.py <work dir from the first run>/video.mp4 --timestamps 4:32,7:10,9:55
+python3 .claude/skills/watch/scripts/watch.py "<the path on the Video line>" --timestamps 4:32,7:10,9:55
 ```
 
 Point the second run at the **downloaded file**, not the URL, so it does not
-download twice. Cue frames are reserved against the cap before anything else, so
+download twice. The report's `Video` line names it; it is not always
+`<work dir>/video.mp4`, because a reused work folder puts a second link's
+download in its own subfolder. Cue frames are reserved against the cap before anything else, so
 they never get evicted.
 
 ## What this costs: nothing but compute
 
-No API key, anywhere in this skill. What it does need installed:
+No paid API key, anywhere in this skill (the one optional token, for your own
+channel's captions, is free and described under "Where the transcript comes
+from"). What it does need installed:
 
 | Thing | Needed for | Install |
 |---|---|---|
@@ -121,11 +116,20 @@ A ladder, first one that works wins, and the run header always names which one d
 1. **yt-dlp captions** - native or auto captions, free, no key. Covers YouTube
    and most of the ~1,000 sites yt-dlp supports (Vimeo, Loom, Twitch and the
    rest). URLs only.
-2. **faster-whisper, local** - offline, no key, and the only route that works on
+2. **YouTube API, your own channel only** - optional, read-only: the YouTube
+   Data API's `captions.list` then `captions.download` (as vtt). It runs only
+   when `YOUTUBE_OAUTH_TOKEN` holds an OAuth 2.0 access token (scope
+   `youtube.force-ssl`) for the channel that owns the video; without it the
+   header says it was skipped. YouTube hands captions over only for videos the
+   token's channel owns, so anybody else's video is a clean 403 and the ladder
+   moves on. This is what carries your own videos on the days YouTube blocks
+   yt-dlp. Access tokens expire after about an hour, and a 401 in the header
+   says so. Untested in this form: the version this was ported from made the
+   same 2 calls through a connector rather than a raw token.
+3. **faster-whisper, local** - offline, no key, and the only route that works on
    a file sitting on this machine, which is most of your own footage.
 
-Nothing but extracted audio ever leaves the machine, and only on route 2. If you
-pay for a hosted transcript API and want it first, add a function to
+Nothing leaves the machine on route 3. If you pay for a hosted transcript API and want it first, add a function to
 `scripts/transcript.py` that returns the same `[{start, end, text}]` shape and
 call it at the top of `resolve()`. The rest of the pipeline will not notice.
 
@@ -136,6 +140,33 @@ stuttered quote in output, that collapse did not run.
 
 ## Traps, all of them found live
 
+- **A caption route only reads what it wrote in this run, for this video.** On
+  2026-10-10 `transcript.py` worked in one shared folder and parsed whatever
+  `.vtt` sat there without checking yt-dlp had succeeded. With yt-dlp blocked,
+  2 videos came back with the captions of an earlier run of a different video,
+  and nothing said so. Now every run gets a new folder
+  (`watch-transcript/<id>-<time>-<random>/` in the system temp folder), the
+  yt-dlp call gets a new subfolder and names its output by video id, and a file
+  counts only if yt-dlp exited 0, the name carries this video's id and it was
+  written after the call started. A failed run returns no transcript and a
+  reason, never another video's words. `python3 transcript.py --self-test`
+  proves it offline (11 cases). If a transcript ever reads like a different
+  video, check the `route:` line and the work folder before trusting a word of
+  it.
+- **A downloaded video is reused only for the link it came from.** Until
+  2026-10-11 `watch.py` handed back any `video.*` in the work folder as
+  "cached", so an `--out-dir` reused for a second link returned the first
+  link's file and the frames and transcript described the wrong video. Now a
+  finished download writes `source.json` beside the file (the link, the YouTube
+  id, the file name and its size), and a file is reused only when that record
+  names this link (the same YouTube id counts, so `youtu.be/X` and `watch?v=X`
+  share) and the size still matches. A file with no record is never reused. A
+  second link in an occupied folder downloads into a new
+  `video-<id>-<time>-<random>/` subfolder, never beside the old file, because
+  yt-dlp keeps an existing `video.mp4` and hands it back as "already
+  downloaded". When a link gets no transcript, an old `transcript.txt` in the
+  folder is overwritten with a line saying so. `python3 watch.py --self-test`
+  proves it offline (6 cases, download stubbed).
 - **The python that runs this script is often not the one with faster-whisper on
   it.** A Mac commonly carries a Homebrew python, a system python and a conda
   python, with the library in exactly one. `transcript.py` probes for an
@@ -163,7 +194,7 @@ stuttered quote in output, that collapse did not run.
   documented in the header of `scripts/yt_download.sh`.
 - **Working files land in your system temp folder, under `watch/<hash>/`** (the run header prints the exact path as `Work dir`; on a Mac it is under `$TMPDIR`, on Linux usually `/tmp`) and a downloaded video is large.
   Delete the directory when the conversation moves on; keep it if follow-ups are
-  likely, since a second run reuses the download.
+  likely, since a second run of the same link reuses the download.
 
 ## Token cost, so it is a decision and not a surprise
 

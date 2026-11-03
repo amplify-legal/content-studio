@@ -84,6 +84,12 @@ And the constitution still governs the gate. **This is a check the creator runs,
 
 ---
 
+## 5. Quality first, then consistency, then speed
+
+A guideline from a working channel: the posting cadence rises only once the pipeline holds the quality bar. One creator's order, said on 2 separate days: quality number one, consistency number two, volume and speed number three. When a channel ramps volume before the cuts are good, the fix is to step back to quality, not to push harder on output.
+
+---
+
 ## The tests
 
 3 questions. Any piece of this system that fails one of them is broken, however good it looks.

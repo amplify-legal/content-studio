@@ -11,12 +11,15 @@ credit pack, and then the direct Gemini and fal keys the same day.
              veo                veo-3.1-generate-preview
              veo-fast           veo-3.1-fast-generate-preview
 
-NOT AVAILABLE ON MIXROUTE: Gemini Omni Flash. Both `gemini-omni-flash-preview`
-and `gemini-omni-flash` return 503 model_not_found ("no available channel"),
-checked live. Omni was one of the three models originally asked for, so this
-is a real gap rather than an oversight. Use `veo` or `veo-fast` for the
-reference-driven, native-audio shots Omni would have covered, and re-run
-`media_gen.py models` to see if MixRoute adds it later.
+    Video    omni               gemini-omni-flash-preview  (Google-direct)
+
+GEMINI OMNI FLASH IS NOT ON MIXROUTE. Both `gemini-omni-flash-preview` and
+`gemini-omni-flash` return 503 model_not_found ("no available channel"),
+checked live. So `--model omni` goes straight to Google (Vertex, Application
+Default Credentials) and bills your GOOGLE_CLOUD_PROJECT. It is token-priced:
+the script estimates the job from the video-output rate before it runs (so the
+per-call ceiling applies), then prints and logs the real cost from the token
+count after. Re-run `media_gen.py models` to see if MixRoute adds it later.
 
 KEY (an environment variable; see the repo's SETUP.md):
     MIXROUTE_API_KEY     from mixroute.ai, covers every model above
@@ -33,7 +36,14 @@ outputs/media-gen/<date>/. Face references come from MEDIA_GEN_FACE_REFS
 (comma-separated), defaulting to two files under content/brand/people/.
 
 OFFLINE CHECKS. `media_gen.py selftest` runs the guards (face lock, spend
-ceiling, caption parsing, thumbnail sizing) with no network and no key.
+ceiling, caption parsing, thumbnail sizing, wallet guard, render lock, the Omni
+estimate and its 10 s ceiling) with no network and no key.
+
+ONE IMAGE RENDER AT A TIME. `image` takes a machine-wide lock file
+(MEDIA_GEN_LOCK, default ~/.cache/media-gen/media-gen.lock) after the confirm,
+so parallel sessions and sub-agents queue instead of colliding into 429s on
+one Google project. MEDIA_GEN_NO_LOCK=1 bypasses it on purpose. The video
+lanes take no lock.
 `media_gen.py thumb-size --video <file>` prints the frame size a native
 video thumbnail must match, and with --image fits a picture to it.
 
@@ -109,7 +119,7 @@ VIDEO_MODELS = {
         "max_dur": 8,
         "fixed_dur": 8,   # MixRoute's Veo channel IGNORES durationSeconds, verified
         "style": "veo",
-        "note": "Veo 3.1 Fast. The default story-animation lane; 4x cheaper. Always 8s.",
+        "note": "Veo 3.1 Fast. The gateway story-animation lane; 4x cheaper. Always 8s.",
     },
     # Not MixRoute. Goes straight to Google, so it bills your GCP project and
     # can spend Google Cloud credits. Verified against Google's own notebook:
@@ -191,9 +201,9 @@ def outdir(a):
     return d
 
 
-def confirm(cost, yes):
+def confirm(cost, yes, truth="MixRoute's dashboard is truth"):
     cap = float(os.environ.get("MEDIA_GEN_MAX_CALL_USD", "5.00"))
-    print(f"  Estimated cost: ${cost:.3f}   (estimate; MixRoute's dashboard is truth)")
+    print(f"  Estimated cost: ${cost:.3f}   (estimate; {truth})")
     if cost > cap:
         die(f"that is over the ${cap:.2f} per-call cap.",
             "Lower the duration or resolution, or raise MEDIA_GEN_MAX_CALL_USD "
@@ -223,7 +233,7 @@ def read_ref(p):
 
 
 def check_refs(paths):
-    # gs:// URIs are Cloud Storage, not local files -- the omni lane reads video
+    # gs:// URIs are Cloud Storage, not local files; the omni lane reads video
     # references from there on purpose, so never stat them.
     missing = [str(p) for p in paths
                if p and not str(p).startswith("gs://") and not Path(p).expanduser().exists()]
@@ -270,6 +280,42 @@ def _report(saved):
 
 
 # ---------------------------------------------------------------------- image
+RENDER_LOCK = Path(os.environ.get("MEDIA_GEN_LOCK")
+                   or Path.home() / ".cache" / "media-gen" / "media-gen.lock").expanduser()
+_render_lock_fh = None
+
+
+def acquire_render_lock(path=None):
+    """One image render at a time, machine-wide.
+
+    Parallel image renders on one Google project come back 429 (4 in parallel
+    got 2 refusals; 3 workers in 1 session did it again). The lock is held
+    until this process exits, so parallel sessions and sub-agents queue
+    instead of colliding. MEDIA_GEN_NO_LOCK=1 bypasses it on purpose. Returns
+    True when the lock is held, False when bypassed or unsupported.
+    """
+    global _render_lock_fh
+    if os.environ.get("MEDIA_GEN_NO_LOCK"):
+        return False
+    try:
+        import fcntl
+    except ImportError:      # no fcntl on this platform: run unlocked, say so
+        print("  (no file locking on this platform; parallel renders may 429)")
+        return False
+    lock = Path(path) if path else RENDER_LOCK
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    _render_lock_fh = open(lock, "w")
+    try:
+        fcntl.flock(_render_lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        print("  waiting for the render lock (another image render is running)...",
+              flush=True)
+        fcntl.flock(_render_lock_fh, fcntl.LOCK_EX)
+    _render_lock_fh.write(str(os.getpid()))
+    _render_lock_fh.flush()
+    return True
+
+
 def cmd_image(a):
     spec = IMAGE_MODELS.get(a.model) or die(
         f"unknown image model '{a.model}'.", f"Pick one of: {', '.join(IMAGE_MODELS)}")
@@ -282,6 +328,7 @@ def cmd_image(a):
     if a.ref:
         print(f"  {len(a.ref)} reference(s): {', '.join(Path(r).name for r in a.ref)}")
     confirm(cost, a.yes)
+    acquire_render_lock()
 
     # References go FIRST so the model anchors identity before it reads the
     # prompt. This is the face-lock rule: both refs, refs ahead of the words,
@@ -601,7 +648,7 @@ def _seedance_text_warning(a):
 
 
 def google_client():
-    """Vertex first (spends your Google Cloud project), API key second."""
+    """Vertex only: spends your Google Cloud project."""
     try:
         from google import genai
     except ImportError:
@@ -611,7 +658,7 @@ def google_client():
     # Vertex FIRST, because that is the only route that spends a Google Cloud
     # project's balance (including any trial credit sitting on it). A plain
     # Gemini API key bills a SEPARATE "prepayment credits" pool, which returns
-    # 429 credits_depleted when empty, so the key is a fallback only.
+    # 429 credits_depleted when empty, so this script uses Vertex only.
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     # Omni Flash rejects classic Vertex regions: only global, us, eu.
     location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
@@ -629,11 +676,66 @@ def google_client():
 
     die("no Google credentials found.",
         "To bill a Google project, export GOOGLE_CLOUD_PROJECT=your-project-id\n"
-        "             then run once:  gcloud auth application-default login\n"
-        "  Or for a plain key:  GOOGLE_API_KEY=... (bills the key's own pool)")
+        "             then run once:  gcloud auth application-default login")
+
+
+# Google's published Omni rates (check its pricing page; prices move):
+# input $1.50 per 1M tokens (text, image, video, audio), text output and
+# reasoning $9.00 per 1M, video output $17.50 per 1M at 5,792 tokens per
+# second of 720p. Measured: an image reference is about 1,100 input tokens,
+# and a reference video costs the same per second as generating one.
+OMNI_RATE_IN, OMNI_RATE_TEXT_OUT, OMNI_RATE_VIDEO_OUT = 1.50e-6, 9.00e-6, 17.50e-6
+OMNI_VIDEO_TOKENS_PER_SEC = 5792
+OMNI_IMAGE_REF_TOKENS = 1100
+
+
+def _omni_estimate(duration, n_images=0, video_ref_secs=0):
+    """A pre-render estimate for an Omni job, so the per-call ceiling applies.
+
+    Video output dominates (about $0.10 a second of 720p); references and the
+    prompt add cents. Reasoning tokens are unknown before the run, so the real
+    cost printed afterwards (from the job's own token count) can be a little
+    higher. The spend log always records the real figure, never this one.
+    """
+    out = duration * OMNI_VIDEO_TOKENS_PER_SEC * OMNI_RATE_VIDEO_OUT
+    inp = (n_images * OMNI_IMAGE_REF_TOKENS
+           + video_ref_secs * OMNI_VIDEO_TOKENS_PER_SEC) * OMNI_RATE_IN
+    return out + inp
+
+
+def _omni_failure_reason(inter):
+    """Omni's 'failed' rarely carries its reason on interaction.error; it sits
+    on the model_output step of the dumped interaction. Best effort, never
+    raises."""
+    try:
+        dump = inter.model_dump() if hasattr(inter, "model_dump") else {}
+        for step in (dump.get("steps") or []):
+            if step.get("type") == "model_output":
+                for c in (step.get("content") or []):
+                    txt = c.get("text") if isinstance(c, dict) else None
+                    if txt:
+                        return str(txt)[:400]
+                return json.dumps(step)[:400]
+    except Exception:
+        pass
+    return ""
 
 
 def cmd_omni(a, spec):
+    # Checks that need no SDK and no network run first, before any sign-in.
+    if a.duration > spec["max_dur"]:
+        die(f"omni maxes out at {spec['max_dur']}s a generation, you asked for {a.duration}s.",
+            "Split the beat into 2 clips, or use --model seedance (up to 30s).")
+    # Flags the Omni lane does not send, said out loud so nobody trusts them.
+    if a.no_audio:
+        print("  note: Omni ignores --no-audio and always returns an AAC track. "
+              "Write 'Silent.' in the prompt and mute it on the timeline.")
+    if getattr(a, "end", None):
+        print("  note: --end is not sent on Omni; there is no tested way to pin a "
+              "last frame here. Build an exact end state deterministically.")
+    if a.negative:
+        print("  note: --negative is not sent on Omni; put exclusions at the end "
+              "of the prompt text instead.")
     from google.genai import types as _t
     try:
         from google.genai import interactions
@@ -667,16 +769,21 @@ def cmd_omni(a, spec):
             "image_to_video" if imgs else
             "text_to_video")
 
+
     print(f"\n  omni  ({spec['id']})  {a.duration}s  {a.aspect}  task={task}")
     print(f"  auth: {who}")
     if imgs:
         print(f"  {len(imgs)} image ref(s): {', '.join(Path(i).name for i in imgs)}")
     if vids:
         print(f"  {len(vids)} video ref(s): {', '.join(str(v) for v in vids)}")
-    print("  cost: preview model, no published per-second rate. Billed to the "
-          "account above, not to MixRoute.")
-    if not a.yes:
-        confirm(0.0, False)
+    # Video references are gs:// objects whose length the script cannot read,
+    # so an edit job is estimated as if the reference matched the asked
+    # duration (an edit needs that match anyway).
+    est = _omni_estimate(a.duration, n_images=len(imgs),
+                         video_ref_secs=a.duration * len(vids))
+    print("  cost: token-priced, billed to the account above, not to MixRoute. "
+          "The real figure prints after the render.")
+    confirm(est, a.yes, truth="the token count after the render is truth")
 
     print("  Submitting...")
     inter = client.interactions.create(
@@ -704,7 +811,11 @@ def cmd_omni(a, spec):
             die(f"20 minutes with no result. The job may still finish: "
                 f"interaction id {inter.id}.", "Re-check it rather than re-paying.")
     if str(inter.status) == "failed":
-        die(f"Omni reported the render failed: {getattr(inter, 'error', '') or inter.status}")
+        why = (_omni_failure_reason(inter)
+               or getattr(inter, "error", "") or inter.status)
+        die(f"Omni reported the render failed: {why}",
+            f"Interaction {inter.id}. If the reason is empty, the image you passed "
+            "is the first suspect; try the same scene with a different still.")
 
     blob = None
     for step in (getattr(inter, "steps", []) or []):
@@ -741,7 +852,8 @@ def _omni_cost(inter):
     the response carries no usage: an absent bill is not a free one, so the
     caller prints nothing instead of claiming zero.
     """
-    RATE_IN, RATE_TEXT_OUT, RATE_VIDEO_OUT = 1.50e-6, 9.00e-6, 17.50e-6
+    RATE_IN, RATE_TEXT_OUT, RATE_VIDEO_OUT = (OMNI_RATE_IN, OMNI_RATE_TEXT_OUT,
+                                              OMNI_RATE_VIDEO_OUT)
     u = getattr(inter, "usage", None)
     if not u:
         return 0.0, {}
@@ -818,9 +930,9 @@ def cmd_doctor(a):
             print(f"    note    {stale} is still set and is no longer used, safe to delete")
     print(f"    OK      per-call spend cap: ${float(os.environ.get('MEDIA_GEN_MAX_CALL_USD', '5.00')):.2f}")
 
-    # The optional Google lane. Not required to work: everything falls back to
-    # MixRoute, so a failure here is a "you are paying cash" warning, never an
-    # error. ADC tokens expire often, which is exactly why the fallback exists.
+    # The optional Google lane. Not required to work: images can fall back to
+    # MixRoute with --pay-cash, so a failure here is a warning, never an error.
+    # Omni video has no MixRoute route and needs this lane. ADC tokens expire often.
     print("\n  Google Cloud lane, optional (images and omni video)\n")
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     if not project:
@@ -833,7 +945,7 @@ def cmd_doctor(a):
             _adc_token()
             print("    OK      credentials live, images and omni bill that project")
         except Exception:
-            print("    STALE   credentials expired. Renders still work, on MixRoute (cash).")
+            print("    STALE   credentials expired. Images need --pay-cash (MixRoute) until fixed; omni needs this lane.")
             print("            Fix:  gcloud auth application-default login")
     print(f"\n  {'Ready.' if ok else 'Not ready, fix the lines above.'}\n")
 
@@ -1103,6 +1215,7 @@ def cmd_thumb_size(a):
 # ---------------------------------------------------------------- selftest
 def cmd_selftest(a):
     """Offline checks of the guards. No network, no key, nothing spent."""
+    global _render_lock_fh
     import tempfile
     fails = []
 
@@ -1176,13 +1289,42 @@ def cmd_selftest(a):
     else:
         os.environ["GOOGLE_CLOUD_PROJECT"] = oldp
 
+    # Render lock: bypass returns False; a real lock on a scratch path holds.
+    oldl = os.environ.pop("MEDIA_GEN_NO_LOCK", None)
+    os.environ["MEDIA_GEN_NO_LOCK"] = "1"
+    if acquire_render_lock():
+        fails.append("render lock taken although MEDIA_GEN_NO_LOCK=1")
+    os.environ.pop("MEDIA_GEN_NO_LOCK", None)
+    with tempfile.TemporaryDirectory() as td:
+        try:
+            import fcntl  # noqa: F401
+            if not acquire_render_lock(Path(td) / "sub" / "media-gen.lock"):
+                fails.append("render lock not taken on a platform with fcntl")
+        except ImportError:
+            pass
+        if _render_lock_fh:
+            _render_lock_fh.close()
+            _render_lock_fh = None
+    if oldl is not None:
+        os.environ["MEDIA_GEN_NO_LOCK"] = oldl
+
+    # Omni estimate: about $0.10 a second of 720p, inside the default ceiling
+    # at 10s, and the 10s ceiling refuses before any spend.
+    e6 = _omni_estimate(6)
+    if not 0.55 < e6 < 0.65:
+        fails.append(f"omni estimate for 6s is off: {e6:.4f}")
+    if _omni_estimate(6, n_images=2) <= e6:
+        fails.append("omni estimate ignores image references")
+    if VIDEO_MODELS["omni"]["max_dur"] != 10:
+        fails.append("omni max_dur should be 10s")
+
     if fails:
         print("\n  selftest FAILED:")
         for f in fails:
             print(f"    - {f}")
         sys.exit(1)
     print("\n  selftest passed: face lock, spend ceiling, ref checks, captions, "
-          "thumbnail sizing, wallet guard.\n")
+          "thumbnail sizing, wallet guard, render lock, omni estimate.\n")
 
 
 def main():
@@ -1201,7 +1343,10 @@ def main():
   # explore a board cheaply first
   media_gen.py image --model nano-banana-lite -n 6 --prompt "..." --slug board
 
-  # story animation, cheapest good lane
+  # story animation on Omni (needs GOOGLE_CLOUD_PROJECT; 3 to 10s, priced per token)
+  media_gen.py video --model omni --duration 6 --ref mascot.png --prompt "..." --slug scene
+
+  # story animation through the gateway (Veo always returns 8s)
   media_gen.py video --model veo-fast --duration 8 --prompt "..." --slug scene
 
   # Seedance for material physics

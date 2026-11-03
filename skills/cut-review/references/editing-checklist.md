@@ -17,7 +17,7 @@ skipped, and a skipped checklist is worse than a short one.
       a subtitle, cut words until it doesn't
 - [ ] Capitalization consistent across every card, banner and title (pick one convention per
       video, sentence case is the safe default)
-- [ ] Number formats consistent and correct for the audience's locale (`$5,000` not `$5.000`,
+- [ ] Number formats consistent and correct for the audience's locale (`$2,500` not `$2.500`,
       `1,000,000` not `1.000.000`, and the right date order on screen)
 - [ ] Nothing under 44px when read at phone size (render a frame at 375px wide and read it)
 - [ ] No spelling errors in any card, lower third or title
@@ -35,11 +35,16 @@ skipped, and a skipped checklist is worse than a short one.
 - [ ] Every visual change is purposeful. No cut, zoom or card without a reason, and motion
       for motion's sake fails the check
 - [ ] Sections end with a beat of tail, not a hard chop on the last syllable
+- [ ] Every section boundary has a bridge: a few seconds or one card saying what comes next,
+      the insight and why to keep watching. A jump with no bridge fails, and so does a join
+      where a removed section broke a count or a promise ("four" said, "five" shown)
 
 ## Audio
 - [ ] Loud moments tamed (check `volumedetect` max_volume)
 - [ ] Music bed sits under the voice, not over it
 - [ ] No clipped word at the head or tail of any cut
+- [ ] Transition sounds land in a pause at a real screen change, never mid-word, and every
+      one is a real recorded sound (no synthesised pop or click baked into a piece's start)
 
 ## Call to action
 - [ ] Exactly one CTA, never stacked asks
@@ -50,6 +55,8 @@ skipped, and a skipped checklist is worse than a short one.
 ## Delivery
 - [ ] `+faststart` set (the file opens instantly in a player and on socials)
 - [ ] A/V sync: video stream duration matches audio, drift under one frame
+- [ ] Sync proven against the original tape at every camera stretch (seek by timestamp to
+      the moment the picture shows and the moment the sound plays), never against the last cut
 - [ ] Correct aspect ratio and resolution for the destination
 - [ ] On a 9:16 short, nothing in the platform's action rail or the top and bottom bands
       (`check_safe_area.py`: no ink above y=200, below y=1500, or right of x=940 from y=960

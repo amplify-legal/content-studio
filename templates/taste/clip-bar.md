@@ -49,8 +49,9 @@ Roughly every 1 to 5 seconds, and every change delivers information: a highlight
 
 ### Technical defaults
 
-- Overlays with transparency: ProRes 4444 `.mov`, matching the timeline frame rate.
-- Loudness target around -14 LUFS for social platforms. Subtitles burn in last.
+- Overlays with transparency: ProRes 4444 `.mov` (or `webm`), rendered at the master's own frame rate: 24 fps on a 24 fps recording, 30 fps on a 30 fps shorts pipeline. A fixed 24 on a 30 fps master stretches every overlay window (`content/reference/edit-lab/motion.md`, group B).
+- Loudness target -14 LUFS on every short, true peak at or under -1 dBTP, after a noise, echo and harshness pass (`content/reference/edit-lab/sound.md`). Subtitles burn in last.
+- No network inside a render: vendor the animation library beside the page rather than loading it from a CDN (a CDN load once stalled a render twice).
 - Confirm the cut plan in plain English with the person before rendering. No auto-upload.
 
 ## Grounding audit

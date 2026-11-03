@@ -1,0 +1,80 @@
+{
+  "id": "podcast-guest-a-F1",
+  "slug": "podcast-guest-a",
+  "kind": "format",
+  "title": "Stop answering every lead the same day",
+  "title_accent": "the same day",
+  "format": "claim-band",
+  "look": "ig_native",
+  "compare_look": null,
+  "people": {
+    "host": {
+      "name": "Host",
+      "file": "podcasts/podcast-guest-a/host-cfr.mp4",
+      "words": "podcasts/podcast-guest-a/edit/transcripts/host-cfr.json",
+      "offset": 0.0,
+      "fps": 30
+    },
+    "cohost": null,
+    "guest": {
+      "name": "Guest A",
+      "firm": "Example Advisory LLC",
+      "file": "podcasts/podcast-guest-a/guest-cfr.mp4",
+      "words": "podcasts/podcast-guest-a/edit/transcripts/guest-cfr.json",
+      "offset": 0.0,
+      "fps": 24,
+      "crop": null,
+      "note": "webcam a little low: the solver lifts the face and fills the bottom with the blurred extension"
+    }
+  },
+  "clock": "guest",
+  "hook": {
+    "mode": "aha",
+    "speaker": null,
+    "pieces": [[412.30, 415.84, "guest"]],
+    "text": "The fastest reply isn't the one that wins. The useful one does."
+  },
+  "question": {
+    "speaker": "host",
+    "pieces": [[388.02, 390.71]],
+    "text": "So how fast should a small team answer a new lead?"
+  },
+  "opening_line": null,
+  "answer": {
+    "pieces": [
+      [392.10, 398.44, "guest"],
+      [399.20, 405.96, "guest"],
+      [406.50, 411.10, "guest"],
+      [412.30, 415.84, "guest"]
+    ]
+  },
+  "intro": {
+    "pieces": [[120.40, 124.95, "host"]]
+  },
+  "speed": 1.15,
+  "caption_drops": ["um", "uh"],
+  "caption_fix": {},
+  "credit": "Guest A · Example Advisory LLC",
+  "graphic": {
+    "kind": "none",
+    "items": [],
+    "keys": [],
+    "source_line": null,
+    "html": null
+  },
+  "screen": null,
+  "after_of": null,
+  "collaborator": "Guest A",
+  "ig": {
+    "emoji": "⏱️",
+    "callout": ["Useful beats fast", 413.10]
+  },
+  "cutaways": [],
+  "notes": [
+    "INVENTED EXAMPLE: every name, time, word and file here is made up to show the shape. Replace it all.",
+    "Shared clock on both tracks (offsets 0, proved by turn-taking at 391 and 412).",
+    "Frame rates differ (host 30, guest 24): the pipeline conforms before stacking.",
+    "Order rule: the aha line opens, then the question, then the answer; the host's introduction of the guest goes at the END."
+  ],
+  "plan_why": "The aha line is the saved line, so it opens; the restart 'we, we used to' at 398.44 to 399.20 is cut; the answer keeps setup and payoff whole and runs about 24 s at 1.15x."
+}

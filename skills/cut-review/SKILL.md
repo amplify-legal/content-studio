@@ -21,6 +21,8 @@ Every cut gets this pass **before the creator watches it**. Each video has 2 rev
 
 **This gate approves nothing.** It clears mechanics. Taste is settled by the creator watching the file, and **the creator sees the file before anything is uploaded**, without exception, including under an explicit "just handle it end to end" mandate. A finished public artifact is not what an autonomy grant covers.
 
+**A pass here is mechanical and never calls a cut ready, and a cut the creator rejected stays rejected until they accept a revision against a reference they picked.** 2 options once passed every mechanical check and the creator rejected both as "way too basic", thrown together without awareness of the skills and the taste files. A green checklist says nothing about taste.
+
 ---
 
 ## The standing rules
@@ -47,6 +49,9 @@ Every cut gets this pass **before the creator watches it**. Each video has 2 rev
 
 1. **The cut itself**, as a local file. Download a shared link first. Never review from memory of a previous version: this version is the one being checked.
 2. **The brief**: `content/videos/<slug>/brief.md` or wherever the video's brief lives. **If no brief exists, say so first.** A cut reviewed against nothing is half a review, and it is worth saying which half you did. The vision-handoff section (what the creator said the great version looks like, recorded right after the shoot) is the heart of the check.
+   - **Read the brief's frame section first** (the director's answers, written before the record: who the creator is in this video, what the viewer leaves with, what the cut has to protect) and say in the verdict's first line which frame the cut was checked against. A brief with no frame says so in that line.
+   - **Then the kind's sheet, before the checklist:** `content/taste/kinds/<kind>.md` (tutorial, masterclass, short, podcast, live; `content/taste/kinds/README.md` tells them apart), and the newest lines the creator said about the work on the last review calls (the kind sheet's lines section, last 14 days). A line that bears on this cut is a check item with its receipt.
+   - **And the edit lab book's file for what the cut leans on** (`content/reference/edit-lab/README.md` names which: captions, sound, picture, motion, privacy and pipeline). Its "tried and dropped" bullets are the faults to look for, because each one shipped or nearly shipped once.
    - **A podcast episode usually has no brief.** Its vision handoff is the episode's own plan file (for example `content/videos/<episode>/re-edit-plan.md`, the creator's notes verbatim per version) plus `content/reference/podcast-edit.md`. Read those two instead, and say which you used.
 
 ---
@@ -55,7 +60,9 @@ Every cut gets this pass **before the creator watches it**. Each video has 2 rev
 
 **A full long-form episode has a machine gate that runs before this skill.** The episode's verify loop must be green: `python3 scripts/verify_loop.py` on the episode folder (the four-file convention in `content/reference/verify-loop.md`). The machine pass owns duration, A/V drift, freezes, black frames, dead air, empty layout wells, and a frame every few seconds across the whole runtime. This skill owns everything it cannot see. Do not re-check those by hand, and do not review a cut whose report is red: the fix list would be about a file that is being re-rendered anyway. **Green is not done.** Green means the machine found nothing; this gate and the creator's watch still run.
 
-**On a long-form episode the end-of-run review is a separate sub-agent, not this session.** Spawn an independent reviewer (on your strongest model), hand it the file path, the plan file and the whole conversation, and relay what it found. A session reviewing its own work is the wrong reviewer.
+**On a long-form episode the end-of-run review is a separate sub-agent, not this session.** Spawn an independent reviewer (on your strongest model), hand it the file path, the plan file and the whole conversation, and relay what it found. A session reviewing its own work is the wrong reviewer. When your strongest model is unavailable, run the reviewer on the next best at its highest practical effort and say so in the record.
+
+**On a podcast episode, every frame stretch is checked against 3 questions:** What is a viewer watching at this moment? What do we want them to take out of this section? Is that objective being achieved? Anyone named, introduced or addressed in a sentence is on screen in it (the host naming the co-host while the cut shows the host alone is a FIX), and in a trailer every cut between 2 picked moments changes the frame, so one speaker's moments never read as 1 long clip.
 
 **When the cut is a podcast episode**, load `content/reference/podcast-edit.md` first and check the episode rules in it:
 - the teaser is a teaser, not an intro, and it is shown to the creator as its own file before the full render
@@ -71,7 +78,7 @@ Episode edits run through **long-form-editor**, not shorts-editor.
 
 Work mechanically. Frame sampling is the tool; your eyes are the instrument.
 
-**1. Ground truth.** `ffprobe` the file: duration, resolution, audio streams, sample rate. Extract a contact sheet at roughly 1 frame per 10 seconds (`fps=1/10` tiles), plus targeted frames at every moment carrying on-screen text.
+**1. Ground truth.** `ffprobe` the file: duration, resolution, audio streams, sample rate. Extract a contact sheet at roughly 1 frame per 10 seconds (`fps=1/10` tiles), plus targeted frames at every moment carrying on-screen text. The contact sheet is for structure only: **any privacy or exposure check (a guest's screen share, a webcam tile, a sidebar, a name label) samples every 1 second or finer at full resolution.**
 
 **2. Run the editing checklist** (`content/taste/editing-checklist.md`), item by item, with a timestamp on every finding. Typical lines:
 
@@ -80,7 +87,7 @@ Work mechanically. Frame sampling is the tool; your eyes are the instrument.
 - number and currency formats in the audience's convention
 - step arrows or progress markers on tutorials
 - every visual change purposeful
-- one call to action, placed where the brief says it goes (the creator's recorded placement, never a framework's default)
+- one call to action, placed where the brief says it goes (the creator's recorded placement); where the brief is silent, the checklist's default window (a starting default of 30% to 40% of the runtime), and a cut outside it is a FIX
 - no subscribe interruptions
 - **safe area clean on any vertical short:** `python3 .claude/skills/shorts-editor/scripts/check_safe_area.py <cut.mp4>`. No card or caption ink above y=200, below y=1500 (the bottom 22% is covered on every platform), or right of x=940 from y=960 down where the platform's action rail sits, and no face whose mouth and chin sit below y=1500. Exit 1 means fix and re-render. A breach that ships costs a full re-upload, because platforms will not swap the file on a live video.
 - **caption size gated:** `python3 .claude/skills/shorts-editor/scripts/check_caption_size.py --style "<style line>" --fontsdir <fonts>`. Exit 1 means raise the size.
@@ -99,7 +106,9 @@ If either of those scripts is not there, shorts-editor is not installed. Run the
 
 **8. Sponsored check** (when the brief says sponsored): every deliverable promised to the sponsor is present, in the agreed form.
 
-**9. Promises on camera.** Any on-camera promise ("link below", "a free resource", "the template") is listed for the launch step, which must fetch each URL and see a 200 before the video publishes. A video that promises a resource it does not deliver reads as clickbait and costs trust.
+**9. Footage edits on the creator's real tape.** The face, the expression and the words stay theirs, with the deliberate exceptions they may allow (eye line moved to the lens, one flubbed word they meant to say regenerated in their own voice, a background shift only as an explanatory effect with their face untouched, a light pass that equalises the whole video). Each use is noted in the edit notes ("eye line moved to the lens, A to B s", "word regenerated: W, at S s", "background shift, A to B s", "light equalised"). For each note: an eye-line stretch is looked at at full resolution (only the irises move; lids, brows and skin stay as recorded); a regenerated word is a word they meant to say on the tape, never a new one, heard against their own take; a background shift leaves the person's pixels unchanged and its sweep frames are looked at at full size. **An edit the frames show that no note names is a FIX**, whoever made it.
+
+**10. Promises on camera.** Any on-camera promise ("link below", "a free resource", "the template") is listed for the launch step, which must fetch each URL and see a 200 before the video publishes. A video that promises a resource it does not deliver reads as clickbait and costs trust.
 
 ---
 
@@ -107,11 +116,12 @@ If either of those scripts is not there, shorts-editor is not installed. Run the
 
 A fix list, written into the brief under a `## Cut review <n> (YYYY-MM-DD)` heading and given in the conversation at the same time:
 
-- **PASS or FIX per checklist item**, with timestamps on every finding (`3:12 card says "$5.000"`)
+- **PASS or FIX per checklist item**, with timestamps on every finding (`3:12 card says "$2.500"`)
 - **Privacy findings**, each with a timestamp and the fix
 - **Vision scorecard:** each handoff point marked landed, partial or missing
 - **Open questions** that ride with the review (consent, choices), each written so the creator can answer it without opening anything
 - **One verdict line:** "ready to watch" or "fix list first", with the count
+- **When the verdict is "fix list first"**, one row in `content/work-record.md` (`cut-review-fail <piece>: N fails, <path of the fix list>`), so a weekly read can count what the gate refused. A clean verdict writes no such row
 
 The verdict clears mechanics and says so in those words. Nothing here approves a piece.
 
@@ -121,7 +131,7 @@ When the cut is handed over for the creator's watch, a page with video players o
 
 ## The retro, and it is the point
 
-**Capture it when the review closes, not next week.** After the creator watches and reacts, write their verbatim reactions with timestamps into `content/taste/cut-feedback/` in the format that folder's README sets, and record 2 things here:
+**Capture it when the review closes, not next week.** If this review's `cut-feedback/` file was not written in this session, say so in the verdict, so it is written from the review call before the next cut. After the creator watches and reacts, write their verbatim reactions with timestamps into `content/taste/cut-feedback/` in the format that folder's README sets, and record 2 things here:
 
 - what this gate **missed** that the creator caught
 - what it **flagged** that turned out to be fine

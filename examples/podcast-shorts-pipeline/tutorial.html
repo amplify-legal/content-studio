@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tutorial look overlay (A, B, C)</title>
+<!--
+  The GRAPHIC LAYER of the tutorial look ("screen is the subject", the tutorial profile in
+  content/taste/shorts-profiles.md), rendered by tutorial_look.py through pipeline.render_overlay (Chrome, omitBackground) as a PNG with
+  alpha at any output time t. The screen, the face and the ground are in the base video under it; this page draws
+  only: the held title, the frames around the screen hole and the face, the marks on the real screen (outline,
+  highlighter, ring, dim-rest, an optional label chip), the one card with its arrow, and the credit in the last 6 s.
+
+  Contract: window.setup(payload) once, then window.setTime(t) per output frame, which returns a state signature
+  (identical frames are hardlinked by render_overlay).
+    payload = { layout: "A"|"B"|"C", duration, fps, title, title_accent, credit (your brand's name, "" for none),
+                hole: [x,y,w,h], hole_r, face: {box:[x,y,w,h], shape: "round"|"fade"|"circle"},
+                title_box: {top, max_bottom, size, color, accent},
+                xf: [[s, ox, oy], ...] one per output frame: a screen point (sx, sy) in source px lands at
+                    (sx*s + ox, sy*s + oy) on the 1080x1920 frame (the same transform the base video used),
+                marks: [{box:[x,y,w,h] source px, kind: outline|highlighter|ring|dim-rest, t0, t1, label}],
+                dims:  [{box, t0, t1, alpha}]   (layout C: everything but the line is dimmed),
+                card:  {t0, t1, eyebrow, line, mark: index into marks | null} | null,
+                credit_mode: "title" }
+  27 Oct 22:50 (the tutorial fixer, round-1 verdicts 22:30): the credit takes the TITLE's own box in the last 6 s (the
+  title fades out, the credit fades and rises in, centred on the title block), so it never covers a face, a
+  mouth, the card or the screen; in C the marks are clipped to the band under the title and over 1500 nothing, so no
+  outline sweeps through the title band on a move; the card drifts and grows a hair through its hold (it is on screen
+  only while it moves); setup reports the smallest type it set (type_min, 44 px floor).
+  29 Oct (builder T, round-3 verdicts): the hole and the face panel come per short from tutorial_look.py fit_layout (A
+  and C: screen 384..P_top-12, face P_top..1920); C has no veil (its screen sits under the title's own band); every
+  layout clips its marks to the hole; A and C get a soft 40 px fade at the screen's left and right edges; the card never
+  enters the face panel, and B's card takes the title's seam while the title dips out.
+  Springs: springs.js beside this page (closed form, exact at any t).
+  Tokens, each written in double braces in this file and filled by paths.page_for_this_mac before the browser opens
+  the page: FONT_DIR the font folder, PIPELINE_DIR this folder (springs.js), ACCENT and ACCENT_DARK the brand accent
+  and its dark partner. This page draws no logo, so the LOGO_SVG token is not used here.
+  Safe frame: content/taste/shorts-formats.md (nothing of ours above 230, nothing in x > 905 below 960, nothing
+  under 1500). Type floors: graphic type 44 px and up (eyebrows Lexend Exa 44, card lines Inter Bold 52).
+-->
+<style>
+@font-face { font-family: "DM Serif Display"; src: url("file://{{FONT_DIR}}/DMSerifDisplay-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "Montserrat"; src: url("file://{{FONT_DIR}}/Montserrat-Bold.ttf"); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url("file://{{FONT_DIR}}/Inter[opsz,wght].ttf"); font-weight: 100 900; }
+@font-face { font-family: "Lexend Exa"; src: url("file://{{FONT_DIR}}/LexendExa[wght].ttf"); font-weight: 100 900; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+body { position: relative; }
+#topfade, #botfade { position: absolute; left: 0; width: 1080px; display: none; }
+.frame { position: absolute; display: none; }
+#title { position: absolute; left: 60px; right: 60px; font-family: "DM Serif Display", serif; line-height: 1.04; letter-spacing: -0.005em; text-wrap: balance; }
+#title .acc { color: var(--acc); }
+svg#fx { position: absolute; left: 0; top: 0; }
+#card { position: absolute; display: none; background: {{ACCENT_DARK}}; border-radius: 24px; padding: 20px 34px 26px 34px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.30); transform-origin: 50% 100%; }
+#card .eb { font-family: "Lexend Exa", sans-serif; font-weight: 600; font-size: 44px; letter-spacing: 0.04em; color: color-mix(in srgb, {{ACCENT}} 70%, #FFFFFF); line-height: 1.12; white-space: nowrap; }
+#card .ln { font-family: "Inter", sans-serif; font-weight: 700; font-size: 52px; color: #FFFFFF; line-height: 1.1; margin-top: 6px; white-space: nowrap; }
+#credit { position: absolute; display: none; left: 60px; right: 60px; text-align: center; font-family: "Montserrat", sans-serif; font-weight: 700;
+  font-size: 64px; line-height: 1.0; letter-spacing: 0.005em; white-space: nowrap; }
+.chip { font-family: "Lexend Exa", sans-serif; font-weight: 600; font-size: 44px; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+<div id="topfade"></div>
+<div id="botfade"></div>
+<div id="holeframe" class="frame"></div>
+<div id="faceframe" class="frame"></div>
+<svg id="fx" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs><clipPath id="holeclip"><rect id="holeclipr" x="0" y="0" width="1080" height="1920" rx="0"/></clipPath>
+        <clipPath id="markclip"><rect id="markclipr" x="0" y="0" width="1080" height="1920" rx="0"/></clipPath></defs>
+  <g id="dimg" clip-path="url(#holeclip)"></g>
+  <g id="markg" clip-path="url(#markclip)"></g>
+  <g id="arrowg"></g>
+</svg>
+<div id="title"></div>
+<div id="card"><div class="eb"></div><div class="ln"></div></div>
+<div id="credit"></div>
+<script src="file://{{PIPELINE_DIR}}/springs.js"></script>
+<script>
+(function () {
+  const P = {};
+  const NS = "http://www.w3.org/2000/svg";
+  const q = (s) => document.querySelector(s);
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  let marks = [], dims = [], cardEl = null, cardGeom = null, arrow = null;
+  // the brand accent and its dark partner (tokens filled by paths.py); the highlighter is the accent at 42 %
+  const ACC = "{{ACCENT}}", ACCD = "{{ACCENT_DARK}}";
+  const hexA = (h, a) => { const x = h.replace("#", ""); const v = x.length === 3 ? x.split("").map((c) => c + c).join("") : x;
+    return `rgba(${parseInt(v.slice(0, 2), 16)},${parseInt(v.slice(2, 4), 16)},${parseInt(v.slice(4, 6), 16)},${a})`; };
+  const COL = {
+    A: { ink: "#1C1C1E", acc: ACCD, mark: ACCD, hl: hexA(ACC, 0.42), under: ACCD, dim: "rgba(247,246,242,0.72)", arrow: ACCD },
+    B: { ink: "#1C1C1E", acc: ACCD, mark: ACCD, hl: hexA(ACC, 0.42), under: ACCD, dim: "rgba(247,246,242,0.72)", arrow: ACCD },
+    C: { ink: "#1C1C1E", acc: ACCD, mark: ACCD, hl: hexA(ACC, 0.42), under: ACCD, dim: "rgba(247,246,242,0.72)", arrow: ACCD } };   // 28 Oct (polish, J): C is light
+  const prog = (spring, t0, t) => (t0 == null || t < t0) ? 0 : spring.S(t - t0);
+  const xfAt = (t) => { const i = clamp(Math.round(t * (P.fps || 30)), 0, P.xf.length - 1); return P.xf[i]; };
+  const rectAt = (box, t) => { const [s, ox, oy] = xfAt(t); return [box[0] * s + ox, box[1] * s + oy, box[2] * s, box[3] * s]; };
+
+  function buildTitle() {
+    const T = q("#title"); T.innerHTML = "";
+    const tb = P.title_box, title = P.title || "", acc = (P.title_accent || "").trim();
+    const i = acc ? title.toLowerCase().indexOf(acc.toLowerCase()) : -1;
+    if (i >= 0) {
+      T.appendChild(document.createTextNode(title.slice(0, i)));
+      const s = document.createElement("span"); s.className = "acc"; s.textContent = title.slice(i, i + acc.length); T.appendChild(s);
+      T.appendChild(document.createTextNode(title.slice(i + acc.length)));
+    } else T.textContent = title;
+    T.style.top = tb.top + "px"; T.style.color = tb.color; document.documentElement.style.setProperty("--acc", tb.accent);
+    if (tb.left != null) T.style.left = tb.left + "px";
+    if (tb.right != null) T.style.right = tb.right + "px";
+    let fs = tb.size; T.style.fontSize = fs + "px";
+    // fit: 2 lines at most, inside max_bottom, no word wider than the box
+    const ok = () => { const r = T.getBoundingClientRect(); const lines = Math.round(r.height / (fs * 1.04));
+      return lines <= 2 && r.bottom <= tb.max_bottom && T.scrollWidth <= T.clientWidth + 1; };
+    while (fs > 44 && !ok()) { fs -= 2; T.style.fontSize = fs + "px"; }
+    P._titleSize = fs; P._titleOverflow = !ok(); P._titleBottom = T.getBoundingClientRect().bottom;
+  }
+
+  function buildFrames() {
+    const L = P.layout, [hx, hy, hw, hh] = P.hole, hr = P.hole_r || 0;
+    const hf = q("#holeframe"), ff = q("#faceframe");
+    const clipr = q("#holeclipr");
+    const mclip = q("#markclipr");
+    clipr.setAttribute("x", hx); clipr.setAttribute("y", hy); clipr.setAttribute("width", hw); clipr.setAttribute("height", hh); clipr.setAttribute("rx", hr);
+    // the marks: A and B inside the screen card; C (the screen edge to edge in the top 860) only in the band under the title
+    // 29 Oct (builder T): C's screen has its own band under the title now (the title never runs over the screen), so
+    // every layout clips its marks to the hole itself
+    mclip.setAttribute("x", hx); mclip.setAttribute("y", hy); mclip.setAttribute("width", hw); mclip.setAttribute("height", hh); mclip.setAttribute("rx", hr);
+    if (L === "A") {
+      Object.assign(hf.style, { display: "block", left: hx + "px", top: hy + "px", width: hw + "px", height: hh + "px", borderRadius: hr + "px",
+        boxShadow: "0 18px 44px rgba(28,28,30,0.22), 0 0 0 2px rgba(28,28,30,0.08)" });
+    } else if (L === "B") {
+      Object.assign(hf.style, { display: "block", left: hx + "px", top: hy + "px", width: hw + "px", height: hh + "px", borderRadius: hr + "px",
+        border: "3px solid #D6D2C8", boxShadow: "0 10px 28px rgba(28,28,30,0.16)" });
+    }
+    const f = P.face || {}; const [fx, fy, fw, fh] = f.box || [0, 0, 0, 0];
+    if (f.shape === "round") {
+      Object.assign(ff.style, { display: "block", left: fx + "px", top: fy + "px", width: fw + "px", height: fh + "px", borderRadius: (f.r || 36) + "px",
+        border: "6px solid #FFFFFF", boxShadow: "0 18px 44px rgba(28,28,30,0.24)" });
+    } else if (f.shape === "circle") {
+      // the ring sits inside the circle (border-box), so nothing of ours reaches under y 1500
+      Object.assign(ff.style, { display: "block", left: fx + "px", top: fy + "px", width: fw + "px", height: fh + "px",
+        borderRadius: "50%", border: "8px solid " + ACC, boxShadow: "0 14px 40px rgba(0,0,0,0.40)" });
+    }
+    // 29 Oct (builder T): no veil in C any more (the screen starts under the title's band). A and C: a soft 40 px fade at
+    // the screen's left and right edges, so a line that runs on past the card fades out instead of ending on half a word
+    // ('Write a summary of my own n', tutorial-1 tutA verdict); B's strip shows whole tiles and keeps hard edges
+    if (L === "A" || L === "C") {
+      // 18:33 (tutorial-3 tutC r3: 'Alway' sliced by C's frame edge, a half line under the title band at y 384): C's
+      // side fades are 90 px (its screen meets the frame's edge), and A and C fade the card's top and bottom 26 px
+      const ew = L === "C" ? 90 : 40, eh = 26;
+      for (const [id, side] of [["edgeL", "left"], ["edgeR", "right"], ["edgeT", "top"], ["edgeB", "bottom"]]) {
+        let e = document.getElementById(id);
+        if (!e) { e = document.createElement("div"); e.id = id; e.className = "edge"; document.body.insertBefore(e, q("#title")); }
+        const vert = side === "top" || side === "bottom";
+        Object.assign(e.style, { display: "block", position: "absolute",
+          top: (side === "bottom" ? hy + hh - eh : hy) + "px", height: (vert ? eh : hh) + "px",
+          left: (side === "right" ? hx + hw - ew : hx) + "px", width: (vert ? hw : ew) + "px",
+          borderRadius: side === "left" ? `${hr}px 0 0 ${hr}px` : side === "right" ? `0 ${hr}px ${hr}px 0` : side === "top" ? `${hr}px ${hr}px 0 0` : `0 0 ${hr}px ${hr}px`,
+          background: `linear-gradient(to ${({ left: "right", right: "left", top: "bottom", bottom: "top" })[side]}, rgba(250,250,248,0.97), rgba(250,250,248,0))` });
+      }
+    }
+  }
+
+  function buildMarks() {
+    const L = P.layout, C = COL[L], dg = q("#dimg"), mg = q("#markg");
+    dims = (P.dims || []).map((d) => ({ d, el: mk("path", { "fill-rule": "evenodd", fill: C.dim.replace(/[\d.]+\)$/, (d.alpha != null ? d.alpha : 0.66) + ")"), opacity: 0 }, dg) }));
+    marks = (P.marks || []).map((m) => {
+      const g = mk("g", { opacity: 0 }, mg); const o = { m, g };
+      if (m.kind === "dim-rest") o.dim = mk("path", { "fill-rule": "evenodd", fill: C.dim }, q("#dimg"));
+      if (m.kind === "wash") o.wash = mk("rect", { fill: C.dim, rx: 10 }, g);
+      if (m.kind === "highlighter") { o.hl = mk("rect", { fill: C.hl, rx: 6 }, g); o.ul = mk("rect", { fill: C.under, rx: 3 }, g); }
+      if (m.kind === "outline" || m.kind === "dim-rest") o.ol = mk("rect", { fill: "none", stroke: C.mark, "stroke-width": 7, rx: 14, pathLength: 1, "stroke-dasharray": 1, "stroke-dashoffset": 1 }, g);
+      if (m.kind === "ring") o.ring = mk("ellipse", { fill: "none", stroke: "#D64034", "stroke-width": 7, pathLength: 1, "stroke-dasharray": 1, "stroke-dashoffset": 1 }, g);
+      if (m.label) {
+        o.chip = mk("g", {}, g);
+        o.chipBg = mk("rect", { fill: L === "C" ? "#343C3E" : "#1C1C1E", rx: 40 }, o.chip);
+        o.chipTx = mk("text", { class: "chip", fill: L === "C" ? "#E1E4E4" : "#FFFFFF", "dominant-baseline": "middle" }, o.chip);
+        o.chipTx.textContent = m.label;
+      }
+      return o;
+    });
+  }
+
+  function holePath(r) {
+    const [hx, hy, hw, hh] = P.hole;
+    let d = `M${hx},${hy}H${hx + hw}V${hy + hh}H${hx}Z`;
+    if (r) { const [x, y, w, h] = r, k = 14;
+      d += ` M${x + k},${y}H${x + w - k}Q${x + w},${y} ${x + w},${y + k}V${y + h - k}Q${x + w},${y + h} ${x + w - k},${y + h}H${x + k}Q${x},${y + h} ${x},${y + h - k}V${y + k}Q${x},${y} ${x + k},${y}Z`; }
+    return d;
+  }
+
+  function placeCard() {
+    if (!P.card) return;
+    const c = P.card, el = q("#card"); el.querySelector(".eb").textContent = c.eyebrow || ""; el.querySelector(".ln").textContent = c.line || "";
+    el.style.display = "block"; el.style.opacity = 0;
+    const cw = el.offsetWidth, ch = el.offsetHeight;
+    const L = P.layout, [hx, hy, hw, hh] = P.hole;
+    let mr = null;
+    if (c.mark != null && P.marks[c.mark]) { const m = P.marks[c.mark]; mr = rectAt(m.box, Math.min(P.duration - 0.05, c.t0 + 0.45)); }
+    let x, y;
+    if (L === "A") {
+      x = clamp(hx + hw - cw - 24, 40, 1040 - cw);
+      if (mr && mr[1] - 34 - ch >= hy + 14) y = mr[1] - 34 - ch;
+      else if (mr && mr[1] + mr[3] + 34 + ch <= hy + hh - 14) y = mr[1] + mr[3] + 34;
+      else y = hy + 14;
+    } else if (L === "B") {
+      // 29 Oct (tutorial-2 tutB verdict: the card sat under his chin on the jacket): B's card takes the title's own
+      // seam (the title dips out while the card is up, setTime), never the face panel
+      x = 60; y = P.title_box.top;
+    } else {
+      // C: above the line, over the dimmed code (the credit owns the band under the line in the last 6 s)
+      x = 60;
+      if (mr && mr[1] - 44 - ch >= (P._titleBottom || 430) + 16) y = mr[1] - 44 - ch;
+      else if (mr && mr[1] + mr[3] + 44 + ch <= P.hole[1] + P.hole[3] - 14) y = mr[1] + mr[3] + 44;
+      else y = P.hole[1] + P.hole[3] - 14 - ch;
+    }
+    y = clamp(y, 236, 960 - ch);
+    // 29 Oct: never into the face panel (A and C: the card stays inside the screen band)
+    if (L !== "B" && P.face && P.face.box) y = Math.min(y, Math.max(236, P.face.box[1] - ch - 8));
+    el.style.left = Math.round(x) + "px"; el.style.top = Math.round(y) + "px";
+    cardGeom = { x, y, w: cw, h: ch, mr };
+    if (L === "B") return;   // B: the card sits over the face and the line is right under the title: an arrow would cross the title
+    arrow = mk("path", { fill: "none", stroke: COL[L].arrow, "stroke-width": 8, "stroke-linecap": "round", "stroke-linejoin": "round", pathLength: 1, "stroke-dasharray": 1, "stroke-dashoffset": 1, opacity: 0 }, q("#arrowg"));
+  }
+
+  window.setup = async function (payload) {
+    await Promise.all(['400 50px "DM Serif Display"', '700 50px "Montserrat"', '700 50px "Inter"', '600 44px "Lexend Exa"'].map((f) => document.fonts.load(f)));
+    Object.assign(P, payload);
+    buildTitle(); buildFrames(); buildMarks(); placeCard();
+    const tb = q("#title").getBoundingClientRect();
+    // the credit: in the title's ink, centred on the title block (the title fades out under it in the last 6 s);
+    // 64 px, shrunk to fit one line, never under 44
+    const cr = q("#credit"); cr.textContent = P.credit || ""; cr.style.display = "block"; cr.style.color = P.title_box.color;
+    let cfs = 64; cr.style.fontSize = cfs + "px";
+    while (cfs > 44 && cr.scrollWidth > cr.clientWidth + 1) { cfs -= 2; cr.style.fontSize = cfs + "px"; }
+    const chh = cr.offsetHeight, cmid = (tb.top + tb.bottom) / 2;
+    cr.style.top = Math.round(cmid - chh / 2) + "px";
+    const ink = document.createRange(); ink.selectNodeContents(cr); const ir = ink.getBoundingClientRect();
+    cr.style.display = "none";
+    P._creditSize = cfs;
+    const sizes = [["title", P._titleSize], ["credit", cfs]];
+    if (P.card) sizes.push(["card eyebrow", 44], ["card line", 52]);
+    if ((P.marks || []).some((m) => m.label)) sizes.push(["mark chip", 44]);
+    const tmin = sizes.reduce((a, b) => (b[1] < a[1] ? b : a));
+    return { title_top: tb.top, title_bottom: tb.bottom, title_left: tb.left, title_right: tb.right, title_size: P._titleSize, title_overflow: P._titleOverflow,
+             card_rect: cardGeom ? [cardGeom.x, cardGeom.y, cardGeom.w, cardGeom.h] : null,
+             credit_rect: [Math.round(ir.left), Math.round(ir.top), Math.round(ir.width), Math.round(ir.height)], credit_size: cfs,
+             type_min: tmin[1], type_min_where: tmin[0] };
+  };
+
+  window.setTime = function (t) {
+    const S = window.SPR, sig = [];
+    // dims (layout C: everything but the line)
+    dims.forEach((o) => { const d = o.d; const on = t >= d.t0 && t < d.t1 + 0.25;
+      if (!on) { o.el.setAttribute("opacity", 0); sig.push(0); return; }
+      const p = prog(S.FADE, d.t0, t) * (1 - prog(S.EXIT, d.t1, t));
+      if (!d.box) { o.el.setAttribute("d", holePath(null)); o.el.setAttribute("opacity", p.toFixed(3)); sig.push(Math.round(p * 40), "full"); return; }
+      const r = rectAt(d.box, t); const pad = 14; o.el.setAttribute("d", holePath([r[0] - pad, r[1] - pad, r[2] + 2 * pad, r[3] + 2 * pad]));
+      o.el.setAttribute("opacity", p.toFixed(3)); sig.push(Math.round(p * 40), Math.round(r[0]), Math.round(r[1]), Math.round(r[2])); });
+    marks.forEach((o) => { const m = o.m; const on = t >= m.t0 && t < m.t1 + 0.3;
+      if (!on) { o.g.setAttribute("opacity", 0); if (o.dim) o.dim.setAttribute("opacity", 0); sig.push(0); return; }
+      const p = m.grow ? (t < m.t0 ? 0 : clamp((t - m.t0) / m.grow, 0, 1)) : prog(S.MASK, m.t0, t), out = prog(S.EXIT, m.t1, t), a = 1 - out;
+      const r = rectAt(m.box, t); const px = 12, py = 9;
+      const R = [r[0] - px, r[1] - py, r[2] + 2 * px, r[3] + 2 * py];
+      o.g.setAttribute("opacity", a.toFixed(3));
+      if (o.ol) { o.ol.setAttribute("x", R[0]); o.ol.setAttribute("y", R[1]); o.ol.setAttribute("width", R[2]); o.ol.setAttribute("height", R[3]); o.ol.setAttribute("stroke-dashoffset", (1 - p).toFixed(4)); }
+      if (o.dim) { o.dim.setAttribute("d", holePath(R)); o.dim.setAttribute("opacity", (prog(S.FADE, m.t0, t) * a).toFixed(3)); }
+      if (o.wash) { o.wash.setAttribute("x", R[0]); o.wash.setAttribute("y", R[1]); o.wash.setAttribute("width", R[2]); o.wash.setAttribute("height", R[3]);
+        o.wash.setAttribute("opacity", prog(S.FADE, m.t0, t).toFixed(3)); }
+      if (o.hl) { o.hl.setAttribute("x", R[0]); o.hl.setAttribute("y", R[1]); o.hl.setAttribute("width", Math.max(0, R[2] * p)); o.hl.setAttribute("height", R[3]);
+        o.ul.setAttribute("x", R[0]); o.ul.setAttribute("y", R[1] + R[3] + 6); o.ul.setAttribute("width", Math.max(0, R[2] * p)); o.ul.setAttribute("height", 8); }
+      if (o.ring) { const rx = R[2] / 2 + 18, ry = R[3] / 2 + 16; o.ring.setAttribute("cx", R[0] + R[2] / 2); o.ring.setAttribute("cy", R[1] + R[3] / 2);
+        o.ring.setAttribute("rx", rx); o.ring.setAttribute("ry", ry); o.ring.setAttribute("stroke-dashoffset", (1 - p).toFixed(4)); }
+      if (o.chip) { const bb = o.chipTx.getBBox(); const cw = bb.width + 56, chh = 80; let cx = R[0], cy = R[1] - chh - 14;
+        const hy = P.hole[1] + 8; if (cy < hy) cy = R[1] + 10;
+        o.chipBg.setAttribute("x", cx); o.chipBg.setAttribute("y", cy); o.chipBg.setAttribute("width", cw); o.chipBg.setAttribute("height", chh);
+        o.chipTx.setAttribute("x", cx + 28); o.chipTx.setAttribute("y", cy + chh / 2 + 3); o.chip.setAttribute("opacity", prog(S.UI, m.t0 + 0.1, t).toFixed(3)); }
+      sig.push(Math.round(p * 60), Math.round(a * 30), Math.round(R[0]), Math.round(R[1]), Math.round(R[2]), Math.round(R[3]));
+    });
+    // the one card: in on the UI spring at t0, out on EXIT at t1; the arrow draws on into the mark
+    if (P.card) {
+      const c = P.card, el = q("#card"); const on = t >= c.t0 && t < c.t1 + 0.35;
+      if (!on) { el.style.display = "none"; if (arrow) arrow.setAttribute("opacity", 0); sig.push("k0"); }
+      else {
+        const pin = prog(S.UI, c.t0, t), pout = prog(S.EXIT, c.t1, t), a = clamp(pin, 0, 1) * (1 - pout);
+        // 22:50 (the creator's default: a card is on screen only while it animates): through its hold the card keeps
+        // moving, a slow rise of 10 px and a 2.5 % grow, until it leaves on EXIT
+        const hp = clamp((t - c.t0) / Math.max(0.5, c.t1 - c.t0), 0, 1);
+        el.style.display = "block"; el.style.opacity = a.toFixed(3);
+        el.style.transform = `translateY(${((1 - pin) * 26 + pout * 12 - 10 * hp).toFixed(1)}px) scale(${((0.94 + 0.06 * pin) * (1 + 0.025 * hp)).toFixed(4)})`;
+        sig.push("k", Math.round(pin * 60), Math.round(pout * 30), Math.round(hp * 60));
+        if (arrow && c.mark != null && P.marks[c.mark]) {
+          const r = rectAt(P.marks[c.mark].box, t), g = cardGeom;
+          const mx = clamp(r[0] + r[2] * 0.5, r[0] + 20, r[0] + r[2] - 20);
+          const below = g.y > r[1] + r[3];
+          const sx = clamp(mx, g.x + 40, g.x + g.w - 40), sy = below ? g.y - 6 : g.y + g.h + 6;
+          const ex = mx, ey = below ? r[1] + r[3] + 22 : r[1] - 22;
+          const ang = Math.atan2(ey - sy, ex - sx), hd = 26;
+          const d = `M${sx},${sy} L${ex},${ey} M${ex - hd * Math.cos(ang - 0.5)},${ey - hd * Math.sin(ang - 0.5)} L${ex},${ey} L${ex - hd * Math.cos(ang + 0.5)},${ey - hd * Math.sin(ang + 0.5)}`;
+          const pa = prog(S.MASK, c.t0 + 0.18, t);
+          arrow.setAttribute("d", d); arrow.setAttribute("stroke-dashoffset", (1 - pa).toFixed(4)); arrow.setAttribute("opacity", a.toFixed(3));
+          sig.push(Math.round(pa * 40), Math.round(ex), Math.round(ey));
+        }
+      }
+    }
+    // the credit: the brand's name, larger text, the last 6 s only, in the title's own box: the title leaves on
+    // EXIT, the credit rises 18 px into place on FADE 0.12 s later (never over a face, a mouth, the card or the screen)
+    const cr = q("#credit"), ti = q("#title"); const c0 = Math.max(0, P.duration - 6.0); const con = !!P.credit && t >= c0;
+    // 23:25: both snap to their end past 98 % (a deduped frame held the title at 2 % under the credit, tutorial-1 F1 round 2)
+    let tout = con ? prog(S.EXIT, c0, t) : 0, cp = con ? prog(S.FADE, c0 + 0.12, t) : 0;
+    if (tout > 0.98) tout = 1; if (cp > 0.98) cp = 1;
+    let dip = 0;
+    if (P.layout === "B" && P.card) { const c = P.card;
+      dip = (t >= c.t0 - 0.2 && t < c.t1 + 0.6) ? clamp(prog(S.FADE, c.t0 - 0.2, t) - prog(S.FADE, c.t1 + 0.1, t), 0, 1) : 0;
+      if (dip > 0.98) dip = 1; }
+    // 18:33 (tutorial-2 tutB r3; round 3, "the title leaves after about 28 seconds", read as 28 s on every short, the
+    // build log, row 189b): the title exits at 28 s whatever the length; the credit still takes its box in the last 6 s
+    let t28 = (P.duration > 28.5) ? prog(S.EXIT, 28.0, t) : 0; if (t28 > 0.98) t28 = 1;
+    ti.style.opacity = ((1 - Math.max(tout, t28)) * (1 - dip)).toFixed(3);
+    cr.style.display = con ? "block" : "none"; cr.style.opacity = cp.toFixed(3);
+    cr.style.transform = `translateY(${((1 - cp) * 18).toFixed(1)}px)`;
+    sig.push("c" + Math.round(cp * 30) + "t" + Math.round(tout * 30));
+    return sig.join(",");
+  };
+})();
+</script>
+</body>
+</html>

@@ -217,8 +217,8 @@ for k in range(3):
 
 HTML=f'''<!doctype html><html lang="en"><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=1080, height=1920"/>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/MotionPathPlugin.min.js"></script>
+<script src="gsap.min.js"></script>
+<script src="MotionPathPlugin.min.js"></script>
 <style>
 *{{margin:0;padding:0;box-sizing:border-box}}
 html,body{{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:"{FONT_DISPLAY}","{FONT_BODY}",sans-serif}}
@@ -303,5 +303,22 @@ html,body{{width:1080px;height:1920px;overflow:hidden;background:#000;font-famil
       {chr(10).join(tw)}
 window.__timelines["main"]=tl;</script></body></html>'''
 open("index.html","w").write(HTML)
+# GSAP is vendored beside index.html, never loaded from a CDN inside a render: a CDN load stalled a render twice
+# (content/reference/edit-lab/motion.md, "No network inside a render"). The files are not shipped with this skill:
+# put them in <skill>/assets/vendor/ once (see assets/README.md); this copies them next to index.html.
+import shutil, pathlib
+_vendor_dirs = [pathlib.Path(__file__).resolve().parent.parent / "assets" / "vendor"]
+if os.environ.get("SHORTS_EDITOR_DIR"):
+    _vendor_dirs.insert(0, pathlib.Path(os.environ["SHORTS_EDITOR_DIR"]) / "assets" / "vendor")
+_cwd = pathlib.Path.cwd().resolve()
+for _p in [_cwd, *_cwd.parents]:
+    _vendor_dirs.append(_p / ".claude" / "skills" / "shorts-editor" / "assets" / "vendor")
+for _f in ("gsap.min.js", "MotionPathPlugin.min.js"):
+    _src = next((d / _f for d in _vendor_dirs if (d / _f).is_file()), None)
+    if _src is None:
+        print(f"MISSING {_f}: put it in .claude/skills/shorts-editor/assets/vendor/ (assets/README.md, section 5). "
+              f"The page will not animate without it.")
+    elif not pathlib.Path(_f).is_file():
+        shutil.copy(_src, _f)
 print(f"v8: {len(BEATS)} beat")
 for i,((trig,t,p),s,e) in enumerate(zip(BEATS,starts,ends)): print(f"  {s:5.2f}-{e:5.2f} {t:9s} {trig}")

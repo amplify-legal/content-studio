@@ -77,16 +77,19 @@ Read what the intent touches, then say what you found in **at most 3 lines, with
 | "What should I record today" | `content/live.md`, `content/seeds.md`, `content/ideas.md`, `content/signal.md`, your recent analytics exports, the next 7 days of the calendar |
 | Ideation, or reviewing ideas | `content/ideas.md` and `content/seeds.md` (theirs) first, then `content/signal.md` (the machine's) |
 | Packaging, titles, thumbnails | `content/taste/thumbnails.md` and `content/taste/packaging.md` (the rules), `content/taste/packaging/` (the teardowns and `inbox.md`), `content/frameworks/youtube-pillar.md` |
-| A cut | The video's brief, `content/taste/editing-checklist.md`, `content/taste/editing-rules.md`, `content/taste/cut-feedback/` |
+| A recording or a cut of a known kind (tutorial, masterclass, short, podcast, live) | `content/taste/kinds/<kind>.md` first, before the kind's edit file: what the kind is for, its frame, its opening, its pacing, its packaging, and the lines from review calls with their receipts. `content/taste/kinds/README.md` tells the kinds apart |
+| A cut | The video's brief (its frame section first, then the vision handoff), `content/taste/editing-checklist.md`, `content/taste/editing-rules.md`, `content/taste/cut-feedback/` |
 | **Anything derived from a recording** (shorts, a re-cut, a waterfall off a tape) | **Watch the tape before the first question, not after.** See below. |
 | Numbers | `content/scoreboard.md` and your analytics exports |
 | **Any plan, briefing or "what should I record" read** | **The next 7 days of the calendar. A recording block with no brief behind it leads the output.** |
 
 **Watching the tape is a precondition, not a step.** A transcript cannot see who is on screen, whose face is croppable, what is accidentally shared behind the work, or whether the visual is usable at all. One full transcript plus about 20 sampled frames was once called "watched", and the actual watch then found the closing 6 minutes were a gallery grid naming 13 attendees (so the best line in the hour had no usable footage) and a private sidebar exposed on screen. Both would have survived into a shipped cut. Use the `watch` skill.
 
-**A recording block on the calendar with no brief behind it is a content decision, not a calendar row.** It goes at the top of any plan or briefing as "you record on X and nothing is shaped", and the door opens the interview the same day. A real plan once listed the block as furniture and the creator found out the night before.
+**A recording block on the calendar with no brief behind it is a content decision, not a calendar row.** It goes at the top of any plan or briefing as "you record on X and nothing is shaped", and the door opens the interview the same day, with the `director` beside it (the frame goes into the brief before the camera turns on). A real plan once listed the block as furniture and the creator found out the night before.
 
 **`content/taste/must-dos.md` loads on every recording plan, every recording session and every launch, whatever else the intent is.** It is the standing list of what a recording carries: the intro beats, the resources that have to be on screen, any mid-video ask, the on-camera promises that need live URLs before publish, and the "what did we miss" question asked the moment the take ends while the set is still up. Read it before the first question and put the items that bear on this video into the plan, rather than leaving it as a link nobody opens. A line marked guideline is the creator's to confirm, not the machine's to enforce.
+
+**`content/taste/director.md` loads beside it on every recording plan and every recording session.** The `director` skill asks its 7 questions (how they want to come across, the goal, the one learning, what the viewer gets, why the viewer should care, a free resource or not, an intro or straight in), only the ones the brief has not already answered, and writes the answers into the brief's frame section before the camera turns on. Why: an edit that has no written frame gets judged against whatever the reviewer happens to like that day; a frame written before the take gives the edit, the cut review and the packaging one thing to serve.
 
 **When something upstream does not exist, name it and offer options rather than blocking or deciding for them.**
 
@@ -145,6 +148,8 @@ Never inferred from silence, from a deadline alone, from a rich source, or from 
 
 **The decision budget.** Any artifact handed over carries **at most 5 open decisions in chat**. Everything else ships with a stated default they can veto in one word. When more than 5 genuinely need them, the top 5 go in chat and the rest go on a single clickable board (a self-saving HTML page) linked in the same message. 18 open markers in a script is a homework assignment, not co-creation. One script carried about 25 across 5 files and was never recorded.
 
+**A board does not replace the question.** In one measured run a pick board carried 7 picks, was handed back 7 times and was answered 0 times, while every one of the 25 structured questions asked in the same run was answered. So picks that block a build go to the creator as structured questions (a few per call, the asset open beside it, the options written out word for word), and the board is where they look, not where they answer. A board alone is for dozens of per-item calls, never for the handful that hold up the work.
+
 **Write which rule applied into the output's header**, so a later reader knows whether a human shaped it: `interview: full (YYYY-MM-DD)` or `interview: skipped, "just draft it"` or `interview: re-run of the YYYY-MM-DD shaping`.
 
 ---
@@ -174,10 +179,12 @@ Name which one is running and why, in one line, before it runs.
 | `on-camera-board` | The surface they present from and draw on while filming. The board derives from the approved script |
 | `long-form-editor` | Editing a whole episode or long video end to end. Read `content/reference/podcast-edit.md` (or `workshop-edit.md` for a live session recording) first, and every long render goes out detached per `content/reference/render-reliability.md` |
 | `shorts-editor` | Rendering their picked clips into a finished vertical short |
-| `cut-review` | The mechanical pass on a cut before they watch it. Runs before any cut reaches them, whatever question is still open about it |
+| `cut-review` | The mechanical pass on a cut, and on every short, before they watch it. Runs before any cut reaches them, whatever question is still open about it |
+| `director` | Before every recording: the 7 questions the brief has not answered, written into the brief as the frame the edit serves |
 | `media-gen` | Thumbnails, title cards and story animations that do not exist yet, per `content/taste/thumbnails.md` and `content/taste/story-animations.md`. **The only skill here that spends money** |
 | `design-dna` | Any HTML surface: prep docs, reports, send artifacts, review boards |
-| `content-waterfall` | One recording becomes many pieces |
+| `content-waterfall` | One recording becomes many pieces: seed, mine, brief, the waterfall hook (every piece of one long form once its cut is approved), sendlist, scoreboard, on 3 clocks (per long form, per week, per day). Called through here, not typed directly |
+| `search-visibility` | The search half of the waterfall, called by `content-waterfall` only, never a door: the searched phrase, title candidates for the creator's pick, chapters from 0:00, description, tags, captions, playlists, live fixes with an undo list, the watch page, answer-engine questions, GEO, the blog article and the newsletter post, and the weekly search measure. Its `reference/evidence.md` wins over popular claims |
 
 **When a tool is retired, grep the reference files a skill loads, not only its SKILL.md.** One retirement left 2 live pointers inside a skill's own references while the SKILL.md was spotless.
 

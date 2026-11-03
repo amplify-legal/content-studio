@@ -124,7 +124,11 @@ Each failure becomes one checklist line. A checklist that starts at 5 real lines
 
 Not part of a first sitting. Run each when the work first needs it, and say which one is due:
 
-- `story-animations.md`: before the first animation is made for a video.
+- `director.md`: before the first recording. Walk the 7 questions once so they can strike or reword any; the `director` skill asks them before every recording after that.
+- `kinds/<kind>.md`: before the first recording of each kind (tutorial, masterclass, short, podcast, live). Walk the kind's starting defaults and keep what is theirs; lines from later review calls are appended with their receipt.
+- `story-animations.md` and `motion-craft.md`: before the first animation is made for a video.
+- `on-screen-graphics.md`: before the first graphic shown on camera beside a live demo.
+- `live-training.md`: before the first live session.
 - `podcast-hosting.md`: before the first guest recording.
 - `comments-and-pinned-comment.md`: before the first video launches.
 - `interview/protocol.md`: the method `content` and `script-writer` use for a brief interview. Walk it once so they can strike what does not fit them; add their own worked example (`interview/example-<slug>.md`) after their first real one.

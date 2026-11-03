@@ -27,6 +27,14 @@
 
 <If you read from a prompter, describe that shape instead and delete the defaults above.>
 
+## When I write it myself
+
+<Starting defaults, from a real hook session where the machine got this wrong:>
+
+- **My version sits on top of the machine's.** When I write a hook, a line or a section myself after the machine built versions, mine is the live one and the machine's go to the bench. Nothing from the bench is folded in unless I take it.
+- **A refinement is a sprinkle, never a version.** On my text: a fact check against the tape, a word that is not on record, a cut I can take or leave, one at a time, each pointing at my own sentence. Never "here is the same hook with those applied".
+- **Structure and elements are what I ask the machine for; the words are mine.** A hook framework, the questions a good reviewer asks, the stakes rule, the raw material on tape: that is the right shape of help. The rewrite is not.
+
 ## Retro
 
 Dated entries, with the script that taught each one.
