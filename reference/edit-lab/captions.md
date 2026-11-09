@@ -352,10 +352,24 @@ Read off the whole build log (rows 1 to 235, T:210 to T:231) and the round-3 ver
 
 ---
 
+## J. The 3 to 6 Nov builds (added 2026-11-07)
+
+### 50. A credit or lower third is checked against the lowest chin, never the face detector's box
+- **Final method:** each person under the credit gets a panel solve that holds their lowest chin (leans included) at least 24 px above the credit's top, and the check reads the measured chin line, not the detector box. Read the last 6 s of every podcast short at full resolution, the credit's window.
+- **Tried and dropped:** a credit check keyed on the face detector's box. A Haar-style box ends around the mouth, so a credit at y 1400 to 1464 ran across the guest's chin and beard for the last 6 s and still passed (the builder's own chin line read 1444 and 1429, inside the credit). A re-frame made earlier the same night had moved the faces down and created the fault.
+- **How we got there:** an independent round-3 checker failed the first 2 re-renders on it; the fix went into the panel solve and the check; every podcast short rendered before the fix that night was re-rendered after it, and the next round-3 read passed all 3 with the credit 8 to 170 px clear.
+- **Receipts:** round-3 verdicts, 2026-11-03 21:23 and 2026-11-04 12:41.
+- **Where it lives now:** here, and the shorts builder's errors table (`.claude/skills/shorts-editor/SKILL.md`). Same gap as item 44's caption check: any box test against a face needs the chin, not the detector box.
+
+### 51. A caption calibration from one machine does not hold on another
+- **Final method:** measure 1 known word through libass on the machine that burns, before the first burn (`privacy-and-pipeline.md` C1).
+
+---
+
 ## Still open in this file
 
 1. **The native look's own floor.** The shared gate fails under 47 px (item 7); settle the Instagram look's 34 px capital floor (item 45) against it in your taste file.
-2. **The chin gap in `caption_face_ok`.** Its face box stops at the lower lip, so a caption on a chin passes (item 44). Until the box is extended, read the chin at full resolution.
+2. **The chin gap in `caption_face_ok`.** Its face box stops at the lower lip, so a caption on a chin passes (item 44). Until the box is extended, read the chin at full resolution. The credit's check was moved onto the measured chin on 3 Nov (item 50); the caption check can follow the same way.
 3. **The yellow highlighter pass** (item 37) was never run on a real cut, and its yellow@0.42 colour was never measured the way item 38 measures a fill.
 4. **Masterclass card type** (item 12): a sans (A) or a display serif (B) is a choice for your taste file.
 5. **Where each lesson sits.** Several of these lessons first lived only in a build log or one review file (the reading-speed rule 14, the frame-midpoint snap 15, the encoder setting 21, the ffmpeg-full fix 22, descender-aware placement 24, never regenerating captioned pixels 29, variable fonts in headless Chrome 11). When one of them becomes a rule for your channel, copy it into the taste file it belongs to.

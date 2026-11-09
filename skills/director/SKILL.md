@@ -21,6 +21,7 @@ The questions live in `content/taste/director.md` and are never restated here. T
 
 **Load before any step:**
 
+0. `content/profile/summary.md` when it exists (who they are, the business, the objectives, the one metric). "How you want to come across" is quoted from `content/profile/who.md` instead of asked when that file answers it.
 1. `content/PRINCIPLES.md`, the constitution. When it conflicts with anything in this file, it wins.
 2. `content/taste/director.md`, the 7 questions and the frame.
 3. `content/taste/must-dos.md`, sections A (before the camera turns on), B (the intro beats) and D (the moment the take ends).
@@ -33,6 +34,7 @@ The questions live in `content/taste/director.md` and are never restated here. T
 - The video is the one named in the ask; else the recording block on the calendar with no brief behind it; else ask which.
 - The brief is `content/briefs/<date>-<slug>.md`. If there is none, create one with the title, a `Type:` line and an empty frame section, say so in one line, and carry on. The director can run before the interview; the interview fills the rest later.
 - The kind: read it off the brief's `Type:` line. If it is not there, ask it first, with the table in `content/taste/kinds/README.md` as the options. Then read `content/taste/kinds/<kind>.md` in full: its opening, pacing and packaging defaults are what the questions carry.
+- **On a podcast, the conversation comes first** (`content/taste/director.md`, "How it is asked"). The audience questions (the one learning, what they get, why they care) are never a gate on the recording and are not put to the creator before one. Ask only how they want to come across and anything the guest booking left open, then spend the rest of the prep on good questions for the guest: what you know about them, what you talked about last time, what would make the hour valuable for them. Why: on a working channel the host's answer to a director batch an hour before a recording was to spend that hour on better questions for the guest, because a great conversation is valuable to the audience on its own (2026-11-04).
 - Optional, if you run several sessions at once: write your claim into `content/in-flight.md` (who, start time, "director on <slug>", the brief you will write). It is a map, never a gate.
 
 ## 2. Read before asking

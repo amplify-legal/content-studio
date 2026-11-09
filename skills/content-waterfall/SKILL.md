@@ -77,7 +77,7 @@ back is a failure, however well formatted.
 | Clock | What runs | Who acts |
 |---|---|---|
 | **Per long form, when the cut is approved** | Engine 3, every piece at once, then the posting plan filled for its 2 weeks | The machine builds; the creator picks the title, the thumbnail and the clips and approves the words; the editor owns the cut |
-| **Per week** | Next week's skeleton laid, filled from the bench of cleared pieces, approved by the creator with every caption read (`routines/posting-refresh.md`) | The machine builds; the creator approves |
+| **Per week** | Next week's skeleton laid, filled from the bench of cleared pieces, approved by the creator with every caption read (the `posting` skill on the full install, `routines/posting-refresh.md` for the night) | The machine builds; the creator approves |
 | **Per day** | One standing content conversation, if you run one: the day's posts, a reminder before every post that needs a hand with the paste ready, read-backs of what went out, the waterfall when a cut is approved | The machine runs; the creator's hand on anything posted by hand |
 | Weekly review (inside the week) | Engine 5, with the weekly search measure | The creator and the editor on the call |
 
@@ -252,7 +252,7 @@ another surface's output**: every chain goes back to the recording.
 |---|---|---|---|
 | Shorts plan | `content/frameworks/short.md` | The picked timestamps plus beat notes, handed to `shorts-editor` one at a time | The creator picked the clips |
 | Written posts | `content/frameworks/post-frameworks.md` | Drafts from `post-writer`, mined from the tape, never from the script | The creator approves |
-| Carousel | `content/frameworks/carousel.md` | Slide-by-slide copy, one idea per slide, the last slide lands the point | The creator approves the cover |
+| Carousel | `content/frameworks/carousel.md`, then their carousel taste `content/taste/carousels.md` (installed from `templates/taste/carousels.md`) | Slide-by-slide copy, one idea per slide, the last slide lands the point | The creator approves the cover |
 | Community or newsletter post | `content/frameworks/youtube-pillar.md` | The same argument at the length that surface rewards | Whoever posts it |
 | Send artifact | `content/frameworks/send-artifact.md` | One page built with `design-dna` | Whoever sends it |
 | Word-level transcript of the final cut | `shorts-editor`'s `transcribe.py` with a key-terms file of the names on the tape | Passed on to every row below | none |
@@ -262,7 +262,7 @@ another surface's output**: every chain goes back to the recording.
 | Watch page on your site: video first, one h1, every word static, questions from real calls and workshops | `search-visibility`, `reference/watch-page.md` and `reference/aeo.md` | A rendered page | **Your go before it goes live** |
 | Blog article, answering a different question than the watch page | `search-visibility`, `reference/blog-substack.md` | A draft, voice-checked | The creator approves; your go before live |
 | Newsletter post, shorter, first person, linking home | `search-visibility`, `reference/blog-substack.md` | A draft and a hand card | The creator approves and posts it by hand |
-| Fill the posting plan for its 2 weeks of slots | `routines/posting-refresh.md` | Each approved piece on a slot, the search pack's tags and chapters on the long form | The week's approval, every caption read |
+| Fill the posting plan for its 2 weeks of slots | the `posting` skill (`posting/scripts/plan.py set`) on the full install; otherwise your own plan | Each piece on a slot, the search pack's description and chapters on the long form, the full-video link as each short's first comment once the long form is live | The week's approval, every caption read |
 
 **The order that saves the creator's time:** the transcript and the promise check first; the
 search pack and the shorts together, because the picks block; then everything else runs while
@@ -351,6 +351,12 @@ Run all 3 whenever a workshop happens. Running only the first is the usual mista
 
 ## Publishing: after approval, never before
 
+**On the full install, the auto-post module does this part** (`posting/`, its doc
+`posting/README.md`, the `posting` skill). It enforces every guard below in code and proves each
+one with a self-test. Hand the publishing step to that skill and read the rest of this section as
+the why. Without the module, the guards still hold for whatever posts: a scheduler, a tool, or
+your hand.
+
 ### Nothing posts without an explicit approval
 
 Every piece that goes out carries who approved it. Recommended guards, whatever tool does the
@@ -360,11 +366,18 @@ posting:
   changed file drops the approval and needs a new one.
 - **One send per piece.** Read the post id from the first attempt before anything else. Retry
   only when no id came back. Never call a send twice "to confirm".
-- **A missed slot is not posted late** past a sensible window (a few hours). Ask instead.
+- **A missed slot is not posted late** past a sensible window (a few hours). It moves to the
+  soonest open slot of its kind that week, never onto the floor. A post that needs a hand stays
+  open in its slot until its day ends, then moves the same way. The posting module's watcher does
+  both and logs every move.
+- **The short goes first; the full-video link follows.** Every short carries the full video's
+  link in its comments on every platform, but no short waits for it: the link is added once the
+  long form is live (`plan.py links-pending` lists what is owed, `plan.py add-link` adds it, and
+  the runner comments it once).
 - **A placeholder never posts.** Run `scripts/copy_check.py` on every caption.
 - **Read the surface back after every publish** and record the proof (the post id, the live
   URL). A composer going quiet is not proof, and generic errors have been seen on posts that
-  actually went up, sometimes more than once.
+  actually went up, sometimes more than once. A failed read retries the read, never the post.
 - **One machine posts a given plan.** 2 computers running the same posting plan will post twice.
 
 ### Platform-native scheduling first
@@ -379,7 +392,11 @@ posting:
   allow a posting API for a tool that uploads to accounts you or your team manage, and an
   unaudited app can only post privately. Plan on posting by hand from TikTok's own app or
   studio, or through a third-party scheduler that holds its own audited access. Check the
-  current guidelines before you build anything.
+  current guidelines before you build anything. The posting module treats TikTok and Substack
+  as hand cards: the card carries the file, the caption in full and the first comment.
+- **A native LinkedIn video carries its custom thumbnail from the start.** It cannot be changed
+  once the post is live. Through an API, only LinkedIn's own Videos API was found to carry one;
+  the posting module's LinkedIn adapter uses it and refuses a video leg with no thumbnail.
 - **Messages and connection requests to people are always sent by a person**, whatever tool
   posts the public content.
 
@@ -404,7 +421,10 @@ When posting gets to every day on several platforms, one structure that works:
    those changes for the morning.
 
 The prompt for that nightly pass is `routines/posting-refresh.md` in this repo. It is optional;
-a weekly plan posted by hand works fine without it.
+a weekly plan posted by hand works fine without it. On the full install, the skeleton, the
+approval, the lock and the check are `posting/scripts/plan.py` (`next-week`, `approve`, `lock`,
+`check`), and the nightly pass edits the plan only through `plan.py set --by night`, which
+refuses a locked field in code.
 
 ---
 

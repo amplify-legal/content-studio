@@ -19,6 +19,7 @@ Everything content-shaped comes through here. One door, so nothing gets lost and
 
 **Load before any step:**
 
+0. **The creator's profile, before the first question:** every file in `content/profile/` (`who.md`, `business.md`, `objectives.md`, `style.md`, `inspirations.md`, `platforms.md`). Never ask what a profile file already answers; quote it back in 1 line instead. When the folder is missing, say so and offer the `creator-profile` skill before anything else. **And the install level** in `content/setup/preferences.md` (`lite`, `standard` or `full`): offer only the engines that level installed (section 6), and name a missing one as "installs with `standard`" or "with `full`" rather than calling it.
 1. `content/PRINCIPLES.md`, the constitution. The system amplifies the creator's creativity and never replaces their judgment. When it conflicts with anything in this file, it wins.
 2. `content/live.md`, what is in motion right now.
 3. `content/graveyard.md`, what was deliberately killed. A deletion is a decision.
@@ -169,6 +170,8 @@ Then do the retrieval work properly, and add a line to `content/live.md` so it s
 ## 6. Call the engines
 
 Name which one is running and why, in one line, before it runs.
+
+The install level in `content/setup/preferences.md` limits this table: `lite` has this skill plus `creator-profile`, `taste-builder`, `script-writer`, `post-writer` and `director`; `standard` adds `watch`, `long-form-editor`, `shorts-editor`, `cut-review`, `search-visibility`, `media-gen`, `design-dna`, `on-camera-board` and `content-waterfall`; `full` adds the `posting` skill and the routines. Before calling an engine, check its skill folder exists in `.claude/skills/`; when it does not, say which level installs it and carry on without it.
 
 | Engine | For |
 |---|---|

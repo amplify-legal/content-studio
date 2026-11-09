@@ -19,7 +19,7 @@ description: >-
 
 Every cut gets this pass **before the creator watches it**. Each video has 2 review gates: after the initial cut (vision correction) and at claimed-finished (launch readiness). This skill runs before both. The output is a fix list for whoever is editing, so the creator's minutes go to taste and vision, never to a typo or a number in the wrong format.
 
-**This gate approves nothing.** It clears mechanics. Taste is settled by the creator watching the file, and **the creator sees the file before anything is uploaded**, without exception, including under an explicit "just handle it end to end" mandate. A finished public artifact is not what an autonomy grant covers.
+**This gate approves nothing.** It clears mechanics. Taste is settled by the creator watching the file, and **the creator sees the file before anything is uploaded**, without exception, including under an explicit "just handle it end to end" mandate. The one exception is one the creator grants themselves, for one file, when asked; nobody else can grant it, and a session never assumes it. A finished public artifact is not what an autonomy grant covers.
 
 **A pass here is mechanical and never calls a cut ready, and a cut the creator rejected stays rejected until they accept a revision against a reference they picked.** 2 options once passed every mechanical check and the creator rejected both as "way too basic", thrown together without awareness of the skills and the taste files. A green checklist says nothing about taste.
 
@@ -155,6 +155,8 @@ Seeded from failures proven in shorts-editor's errors table, so this gate starts
 | **A full-resolution frame check, not a thumbnail glance.** Faces, name labels, private interface. Crop the webcam column off a screen share where possible. | A cleared frame carried a stranger's face and name; another carried a sidebar of private conversation titles |
 | **Exposure sweeps sample at 1 second or finer.** A brief flash of a private list survives a 5-second sample. | A 1.8-second exposure that passed an OCR sweep at 5-second spacing |
 | **A video board opened as a file shows empty players.** Serve it with Range support. | Review boards whose videos would not play in the embedded browser |
+| **A re-review checks every fix from the last round on the new render, one by one.** List the last round's fixes and mark each fixed or not on frames or a measure; "folded into the build" is not fixed. Reviews repeat until one comes back with nothing blocking. | An episode's version 2 carried 6 of 13 folded fixes that never reached the render (a level change whose staging step was not re-run, a bed that ran out under the title card), 2026-11-05 |
+| **A credit or lower third is checked against the lowest chin, at full resolution, in its own window.** A face detector's box ends around the mouth, so a credit across a beard passes a box check. | A credit over a guest's chin and beard for the last 6 s of 2 shorts passed its check, 2026-11-03 (`content/reference/edit-lab/captions.md` 50) |
 
 ---
 

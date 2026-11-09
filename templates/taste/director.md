@@ -15,6 +15,7 @@
 - **The same phrasing as the person in the room.** The machine asks the questions the way your editor or director asks them on set, so the two sound the same.
 - **The answers are the creator's words**, 1 sentence each, never a label the machine picked ("educational", "authoritative"). A label is a sign the question was not really answered.
 - **The kind comes first.** Which kind of video this is (`content/taste/kinds/README.md`) decides the default opening, the pacing and the packaging. The director reads that sheet before it asks, so the questions carry the kind's defaults ("a tutorial usually opens on the finished output; straight in, or the 4 beats?").
+- **On a podcast, the conversation comes first.** The director's audience questions (3, 4 and 5) are never a gate on a podcast recording and are not put to the creator before one. The prep time goes into good questions for the guest, built on what you know about them and on your last conversation (`kinds/podcast.md`, section 2). Other kinds keep all 7. A starting default from a working channel (2026-11-04).
 
 ## The 7 questions
 

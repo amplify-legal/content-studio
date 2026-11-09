@@ -277,6 +277,13 @@ From the 27 to 29 Oct podcast shorts build (added 2026-10-29 evening; "row N" is
 - **Tried and dropped:** specs timed on a composed Riverside export that is gone (guest D +387.98 s and guest R +374.65 s on the guest tracks; guest P's tracks landed late); an aha hook piece that carries its speaker as a 3rd element broke the retime path, because `_pieces_of` unpacked 2 (row 78); a role name ('agent') that is no person in the spec stopped `plan()` with a KeyError (row 128).
 - **Receipts:** the example's README, method notes item 10; rows 8, 78, 128; the build hand-off notes ("Gotchas").
 
+### A podcast episode's mix through 3 review rounds (added 2026-11-07)
+- **Final method:** denoise a noisy track from its own measured floor (`afftdn` with `nf` set to the floor you measured on that track, here -45 dB), never a fixed default; keep laughs alive by softening the compressor chain itself (turning the laughs down to 0.65 in v2 did not help: the reviewer still heard them flattened, because the compressor was doing it); when the music bed runs out before the title card ends, extend it with a crossfade of the same track rather than leaving silence; a 1.5 to 2 s tail or end card closes the episode so it never stops mid-breath.
+- **Tried and dropped:** the first compressor chain, which flattened every laugh (named by the reviewer twice); a bed 40 s long under a title card that ran past it; a level change on one speaker (-3 dB) that was written into the edit notes and never reached the render, because the staging step that writes the levels file was not re-run.
+- **How we got there:** an independent reviewer read v1 (18 items, not ready), v2 (6 of 13 folded fixes did not reach the render) and v3; v4 shipped at -14.2 LUFS, loudness range 5.0.
+- **Receipts:** the editor's work log, 2026-11-05 18:49 to 20:14.
+- **Where it lives now:** here and `content/reference/long-form-lessons.md` (the review errors table: a folded fix is checked on the new render).
+
 ## Where these lived before this book (29 Oct 2026), and what still waited on a ruling
 
 Not tracked at all (one machine only):

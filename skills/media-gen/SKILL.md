@@ -114,6 +114,9 @@ Write it in this order, then check it against the list. Copy-ready shapes are in
 - **Make the still on `nano-banana-lite` first and on Pro once the direction is picked**; a still with no face that passes 1 reference needs `--allow-single-ref`. An edited end frame is an edit of the first ("... Keep everything else the same.") so the pair matches. Every route redraws a mascot to some degree, so judge it against the original sheet.
 - **On Seedance**, `--start` and `--end` are first and last frame. The script will also send `--ref` in the same job without refusing, and the provider docs say the two modes cannot mix: leave `--ref` off. Whether the gateway maps the script's reference role string to Seedance's own is untested.
 
+- **A polished twin of a real frame is judged against that frame before it is offered.** On one thumbnail round 6 twins built from real frames each changed an eye, a mouth, a head tilt or the framing; none was offered, and the real frames went on the board (2026-11-05). An edit the creator asks for changes only what they named, proven by a pixel diff against the picked file (`content/taste/thumbnails.md`, faces and real people).
+- **A carousel is designed, never a frame with a caption box** (`content/taste/carousels.md`): read that file before rendering any carousel slide.
+
 ## Draft, judge, keep
 
 - **Rewrite the prompt before rerolling it.** One published creator went from 0 usable takes in 10 rerolls to 10 in 10 by rewriting to one action and one locked camera. Then plan for about 3 generations per usable shot. On trial credit that expires anyway, go wide rather than ration.

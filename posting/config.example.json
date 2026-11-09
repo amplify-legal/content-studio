@@ -1,0 +1,53 @@
+{
+  "_read_me": "Copy this file to content/posting/config.json in your project and change it there. Keys starting with _ are notes and are ignored.",
+
+  "timezone": "America/New_York",
+  "plan": "content/posting/plan.jsonl",
+  "log": "content/posting/log.jsonl",
+  "hand_cards_dir": "content/posting/hand-cards",
+
+  "_slots": "One entry per kind of post. days: which weekdays get a slot. time: local time. max_per_day: how many of this kind one day may carry. second_offset_h: when a missed leg moves onto a day that already has one, how many hours after the first it goes. The starting times below are a stagger to try (the long-form-friendly platform first, the others a few hours later), not a measured best time for your audience.",
+  "slots": {
+    "linkedin_written": {"days": ["Tue", "Thu"], "time": "09:00", "max_per_day": 1},
+    "linkedin_video":   {"days": ["Mon", "Wed", "Fri"], "time": "12:00", "max_per_day": 1},
+    "youtube_short":    {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "time": "14:00", "max_per_day": 1},
+    "instagram_reel":   {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "time": "16:00", "max_per_day": 2, "second_offset_h": 3},
+    "tiktok_video":     {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "time": "19:00", "max_per_day": 1},
+    "youtube_long":     {"days": ["Sat"], "time": "10:00", "max_per_day": 1}
+  },
+
+  "_hand_platforms": "Platforms the machine never posts to. They get a hand card and a reminder instead. TikTok and Substack are here by default: neither offers a posting API a tool like this may use for your own account.",
+  "hand_platforms": ["tiktok", "substack"],
+  "hand_card_hour": 7,
+  "approval_warn_hours": 3,
+
+  "stale_hours": 6,
+  "youtube_upload_lead_days": 7,
+  "probe_video": true,
+
+  "_adapters": "route: composio (the easy option: Composio's CLI with your connected accounts), direct (stubs, untested), or fake (a pretend platform for a first practice week). composio_account: the id of the one connected account to use, so a second account can never be picked by mistake. expected_account_id: YOUR OWN channel, member or user id, read with `runner.py whoami <platform>`; the runner reads the connected account before every upload and refuses unless it matches. When you switch a platform off fake, replace fake-creator with your real id and delete account_id.",
+  "adapters": {
+    "youtube":   {"route": "fake", "account_id": "fake-creator", "expected_account_id": "fake-creator", "composio_account": "", "category_id": "22", "made_for_kids": false},
+    "linkedin":  {"route": "fake", "account_id": "fake-creator", "expected_account_id": "fake-creator", "composio_account": "", "linkedin_version": ""},
+    "instagram": {"route": "fake", "account_id": "fake-creator", "expected_account_id": "fake-creator", "composio_account": ""}
+  },
+
+  "_hosting": "Instagram fetches your video from a public https URL. Either put file_url (and thumb_url) on the leg yourself, or name a command that uploads a file, and the public address it lands at. {file} is the full path, {key} is <date>/<file name>.",
+  "hosting": {
+    "upload_command": [],
+    "public_url": ""
+  },
+
+  "_reminder": "Optional. A command the watcher runs to remind you of a hand post. {text} is replaced by the reminder. The example shows a desktop notification on a Mac.",
+  "reminder_command": [],
+  "_reminder_example_mac": ["osascript", "-e", "display notification \"{text}\" with title \"Time to post\""],
+  "reminder_lead_min": 60,
+
+  "limits": {
+    "linkedin_caption_max": 3000,
+    "instagram_caption_max": 2200,
+    "instagram_hashtags_max": 5,
+    "youtube_short_max_s": 180,
+    "linkedin_video_needs_thumbnail": true
+  }
+}

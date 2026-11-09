@@ -1881,7 +1881,7 @@ NO_END = {"a", "an", "the", "to", "of", "and", "or", "in", "on", "is", "i", "but
 
 
 def fits(c, size, maxwords):
-    # (builder A, cause 3: 'attorney or / detectives'): a chunk set on 2 lines fits only with 2 words or more on
+    # (builder A, cause 3: 'designer or / developers'): a chunk set on 2 lines fits only with 2 words or more on
     # each, so the chunker cuts a sentence where no line is left with a lone word
     ln = two_lines([x["t"] for x in c], size)
     return len(c) <= maxwords and ln is not None and (len(ln) < 2 or all(len(x) >= 2 for x in ln))

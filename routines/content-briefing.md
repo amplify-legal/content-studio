@@ -228,6 +228,10 @@ Run it for a week before you touch it. Then change one thing at a time, and chan
 
 The number to watch is not how good the drafts are. It is how often you engaged: a seed captured, a decision answered, a default vetoed. The briefing counts that for you and puts it on its first line once it reaches 5. If it stays high for a week, the briefing is firing into a void, and the honest move is yours to make: cut it to the decision alone, move it to a time you actually read it, or turn it off. The run will not make that call for you.
 
+## The other routine, once you have a pipeline
+
+When you are recording several things a week, with cuts in review, shorts on a plan and people you promised things to, `routines/content-day.md` is the coordinator's version: specialist sub-agents check each area and you get one list of what content needs from you today, with minutes. Start with this briefing; move to the content day when the briefing's one decision is no longer the bottleneck.
+
 ## The optional second routine
 
 If you run a weekly posting plan, `routines/posting-refresh.md` is a nightly pass that adjusts the unposted part of the week from the latest numbers, without ever touching your own words or picks. It is optional; the content-waterfall skill explains the weekly-skeleton idea it belongs to.

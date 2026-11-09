@@ -1,0 +1,17 @@
+# A cron schedule for the posting tick (Linux, or a Mac if you prefer cron to launchd).
+# Open your crontab with:  crontab -e   and paste the lines below, with /path/to/your/project replaced.
+#
+# Every 10 minutes: the runner (a DRY RUN until you add --live), then the watcher (never posts).
+# Run it on ONE computer only. 2 computers running the same plan post twice.
+# cron starts with a short PATH: put the folder that holds the composio command on it.
+
+PATH=/usr/local/bin:/usr/bin:/bin:/path/to/your/home/.composio
+CONTENT_PROJECT=/path/to/your/project
+
+*/10 * * * * cd /path/to/your/project && PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/runner.py tick >> content/posting/tick.log 2>&1; PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/watch.py tick >> content/posting/tick.log 2>&1
+
+# When your dry week reads right, the live line is the same with --live after tick:
+# */10 * * * * cd /path/to/your/project && PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/runner.py tick --live >> content/posting/tick.log 2>&1; PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/watch.py tick >> content/posting/tick.log 2>&1
+
+# Optional, the Sunday job: lay next week's empty legs at 15:00 every Sunday.
+# 0 15 * * 0 cd /path/to/your/project && PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/plan.py next-week >> content/posting/tick.log 2>&1

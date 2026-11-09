@@ -405,6 +405,8 @@ ls -l renders/*.mp4 && md5 renders/cut-v4.mp4 renders/cut-v5.mp4
 
 **2 portability traps that waste a whole night:** `timeout` does not exist on macOS, and a step that uses it exits 127 every time (`perl -e "alarm N; exec @ARGV"` is the portable version). And a filter label containing a colon silently fails the entire filter graph, so escape it (`00\:30`). The second one is worse, because a verification step that produces nothing while looking like it ran is harder to notice than an error.
 
+**A piece that hangs at 0% CPU with its file stopped growing is killed and retried, by a watchdog that reads both.** Size alone or CPU alone misreads it. On one machine every piece started in its own session (what a detached runner does) could hang at its final flush while the same command ran in 3 s from the login session; a piece runner watching both (flat 20 s: kill, retry up to 4 times) finished the master (`content/reference/edit-lab/privacy-and-pipeline.md` B16, 2026-11-05). **Keep the raw tracks until the finals pass cut-review**, and never run 2 builds into one piece cache at once (C2, C3). **On a new machine, measure 1 caption word through libass before the first burn** (C1).
+
 **You end this step with the render running detached and a heartbeat you can read**, and the answer to "is it working" is the output file growing, never the CPU meter.
 
 ---
@@ -435,6 +437,8 @@ ffprobe -v error -select_streams a:0 -show_entries stream=duration -of csv=p=0 r
 
 The 2 durations agree to within a frame, or there is drift.
 
+**The independent review repeats until one comes back with nothing blocking, and each repeat checks every fix from the round before on the new render.** On one episode 6 of 13 fixes folded into version 2 never reached the render: a speaker's level change whose staging step was not re-run, a music bed that ran out under the title card, a compressor that still flattened the laughs (`content/reference/long-form-lessons.md`, the review errors, 2026-11-05).
+
 **Then a person watches it, and that never gets skipped.** A green battery means the file is now worth their time. It does not mean done. A finished public artifact is not what an autonomy grant covers, even an explicit one.
 
 **You end this step with a timestamped fix list**, and you run `cut-review` for the mechanical half of it.
@@ -460,6 +464,8 @@ One long recording is not one piece of content. Hand it over rather than rebuild
 ---
 
 ## The handover, and what it must say
+
+Before the handover, read `content/reference/long-form-lessons.md` Part 6: the standing rulings one working channel settled for long form (the creator watches every file before upload, 3 good options of each pick with no known fault, title and thumbnail together, a 30 to 40 second trailer, a punch-in rather than a generated angle). They are starting defaults; your own rulings in `content/taste/` win.
 
 Whatever you hand over, name **what you left out on purpose.** A real handover said it in one line: the chat-reading moments, one whole tier list, 2 tangents and the entire question and answer section, "those are yours to put back." A list of what is missing is what lets somebody subtract in one word instead of re-watching an hour.
 

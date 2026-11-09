@@ -73,6 +73,9 @@
 - **A face at 720p on the tape is a pose reference, not a face reference.** A small video tile cannot hold a face; use it for the pose and a real photo for the face.
 - **When a person asks for an AI edit of their own look** (styling, looking older or more polished), build it from the real frame plus 2 or more real photos of them, keep anyone else unchanged, and show labelled options. Their own look is theirs to change; another person's face is never edited without that person's word.
 
+- **An edit the creator asks for changes only what they named, and a pixel diff proves it** (2026-09-23 on a working channel, ported 2026-11-07). The edit is made on the exact file they picked, never a fresh render of it. Before it is shown, a diff against the picked file shows every changed pixel inside what they named (a capital letter in a headline: every change inside the headline line, 0 changed pixels anywhere else). Re-render the untouched source first and check it comes back byte-identical, so the diff is the edit and nothing else.
+- **A model twin of a real frame that changed an eye, a mouth, a tilt or the framing is not offered.** On one round 6 polished twins were built from real frames and every one moved something on a face; all 6 stayed in the build folder and the real frames went on the board (2026-11-05).
+
 ### Sizes
 
 - YouTube thumbnail: 1280x720.

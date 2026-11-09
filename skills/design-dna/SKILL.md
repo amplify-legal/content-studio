@@ -14,7 +14,7 @@ description: >-
 
 # Design DNA
 
-**Load before any step:** `content/PRINCIPLES.md` (the constitution: it wins over every step here), then `content/brand.md` (the brand values: colours, fonts, voice of the surface). This skill is the engine and never restates the brand. Wherever this file says `{BRAND_ACCENT}`, `{BRAND_FONT_DISPLAY}` and so on, the value lives in `content/brand.md`.
+**Load before any step:** `content/PRINCIPLES.md` (the constitution: it wins over every step here), then `content/brand.md` (the brand values: colours, fonts, voice of the surface). This skill is the engine and never restates the brand. Wherever this file says `{BRAND_ACCENT}`, `{BRAND_FONT_DISPLAY}` and so on, the value lives in `content/brand.md`. Before any carousel, read `content/taste/carousels.md`.
 
 Two ideas do the work.
 

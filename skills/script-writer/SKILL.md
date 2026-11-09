@@ -15,6 +15,7 @@ description: >-
 
 **Load before any step, in this order:**
 
+0. `content/profile/summary.md` and the confirmed lines of `content/profile/style.md`, when they exist: who the script is for, what it has to move, and how they actually talk.
 1. `content/PRINCIPLES.md`, the constitution. When it conflicts with anything in this file, it
    wins.
 2. `content/taste/script-format.md`, the shape the creator records from. **It is the single

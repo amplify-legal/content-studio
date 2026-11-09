@@ -2,7 +2,7 @@
 
 > Read before any render longer than about 10 minutes. Every cause below actually happened on a real pipeline, with the symptom that made it hard to diagnose. A single vertical short, 2 to 5 minutes of rendering, rarely meets any of these. A 40 minute episode meets them all.
 >
-> Tools: `scripts/render_detached.sh`, `scripts/render_queue.sh`, `scripts/render_preflight.sh`, `scripts/render_status.sh`, `scripts/render_soak.sh`. Companion: `content/reference/verify-loop.md` for a render that checks itself.
+> Tools: `scripts/render_detached.sh`, `scripts/render_queue.sh`, `scripts/render_preflight.sh`, `scripts/render_status.sh`, `scripts/render_soak.sh`. Companion: `content/reference/verify-loop.md` for a render that checks itself. Day and night render limits, freezing a render under 15 GB free instead of killing it, and a watchdog on output size and CPU together: `content/reference/lessons.md` 14b and 14c.
 
 8 things kill a long render. 7 have fixes you can apply today. The last one is the machine itself, and only a person can fix it.
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  A Mac schedule for the posting tick: the runner, then the watcher, every 10 minutes.
+
+  1. Replace /path/to/your/project (4 places) with your project's full path.
+  2. While you are in your dry week, leave the runner line WITHOUT live (it posts nothing).
+     When you go live, change "tick" to "tick --live" in the runner part. That one word is the switch.
+  3. Save it as ~/Library/LaunchAgents/com.example.posting-tick.plist, then:
+       launchctl load ~/Library/LaunchAgents/com.example.posting-tick.plist
+     To stop it:
+       launchctl unload ~/Library/LaunchAgents/com.example.posting-tick.plist
+  4. Run it on ONE computer only. 2 computers running the same plan post twice.
+
+  launchd uses the system python3, which may be older than yours: the scripts work on Python 3.9 and later.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.posting-tick</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>cd /path/to/your/project &amp;&amp; PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/runner.py tick; PYTHONDONTWRITEBYTECODE=1 python3 posting/scripts/watch.py tick</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/path/to/your/home/.composio</string>
+    <key>CONTENT_PROJECT</key>
+    <string>/path/to/your/project</string>
+  </dict>
+  <key>StartInterval</key>
+  <integer>600</integer>
+  <key>StandardOutPath</key>
+  <string>/path/to/your/project/content/posting/tick.log</string>
+  <key>StandardErrorPath</key>
+  <string>/path/to/your/project/content/posting/tick.log</string>
+</dict>
+</plist>

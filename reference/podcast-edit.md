@@ -1,6 +1,6 @@
 # Podcast edit craft
 
-> Installed to `content/reference/podcast-edit.md`. The generic pipeline craft for editing a conversational episode in a Claude session: the rulings a working pipeline converged on and every trap it paid for, written as rules. The step-by-step manual is `content/reference/podcast-edit-runbook.md`. Your own host's taste calls go in `content/taste/editing-rules.md` and win over any default here.
+> Installed to `content/reference/podcast-edit.md`. The generic pipeline craft for editing a conversational episode in a Claude session: the rulings a working pipeline converged on and every trap it paid for, written as rules. The step-by-step manual is `content/reference/podcast-edit-runbook.md`. Your own host's taste calls go in `content/taste/editing-rules.md` and win over any default here. The standing long-form rulings, as starting defaults: `content/reference/long-form-lessons.md` Part 6.
 >
 > **How to read the numbers.** Every measurement below came off a real tape on a real pipeline. Where something is unproven, it says so.
 

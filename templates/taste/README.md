@@ -34,6 +34,7 @@
 | what makes a moment a clip | `clip-bar.md` |
 | vertical shorts: safe frame, captions, crops | `shorts-formats.md` |
 | which shorts profile a recording gets | `shorts-profiles.md` |
+| carousels: what a great one is, and what I rejected | `carousels.md` |
 | animations that teach, never mood footage | `story-animations.md` |
 | how an animated piece moves (springs, overlap, handoffs) | `motion-craft.md` |
 | a graphic shown on camera beside a live demo | `on-screen-graphics.md` |

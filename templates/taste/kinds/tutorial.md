@@ -20,6 +20,7 @@ The person who built it, showing the inside and handing over the exact steps. A 
 - **Straight in instead of the 4 beats** is a per-video choice the director records (`content/taste/director.md`, the intro-or-straight-in question).
 - A lesson from a real cut: an opening with 3 segues before the content ("here's what I'm doing", "here's how I'll rank them", "stay to the end for the resource") reads as a video that never starts. One segue, then start.
 - A lesson from a real cut: when the result is the exciting part (the agent answering, 2 outputs side by side), show the result first and the build after. It calls the viewer in more than watching the setup.
+- A lesson from a real cut: after the line that hands over into the body ("let's get into it"), the frame goes full screen on the creator's face, and each section opens with one card that comes down at the top naming it ("Step 1"), on a seamless transition, never a hard jump. One card per section, not a row of chapter plates.
 
 ## 4. Pacing and length
 
@@ -29,6 +30,7 @@ The person who built it, showing the inside and handing over the exact steps. A 
 - **A demo is the same input twice with 1 thing changed, and the screen shows the change** (row 13). **A long run starts before the take, so the camera never waits** (row 6).
 - A lesson from a real cut: set up the stakes. A tutorial where nothing happens to the viewer if they do not follow along reads as boring, however good the steps are.
 - A lesson from a real cut: about 3 minutes with nothing new on screen is where the next group of viewers leaves. Keep the section title on screen, add a progress bar, change the layout.
+- A lesson from a real cut: 40 seconds of talk with nothing changing on screen is already too long. The fix the creator named: the section title stays up and moves to the top or top left while they talk, beside the section progress bar.
 - A lesson from a real cut: a real demo is allowed to be slow, because the real thing is the proof; a viewer already 5 minutes in tolerates a longer stretch. Give them a reason on screen while it runs.
 - A lesson from a real cut: when retention data says viewers are staying through a stretch, do not cut it because you are bored of it.
 - A default: a stretch where the creator reads a prompt or a document aloud can run at about 1.2x to 1.25x, with the words highlighted as they are read.

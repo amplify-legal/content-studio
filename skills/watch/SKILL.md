@@ -196,6 +196,13 @@ stuttered quote in output, that collapse did not run.
   Delete the directory when the conversation moves on; keep it if follow-ups are
   likely, since a second run of the same link reuses the download.
 
+- **From a cloud or server machine, YouTube may refuse the download with its bot check.**
+  On 2026-11-05 a cloud session could not download any of 4 reference videos and
+  did not work around the check; its style study rested on transcripts alone.
+  When that happens, say so on the page and mark every claim about what was on
+  screen as inferred. A study with no frames is a transcript study, never a
+  watch.
+
 ## Token cost, so it is a decision and not a surprise
 
 Frames are the cost; the transcript is nearly free. Roughly 200 image tokens per

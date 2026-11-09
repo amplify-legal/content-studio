@@ -278,6 +278,34 @@ shaped.
 
 ---
 
+## A cause is sourced, or said as the creator's reading (2026-11-05)
+
+**What happened.** A 2-minute reel script about a company that closed had a beat that read as if a
+new technology had caused it. No report the script drew on named that technology as a cause. The
+gap was caught when the angles were briefed, before the take.
+
+**The rule.** Every "because" in a script carries its source, or it is phrased as the creator's own
+view or as an implication ("now imagine that with X"). A cause nobody reported is never said as
+the reason.
+
+**Cost.** A beat rewritten the hour before recording; had it shipped, one checkable wrong cause
+in a video built to be shared.
+
+---
+
+## A rewrite after a fact check keeps only what the sources hold (2026-11-05)
+
+**What happened.** A voice and fact read on 2 reel scripts found 3 lines that said more than the
+sources did (an outcome that "could have saved it", a count of people, a share of data). All 3
+came out before the scripts reached the creator.
+
+**The rule.** The voice check and the fact check both run on every script version, not just the
+first. A sentence that goes past its source is cut or narrowed, never kept for rhythm.
+
+**Cost.** Nothing, because it ran before the creator read them.
+
+---
+
 ## How to add to this file
 
 After a script the creator reacted to:

@@ -10,6 +10,7 @@ A guest's world through your lens. Every guest is also a possible customer, a re
 
 ## 2. The frame you set
 
+- **The conversation comes first.** Prep goes into making the conversation valuable for the guest: good questions built on what you know about them and on your last conversation with them. What the audience gets is a bonus when something good can be given or pointed out. A lesson from a real recording (2026-11-04): a planning run asked the host for the director's audience answers an hour before a recording, and the host's answer was to spend that hour on better questions for the guest, because a great conversation is valuable to the audience on its own. On a podcast the director's audience questions are never a gate on the recording.
 - **The host who has done the work the guest is describing**: curious, present, never interviewing from a list (`podcast-hosting.md`).
 - **Anyone named, introduced or addressed in a sentence is on screen in it.** A lesson from a real cut: the host named the co-host while the cut showed the host alone, and it was a fix.
 - **The frame follows the people, not a fixed grid.**
@@ -48,7 +49,7 @@ A guest's world through your lens. Every guest is also a possible customer, a re
 - **Echo is fixed from the source tracks before the cut; the true peak is measured on the mp4 that ships.**
 - **A pick made on a mockup, a description or a rule is not a pick on the tape.**
 - **A derivative inherits the episode's audio chain.**
-- **The creator sees the file before anything is uploaded**, without exception, and there is one review call before an episode launches (`podcast-edit-runbook.md`).
+- **The creator sees the file before anything is uploaded**, without exception, save one the creator grants themselves when asked, and there is one review call before an episode launches (`podcast-edit-runbook.md`).
 - A lesson from a real cut: music is always louder than you think. Set it low, then lower it again, and keep music out from under a laugh.
 - A default: post episodes in the order they were recorded, oldest unposted first.
 

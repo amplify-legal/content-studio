@@ -286,6 +286,14 @@ A naming trap to tell your editor first: in the shorts lane in October, "blur" m
 - **Tried and dropped**: a `-hook2` twin per short (the aha version beside the question version, row 70 and the build log line 188, 27 Oct), superseded once the Round-3 order put both in one short: every podcast `-hook2` is out of the posting set, 63 marked `superseded_by` in their specs (row 195 b); the tutorial `-hook2` twins are held as hook compares, rendered only on the creator's word (row 195 d); a twin written even when the base had no question, so 17 twins opened on the same line as their base (row 73).
 - **Receipts**: rows 70, 73, 174, 195, 223, 227; the build hand-off notes (the defaults table).
 
+### B16. A detached render can hang at a piece's final flush (measured 2026-11-05)
+- **Final method**: a piece runner that watches each piece's output size AND its CPU. When both are flat for 20 s, it is a hang: kill that piece and retry it, up to 4 times. The finalize passes use the same watch with 60 s and 3 tries. On the machine where it hung, the pieces and the finalize ran from the session that owned the edit, said in the work log, against the standing "long renders run detached" rule.
+- **Tried and dropped**: the plain stall watchdog, which killed and retried the same piece, and the piece hung the same way again (deterministic per piece); 1 worker instead of several (hung the same); swapping `h264_videotoolbox` for `libx264` (hung the same).
+- **How we got there**: the pieces of a 3-track podcast episode (1080p) hung 6 times across 3 starts of `scripts/render_detached.sh` on the editor's machine: ffmpeg at 0 CPU, state S, the output 1 to 2 s short of its length, one input's demuxer thread gone. The same command run by hand from the login session finished in 2 to 3 s. Running it by hand in its own session (`subprocess.run(cmd, start_new_session=True)`) hung too. That is what a detached launcher does: this pack's `scripts/render_detached.sh` starts the job with `os.setsid()`. So the cause is the job's own session, not the encoder, the worker count or memory (77% free).
+- **Not pinned**: why the session matters (untested guesses: a quirk of that ffmpeg 9.0.1 build on macOS 27, or an end-of-file race in the filter graph that only shows without a controlling terminal). The same detached route kept working on the other machine.
+- **Receipts**: the editor's work log, 2026-11-05 17:36 and 18:12; the episode's render log.
+- **Where it lives now**: here and `content/reference/long-form-lessons.md` (the render errors table). If your renders hang the same way, test one piece with `start_new_session=True` before blaming the encoder.
+
 ## Where these lived before this book (29 Oct 2026), and what still waited on a ruling
 
 Each of these lived only in a work-log row, a build folder, a per-episode folder or a script comment.
@@ -308,3 +316,31 @@ Each of these lived only in a work-log row, a build folder, a per-episode folder
 16. **Contradictions in shared files that will mislead an editor**: cut-review's safe-area bottom y 1680 against 1500; the 35% CTA in `editing-checklist.md` item 9 against cut-review's "never the framework's ~35% default"; the zinger-table input in the shorts-editor skill against cut-review; cut-review's `fps=1/10` contact sheet and the deep pass's 5 s sweep against the 1 s exposure rule; `editing-checklist.md` has no privacy item; the runbook has no frame-check step for a guest's screen share (the rule is in `podcast-edit.md`); `render-reliability.md` calls `h264_videotoolbox` untried while the editor used it; the runbook's 25 GB preflight floor against the main machine running without it since 22 Oct, with the editor's machine not stated. **[Fixed 2026-10-29: cut-review 1500 fixed; the rest still open, the book's README "Still open"]** **[CTA ruled 2026-10-29: between 30% and 40%, the creator; checklist and cut-review agree]**
 
 Not reached: session transcripts were not opened (only work logs, shared files, build logs and code), so a lesson spoken in a session and never written to a row is not here. No script was run, and nothing was rendered.
+
+## From a podcast edit run in a cloud session overnight (added 2026-11-05)
+
+A whole episode (the full cut, a shorter standalone cut, trailers and intros) was edited in a cloud session on a Linux box while the creator slept. These 6 came out of its review rounds.
+
+### C1. libass draws a different width on another machine: calibrate where the burn runs
+- **Final method**: before the first burn on any new machine, render 1 known word on a black frame through `ass=...:fontsdir=` and measure its pixel width against the layout's own measure (`textlength`). Use the ratio you get. On the Linux box the factor was 0.691 against 0.63 on the Mac.
+- **Tried and dropped**: the Mac's calibration carried to the Linux box. libass drew a word 436 px wide where the layout expected 398, so every caption lost its word gap and the letters ran together (a review block on the first cut).
+- **Receipts**: the cloud session's review round 1, block 2. **Where it lives now**: here and `captions.md` 50.
+
+### C2. 2 builds sharing one content-keyed piece cache race each other
+- **Final method**: run builds that share a piece cache one after the other, or give the second build its own cache folder.
+- **How we got there**: the full episode's build, the shorter cut's build and both pick renders wrote into the same cache. When 2 wanted the same key at once, one finished and the other's temporary file was gone (`FileNotFoundError` on `os.replace`, 3 times in one night).
+
+### C3. Keep the raw tracks until the finals have passed cut-review
+- **Final method**: when disk runs short, delete the piece cache and the intermediates first and the raw tracks last.
+- **How we got there**: the raw tracks were deleted for disk after the first finals rendered. Cut-review then asked for a different body start and a layout change on the goodbye, and the new pieces needed the raw tracks again (a 15-minute download).
+
+### C4. An opener that carries the welcome means the body starts after it
+- **Final method**: when the title card's audio already holds the welcome line, the body starts on the next sentence.
+- **How we got there**: the title card's audio and the body both started at the same second, so "Hey, welcome back" played twice (a review block on the first cut).
+
+### C5. The bed level is measured on this tape's trailer, never copied from another episode
+- **Final method**: measure bed against voice on this episode's trailer windows and set it to sit about 19.5 dB under.
+- **How we got there**: another episode's level put the bed 4.7 dB under the voices here, because these voices measured about 15 dB quieter before loudness normalization. 2 measures landed it at 19.5 dB under.
+
+### C6. A paid listening pass that fails is named, never stood in for
+- **Final method**: when an AI listening pass is refused (here a prepaid-credit error, HTTP 402 `RESOURCE_EXHAUSTED`, on every trailer moment), say so on the page. A loudness (RMS) flag is a stand-in, not a listen.

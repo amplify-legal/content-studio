@@ -16,6 +16,9 @@ description: >-
 **Load before any step, in this order:**
 
 1. `content/PRINCIPLES.md`, the constitution. When it conflicts with anything here, it wins.
+1b. `content/profile/summary.md` (who they are, the business, the objectives) and the confirmed
+   lines of `content/profile/style.md`, when the `creator-profile` skill has written them. A line
+   still marked as a guess is a question for them, never a rule to write by.
 2. `content/taste/voice.md` and `content/taste/hooks.md`: how they write, and the openers that
    stopped them versus the ones they killed.
 3. `content/taste/stories.md`: the only place a number or a story may come from.
@@ -23,6 +26,7 @@ description: >-
 5. `references/examples.md` in this skill, once they have filled it with their own posts: load
    5 to 7 of the starred ones as cadence references per draft.
 6. `references/platform-craft.md` when the post is for a specific feed.
+7. `content/taste/carousels.md` before any carousel (installed from `templates/taste/carousels.md`).
 
 **This skill states no voice of its own.** It ships no house style and no opinion about how a
 post should sound. Where it needs to know how the creator writes, it reads their file. A writing
@@ -52,8 +56,10 @@ These hold in every mode.
   capitalisation and product names, and change nothing else. A word that looks worth cutting
   or softening is asked about before it ships, never reported after. A posted message cannot
   be taken back.
-- **Nothing publishes from here.** This skill writes drafts. Posting is the
-  `content-waterfall` skill's publishing step, and it needs their explicit approval.
+- **Nothing publishes from here.** This skill writes drafts. At the full level, posting is the
+  `posting` skill (`.claude/skills/posting/`, the auto-post module). At lite and standard it is
+  the content-waterfall's publishing rules and the creator's own hand. Either way it needs their
+  explicit approval.
 
 ---
 
@@ -236,6 +242,24 @@ on the way in. `references/platform-craft.md` has the detail.
 
 **Length matches the energy.** Never pad to a target. `references/platform-craft.md` has the
 bands per feed.
+
+### Captions that ride with a video or a picture
+
+- **A caption never refers to its own media.** No "see the video above", "that's the picture
+  with this post", "in this clip". The picture is seen, not announced.
+- **The caption is shown in full before it posts.** A go on a video is not a go on its words. Put
+  every caption in front of them, one box per platform, word for word, before the week is
+  approved, and again after any change. The posting module's `approve` prints each one as it
+  approves; an approval covers only the text they read.
+- **Every person a caption names is tagged, where the platform's API allows it, and only
+  there.** On LinkedIn, a machine can tag only a person whose member id it holds (in practice,
+  people who connected their own LinkedIn to the same app); put them on the leg's `mentions`. A
+  person with no id is named untagged, or tagged by the creator's hand in the app. Never invent
+  an id or guess a handle. On a hand card, list who to tag so the creator does it while posting.
+- **The full-video link goes in the first comment, never held for.** A short's caption does not
+  wait for the long form; the link is added as the first comment once it is live.
+- **A link in a caption on a feed that punishes body links goes in the first comment instead**,
+  never in both (the posting check refuses a LinkedIn link in both places).
 
 ---
 

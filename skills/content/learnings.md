@@ -40,6 +40,8 @@ These came from real runs on the system this pack was built from. They are writt
 
 - **The retro is never self-review.** A separate reviewer sub-agent reads the whole conversation and the session hands its list over unedited. (Home: `SKILL.md` section 8.)
 
+- **A resource page rewritten to match what was said on camera is checked against the cut, not only the raw tape** (2026-11-04). On a review call the creator cut a section and said a product option no longer existed; the page rebuilt the same day from the raw tape kept a line about that option, and page and video disagreed for weeks until a session rebuilt the page against the published cut. Why: the viewer compares the page with the video they watched, never with the tape. While a cut is still changing, every page tied to it is re-read against the creator's cut notes before it ships. (Home: `content/taste/must-dos.md`, the on-camera promise rows.)
+
 ---
 
 ## Your rules

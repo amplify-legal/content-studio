@@ -1,6 +1,6 @@
 # scripts
 
-10 scripts, installed to `scripts/` in your project and run from your project root. Standard library Python and bash only, nothing here needs a key, and nothing here sends anything anywhere.
+11 scripts, installed to `scripts/` in your project and run from your project root. Standard library Python and bash only, nothing here needs a key, and nothing here sends anything anywhere.
 
 | Script | What it does | Offline proof |
 |---|---|---|
@@ -13,6 +13,7 @@
 | `render_status.sh` | "Is it actually working?" Answers from the files: is the output growing, is the heartbeat fresh, what the log says | run it on a folder |
 | `render_soak.sh` | An evidence run for renders that never finish: a monolithic encode and your parallel finalize at several worker counts, each time-limited, with memory sampled | |
 | `yt_download.sh` | Downloads a video, a slice or the audio, and heals itself when yt-dlp goes stale (upgrade and retry, then cookies) | `--help` |
+| `seo_updates.py` | The weekly read of what Google changed in Search (3 public sources, no key), used by search-visibility's Friday measure; writes `content/seo-updates/` | `--selftest` |
 | `serve_outputs.py` | Serves a folder on localhost with HTTP Range support (206), so review pages with `<video>` play and seek in a browser pane. Default `./outputs` on port 4200 | `--selftest` |
 
 The reasons behind every render behaviour are in `content/reference/render-reliability.md`. The verify loop's contract is in `content/reference/verify-loop.md`. The thinking behind the copy checker is in `content/reference/the-checks.md`.

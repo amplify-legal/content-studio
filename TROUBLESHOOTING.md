@@ -10,7 +10,7 @@ Find your error by the words in it. If yours is not here, the last section has a
 
 ## The first 20 minutes
 
-The path at the top of `SETUP.md`. These are its failures, and most of them are fixed by saying 1 sentence back in the same conversation.
+The optional 20-minute path to a first taste file, `SETUP.md` step 7b. These are its failures, and most of them are fixed by saying 1 sentence back in the same conversation.
 
 ### `cp: ... No such file or directory` during the copy
 
@@ -106,11 +106,11 @@ This is the correction worth making tonight, because it gets harder every week: 
 
 ### The skills do not show up in Claude Code
 
-Skills install into your project's own `.claude/skills/`, so they load only when Claude Code is opened in that project. Check you started `claude` from your project folder, then `ls .claude/skills` and expect 14 folders: `content`, `content-waterfall`, `cut-review`, `design-dna`, `director`, `long-form-editor`, `media-gen`, `on-camera-board`, `post-writer`, `script-writer`, `search-visibility`, `shorts-editor`, `taste-builder`, `watch`.
+Skills install into your project's own `.claude/skills/`, so they load only when Claude Code is opened in that project. Check you started `claude` from your project folder, then `ls .claude/skills` and expect the count for your level (`level:` in `content/setup/preferences.md`): 6 at `lite` (`content`, `creator-profile`, `director`, `post-writer`, `script-writer`, `taste-builder`), 15 at `standard` (adding `content-waterfall`, `cut-review`, `design-dna`, `long-form-editor`, `media-gen`, `on-camera-board`, `search-visibility`, `shorts-editor`, `watch`), 16 at `full` (adding `posting`). If a skill you just copied is still missing, open a new session: whether an open session picks up new skills depends on the Claude Code version (untested here).
 
 ### `.claude/skills/` has loose files like `SKILL.md` in it
 
-You copied the contents instead of the folders. Nothing is broken and you do not need to delete anything by hand. Run the copy again exactly as written in `SETUP.md` step 4, including the `/*`, then move the loose files out of the way when you are ready.
+You copied the contents instead of the folders. Nothing is broken and you do not need to delete anything by hand. Run your level's blocks in `SETUP.md` step 4 again exactly as written, then move the loose files out of the way when you are ready.
 
 ### A skill says it cannot find `content/PRINCIPLES.md` or a taste file
 
@@ -138,6 +138,73 @@ It lists 6 files. The kind sheets come with the taste copy (`cp -Rn ~/content-st
 ### I updated and my taste file was replaced
 
 It should not be: every copy into `content/taste/`, `content/brand.md` and `content/PRINCIPLES.md` uses `cp -n`, which never overwrites. If a copy without `-n` ran, your previous version is in git if your project is a repository (`git log -- content/taste/`), or in your machine's backups. Add `-n` to that line so it cannot happen again.
+
+## Levels and the deep dive
+
+### `MISSING  preferences   level is '...', want lite, standard or full`
+
+The `level:` line in `content/setup/preferences.md` must read exactly `level: lite`, `level: standard` or `level: full`, on its own line. Say *"rewrite the level line in my preferences file"*, then run `python3 .claude/skills/creator-profile/scripts/profile_check.py --preferences content/setup/preferences.md` again.
+
+### `WARN  preferences   content/setup/preferences.md not found`
+
+The 5 questions at the top of `SETUP.md` were skipped, or the answers were never written. Say *"ask me the 5 setup questions and write my preferences file"*. It takes 2 minutes.
+
+### A skill says it needs another skill that is not installed
+
+Your level did not install it, and that is expected. A `lite` session that reaches for `watch`, `cut-review` or `media-gen` says which skill is missing and which level carries it. Say *"upgrade me to standard"* to add it, or carry on without it. If a session pretends the step ran, that is a bug: say *"which skill would that need, and is it installed?"*
+
+### `upgrade me to standard` says a skill folder already exists and differs
+
+You, or an earlier install, edited that skill. Nothing is replaced without your word. Ask to see the difference, copy your version somewhere safe if you want to keep it, then say which to keep.
+
+### I went back to `lite` and a parked skill still shows up
+
+Open a new Claude Code session in your project (an open session may still list what it loaded at its start; untested which versions do). Then `ls .claude/skills` should show only your level's folders, and `ls .claude/skills-parked` the parked ones. Nothing was deleted: moving a folder back undoes it.
+
+### The deep dive stopped mid-sitting
+
+Say *"pick up my profile"*. It reads `content/profile/progress.md` and asks the next question. If `progress.md` is missing, the sitting never wrote it: say *"write progress.md from what is in content/profile/ now, then ask me the next question"*.
+
+### `MISSING  <section>: your words   0 quoted passages, 1 wanted`
+
+The file holds a summary of you, not your sentences. Say, in the same conversation: *"those are your words, not mine. Put my own sentences in, in quotation marks."*
+
+### `MISSING  business: customer worth`
+
+The money question was skipped or answered with a guess that was then removed. Say: *"ask me what one customer is worth to me. If I do not know, write UNKNOWN with today's date."* A blank fails the check on purpose; `UNKNOWN` passes, because not knowing is a real answer.
+
+### It wrote a price, a target or a customer's worth I never said
+
+That is the one thing the deep dive must never do. Say: *"strike that number, keep the line visible, and write what I actually said, or UNKNOWN."* Then make the correction land in the skill: *"and put that rule in creator-profile so the next session sees it."*
+
+### `MISSING  private   content/profile/private.md exists and .gitignore does not list it`
+
+Your private figures could reach git. From your project root:
+
+```bash
+echo "content/profile/private.md" >> .gitignore
+git check-ignore content/profile/private.md
+```
+
+The second line prints the path when it is ignored. If the file was already committed, `.gitignore` alone does not take it out of your history; ask before doing anything about that.
+
+### `MISSING  style: pieces read   3 or more rows under 'The pieces read'`
+
+Your style is read off at least 3 of your own pieces before anyone tells you what it is. Send 3 or more links or files. At `lite`, a video with no transcript can't be read: paste its transcript or the script you recorded from, or add the no-key extra in `SETUP.md` step 7 (the `watch` skill, `yt-dlp` and `ffmpeg`), which reads public captions.
+
+### `MISSING  summary: confirmed`
+
+The summary was written and never confirmed. Say *"show me the whole summary"*, read it, correct anything, and say yes. It writes `confirmed:` only after your yes, never on silence.
+
+### The recommended level is not the one I installed
+
+The deep dive knows more than the 5 setup questions did, and it says when it disagrees. Your choice wins. Say *"keep my level"* and it is recorded, or *"upgrade me to <level>"*.
+
+### Windows
+
+`lite` is files only and works wherever Claude Code runs; ask Claude Code to do the copy for you. `standard` and `full` lean on bash and ffmpeg and are untested on Windows. The likely route is WSL with Ubuntu, then the Linux lines in `SETUP.md`.
+
+---
 
 ## System tools
 
@@ -318,7 +385,7 @@ A jump over about 20 seconds needs a transition card. A cut that does not land o
 
 Check the highlight direction first. If the base colour is not pinned before the colour transitions, the renderer resolves the first transition's target for any time before it starts, which means **every word arrives already highlighted and the colour drains away as the words are spoken.** The highlight marks what has not been said yet. Proved on a bench render: 0.2 seconds into a 4 word line, all 4 words were highlighted. It is one token to fix and it is the first thing anybody's eye catches.
 
-The second suspect is line breaking by word count. A hard 4 word cap put **524 of 705 lines at exactly 4 words** on one cut and read "So I was in / an instance where, a / firm was trying to". Break where the language breaks.
+The second suspect is line breaking by word count. A hard 4 word cap put **524 of 705 lines at exactly 4 words** on one cut and read like "So I was in / a meeting where, a / team was trying to" (an invented line of the same shape). Break where the language breaks.
 
 ### Something private is on screen and I only noticed after publishing
 
@@ -409,6 +476,10 @@ A start was refused with exit 75 because your `RENDER_PAUSE_CHECK` command said 
 
 `T` means stopped, not stuck. If you run a disk or memory guard that freezes renders (SIGSTOP) when space runs low, this is it working. **Never kill a frozen job, and never send it SIGCONT yourself**: free disk, and the guard resumes it. A timeout around a render should count only the time the job is actually running, or a freeze kills a healthy job. A 0% CPU render whose state is not `T` is the deadlock described earlier on this page ("A segment render has been going for 20 minutes").
 
+### A render piece hangs at 0% CPU with its file 1 to 2 s short, but the same command finishes from your terminal
+
+The job is not frozen (`ps` does not show `T`). It hangs only when it is started in its own process session, the way `scripts/render_detached.sh` starts jobs. Test one piece with `subprocess.run(cmd, start_new_session=True)`. If that hangs too, run that build from the session itself, or use a piece runner that watches output size and CPU together, and moves on when both stand still. The case and what was tried are in `content/reference/edit-lab/privacy-and-pipeline.md`, B16. A mode of `render_detached.sh` without its own session would be the code fix; it is untested.
+
 ### The verify loop says a build file is missing
 
 `scripts/verify_loop.py` drives a piece folder that holds 4 files: `build/build_cut.py`, `build/finalize.py`, `build/verify.py` and `build/autofix.py`. It prints which one is missing and stops. Write stubs with:
@@ -458,6 +529,20 @@ Add the video first and wait until its upload bar reaches 100%, then add the thu
 ### The platform said it failed, and now the post is up 3 times
 
 A generic refusal can be untrue about the outcome: retries may each have landed. After any publish that took more than 1 attempt, open the profile and count what is actually there. Deleting duplicates is yours to do by hand.
+
+---
+
+## Posting by machine (full)
+
+`posting/README.md` is the authority for the posting module. These are the 2 surprises the scripts' own headers explain.
+
+### `runner.py tick` says what it would post and nothing goes out
+
+That is the default. `posting/scripts/runner.py` is a dry run unless you pass `--live`, and even then it posts only legs with `approved_by` recorded, not on hold, and passing `plan.py check` (from the header of `runner.py`). Approve a leg with `python3 posting/scripts/plan.py approve <leg> --by "<your name, the date, where you read it>"`.
+
+### A TikTok or Substack leg never posts
+
+Those are hand platforms by default: the watcher writes a card to `content/posting/hand-cards/` with the file, the caption and how to record the post, and you press post (from the header of `posting/scripts/watch.py`). Run the checklist in `SETUP.md` step 7c, then record it with `plan.py posted <leg> --url <the live link> --by "<you>"`.
 
 ---
 

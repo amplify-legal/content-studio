@@ -36,6 +36,8 @@ Teach something and deliver a lot of value in under 60 seconds. A useful framing
   - Keep the whole bit. A short that cuts the speaker halfway through the joke has cut the best part.
   - One clear purpose per short. A short that is all over the place is recut, not polished.
   - Context first: a short that drops the viewer into the middle of a conversation loses them. A few seconds of who the guest is, and the surprising fact about them, buys the rest.
+  - Never the same clip twice in a row: an opening line that plays again inside the answer reads as a mistake (more from that round in `shorts-formats.md`, "Lessons from a fifth review round").
+  - A candidate, not a rule yet (heard twice on review calls): a follow-up short made because an earlier short took off gives the audience what its comments ask for, usually the why behind the first one.
 
 ## 5. Packaging
 

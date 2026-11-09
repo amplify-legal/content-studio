@@ -317,6 +317,12 @@ From the 27 to 29 Oct podcast shorts build (added 29 Oct evening; "fix N" is a n
 - **Tried and dropped:** the duo to the end, with the guest's low face under the credit at 1400 (guest C's F1, `credit_face_ok` false, fix 204). Still open on guest C's F1 round 3: 51.5 s of stacked duo with nobody full width until 52 s; builder H (fixes 236 on) is changing it with `duo_pieces`, so re-read the log. Also open (fix 232): this cut and the `ig_between` card rule (fix 193) still count their 6 s from the end of the short, while the credit now ends where an introduction starts, so on a short with an introduction they can sit a few seconds early (untested).
 - **Receipts:** build log fix 204; the round-3 verdict on guest C's F1, fix 2.
 
+### 37. A darker face is lifted on its own track, measured against the other faces (added 2026-11-07)
+- **Final method:** measure the mean face luma of each speaker on a few frames of their own track; where one face sits well under the others, lift that track alone with a gamma move (a host at a mean face luma of 79 against a guest's 124 got `gamma 1.25`), then judge it on a 1-frame-a-minute sheet beside the others. A gamma lift moves the mid-tones more than the whites; that it reads more natural than a flat brightness add is the usual reason given, untested on this tape. On stills, a lift that only equalises a brightness number can drain a warm face to pale (`content/taste/thumbnails.md`, two real photos matched on the skin), so judge on the frame sheet by eye, never by the number alone.
+- **Tried and dropped:** nothing else was tried on this episode.
+- **Receipts:** the editor's work log, 2026-11-05 16:18 and 16:24 (the hook sample's frame sheet: "light lift reads natural").
+- **Where it lives now:** here. A general light match across a whole video is the footage tools' job (`editing-rules.md`); this is the per-track case.
+
 ## Lessons that had no other home before this book (29 Oct 2026), and what still waits on a ruling
 
 In the reference setup the editor's sessions would not have found these, because they sat only in a work-log row, a research or lab page, a build folder, the co-host's project folder, a script docstring or the editor's own night notes. If you adopt one, give it a home in your taste files or your runbook:

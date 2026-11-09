@@ -38,6 +38,8 @@ This skill produces no video, no script, no post. It produces the files every ot
 
 ## Before the first question
 
+**0. Read `content/profile/` first** when it exists. Quote what it already answers (the voice playback, the hooks from their inspirations, whether they want views or customers) and start each round from there, never from a blank question.
+
 **1. Find the content folder.** It is `content/` at the root of their project. If it does not exist, ask where they want it before creating anything.
 
 **2. Find the taste folder, `content/taste/`.** The install copies the blank templates from the repo's `templates/taste/` into it, so on a fresh install every canonical file is already there with its placeholders. Check:

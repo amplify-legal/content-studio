@@ -2,30 +2,57 @@
 
 Ready-made prompts for every stage, in the order you will hit them. Edit the bracketed parts before you paste.
 
-**First night and short on time?** Skip to "Tonight instead" below and do only that. The full install will still be here tomorrow.
+**Start with prompt 1.** It is the only one you need to install. It asks you 5 quick questions, picks a level (`lite`, `standard` or `full`), installs only that level, runs the checks, and then starts the deep dive on you. Every other prompt here is for later.
+
+**Which level each prompt needs.** Prompts 1 to 3, 5b and 12 to 14 work at every level. Prompts 4, 5, 6 to 9 and 11 use skills from `standard` (prompt 4 builds thumbnails with `media-gen` only if you added its key). Prompt 10 uses the verify loop from `full`. At a lower level, Claude says which skill is missing and offers the upgrade; it never pretends.
 
 ---
 
-## 1. The full install
+## 1. The install, the one paste
 
 Open Claude Code in the folder you do content work in (your project), and paste:
 
 > Install Content Studio into this project with me, one step at a time.
 >
-> 1. Clone `https://github.com/amplify-legal/content-studio.git` to `~/content-studio` (or `git pull` there if it already exists). Read its `START-HERE.md` and `SETUP.md` before doing anything else.
-> 2. Before you change anything, check what I already have: ffmpeg, ffprobe, node, python3 (3.10 or newer), yt-dlp, Playwright with a Chrome or Chromium (optional), an existing `.claude/skills/` in this project, an existing `CLAUDE.md`, an existing `content/taste/` folder, and which of these keys are set in `.env` or my environment: ELEVENLABS_API_KEY, DEEPGRAM_API_KEY, MIXROUTE_API_KEY. Show me what is there and what is missing. Never print a key's value.
-> 3. Copy, following the table at the top of `SETUP.md`: `skills/*` into `.claude/skills/`, `scripts/*` into `scripts/`, `reference/*.md` into `content/reference/`, the `reference/edit-lab/` folder into `content/reference/edit-lab/`, `reference/PRINCIPLES.md` into `content/PRINCIPLES.md` (only if I do not have one), `reference/frameworks/*` into `content/frameworks/`, `templates/taste/*` (the `kinds/` folder included) into `content/taste/` `templates/brand.md` into `content/brand.md` and `routines/*.md` into `routines/`. Leave `examples/` in the clone: I copy an example pipeline into a video's folder when I need it (`SETUP.md` step 13b). Use `cp -n` for anything under `content/taste/`, `routines/`, `content/brand.md` and `content/PRINCIPLES.md`, so nothing of mine is ever overwritten. If a skill folder of the same name already exists and differs, show me the difference and ask before replacing it.
-> 4. Add the lines from `SETUP.md` step 5 to this project's `CLAUDE.md`, never to `~/.claude/CLAUDE.md`.
-> 5. Make sure `.env` is in this project's `.gitignore`.
-> 6. Run every self-test in `SETUP.md` step 13 and show me the output. Use `PYTHONDONTWRITEBYTECODE=1`. Run the page check's self-test only if Playwright is installed, and say plainly which tests you skipped and why.
+> 1. Clone `https://github.com/amplify-legal/content-studio.git` to `~/content-studio` (or `git pull` there if it already exists). Read its `START-HERE.md`, `SETUP.md` and `skills/creator-profile/reference/levels.md` before doing anything else. Do not summarise the repo back to me.
+> 2. Ask me the 5 preference questions from `SETUP.md` section 0, one at a time, and stop talking after each one: how much time I have today, who edits my videos, whether I want posting done by machine, which platforms I use and want, and which computer I am on. Then tell me in 2 lines which level you recommend and why, following "The pick, in order" in `levels.md`, and let me choose.
+> 3. Write my answers to `content/setup/preferences.md` in the shape at the bottom of `levels.md`, in my words, with today's date, and run the preferences check from `SETUP.md` step 2.
+> 4. Before you copy anything, check what I already have and show me: an existing `.claude/skills/`, `CLAUDE.md`, `content/taste/`, `content/profile/`. For `standard` or `full`, also check ffmpeg (with libass: the `ffmpeg -filters` line in step 8), ffprobe, node, python3 (3.10 or newer), yt-dlp, Playwright with a Chrome or Chromium (optional), and which of these keys are set in `.env` or my environment: ELEVENLABS_API_KEY, DEEPGRAM_API_KEY, MIXROUTE_API_KEY. Never print a key's value. For `lite`, check only python3.
+> 5. Copy with the blocks in `SETUP.md` step 4 for my level only: the lite block, then the standard block for `standard` or `full`, then the full block for `full`. Use `cp -n` exactly where the blocks do, so nothing of mine under `content/taste/`, `routines/`, `content/brand.md` or `content/PRINCIPLES.md` is ever overwritten. If a skill folder of the same name already exists and differs, show me the difference and ask before replacing it.
+> 6. Add the lines from `SETUP.md` step 5 to this project's `CLAUDE.md`, never to `~/.claude/CLAUDE.md`. Make sure `.env` is in this project's `.gitignore`.
+> 7. Run the self-tests for my level and show me the output: step 6 for `lite`, step 13 for `standard`, steps 13 and 17 for `full`. Use `PYTHONDONTWRITEBYTECODE=1`. Say plainly which tests you skipped and why.
+> 8. For `standard` or `full`, walk the rest of that level's steps with me, one at a time, running each step's check before the next. For `full`, step 16 follows `posting/README.md` from the top, and nothing posts: dry-run until I approve a row.
+> 9. Then start the first sitting of `creator-profile` (`SETUP.md` step 7). If I have to stop, save where we are in `content/profile/progress.md` and tell me how to resume.
 >
-> I **[do / don't]** want the video half (ffmpeg, node, transcription). I **[do / don't]** want media-gen, which spends money. Ask before installing any system package. Never delete anything: if something is in the way, tell me. Do not summarise the repo back to me.
+> Ask before installing any system package. Never delete anything: if something is in the way, tell me. Never ask me to paste a key into the chat: tell me the file (`.env` in this project) and the variable name.
+
+If you already know your level, add one line at the end: *"My level is **[lite / standard / full]**, skip the recommendation."* The questions are still asked, because the deep dive reads your answers.
+
+---
+
+## 1b. The deep dive, any time after
+
+> Start my profile.
+
+> Pick up my profile.
+
+> My business changed: **[what changed]**. Update my profile.
+
+It asks one question at a time, writes your words into `content/profile/` as you go, and ends with a 1-page summary you confirm and a recommended level. For sitting 2, have 3 to 10 of your own pieces ready (2 you are proud of, 2 typical, 1 you dislike), and 3 to 10 creators or pieces you love plus 3 you dislike.
+
+---
+
+## 1c. Changing level
+
+> Upgrade me to **[standard / full]**. Read `content/setup/preferences.md` and `SETUP.md` "Changing level", run only what the new level adds, run its self-tests, and update my preferences file.
+
+> Take me back to **[lite / standard]**. Follow "Changing level" in `SETUP.md`: stop anything that runs on its own first, move the skills above that level to `.claude/skills-parked/`, delete nothing, and update my preferences file.
 
 ---
 
 ## Tonight instead: your first taste file, 20 minutes
 
-Have 3 pieces by other people in front of you that made you stop scrolling. Do `SETUP.md` step 1 (2 minutes of copying), then open Claude Code in your project and paste:
+Have 3 pieces by other people in front of you that made you stop scrolling. It needs the lite copy in place (prompt 1 at `lite`, or `SETUP.md` steps 1 and 4 by hand, about 3 minutes). Then open Claude Code in your project and paste:
 
 > I am setting up Content Studio and tonight I am doing only the first 20 minutes.
 >
@@ -45,7 +72,7 @@ Then in a terminal: `python3 scripts/first_taste_check.py content/taste/hooks.md
 
 ## 2. Taste, the important one
 
-If you did the 20 minute sitting, start with: *"I already have hooks.md. Read it, do not redo it, and start at round 1."* Then:
+If you did the 20 minute sitting, start with: *"I already have hooks.md. Read it, do not redo it, and start at round 1."* If your profile is done, add: *"Read content/profile/ first and do not ask what it already answers."* Then:
 
 > Run `taste-builder`. Give this a proper 45 minutes and interview me hard. When I say "I just know it when I see it", ask me for 3 examples and work out the rule from what they have in common. Write into `content/taste/` as you go, not at the end. Then walk me through the "starting defaults" sections in the templates and ask which I keep, change or strike.
 
@@ -147,4 +174,4 @@ Add this to any correction:
 
 ## 14. Updating
 
-> Run `git pull` in `~/content-studio`, read `CHANGELOG.md` and show me what changed, then redo the copy from `SETUP.md` step 4. Never overwrite anything in `content/taste/`, `content/brand.md` or `content/PRINCIPLES.md`. If I edited a skill, show me the difference before replacing it.
+> Run `git pull` in `~/content-studio`, read `CHANGELOG.md` and show me what changed, then redo the copy from `SETUP.md` step 4, the blocks for the level in `content/setup/preferences.md` only. Never overwrite anything in `content/taste/`, `content/profile/`, `content/setup/`, `content/brand.md` or `content/PRINCIPLES.md`. If I edited a skill, show me the difference before replacing it.

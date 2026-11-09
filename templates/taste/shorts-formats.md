@@ -93,6 +93,17 @@ Measured on screenshots of LinkedIn's full-screen player, Instagram Reels and Yo
 - **A guest's shorts are for the guest to post**: they feature the guest (their face, their voice, their name on screen), and the guest gets the MP4 files, not only links to your posts.
 - **Taste profiles from the feedback:** mine every review for patterns that repeat. A pattern with 3 or more receipts becomes a profile in `content/taste/shorts-profiles.md`; 1 or 2 is a candidate. A brief lists 2 or more profiles as options, never one.
 
+### Lessons from a fifth review round (starting defaults, 2026-11-04)
+
+An editor reviewed 21 shorts from one page: 14 kept, 7 cut, each cut with its fix named. The cuts, written as rules:
+
+- **Never the same clip twice in a row.** The opening line followed by the same line again inside the answer reads as a mistake. Remove the first one.
+- **Never cut a speaker mid-sentence, at the hook seam or at the end.** Let them finish the point, then end the shot.
+- **A list on screen never mixes the mistakes and the fixes.** When the talk turns to what to do instead, a new list in another colour starts.
+- **One short, one topic.** When a short would cut from an explanation to a demo, it is 2 shorts, and in the demo short the viewer sees the cause before the result (the button being pressed, then the result appearing).
+- **A tutorial short never shows only the face in a centred box with no screen.** The same video made better shorts with the screen in them.
+- **Name 1 benchmark short per kind once a reviewer calls one "the benchmark"**, and build the next round toward it; write its name and why in `## Mine` below.
+
 ### The short's job
 
 Teach something and deliver real value in under 60 seconds. Every format is judged on that first. **Self-check before it is shown:** every frame and every short is opened at full size and checked against this file before a person sees it.

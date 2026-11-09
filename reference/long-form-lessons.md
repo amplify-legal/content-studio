@@ -160,6 +160,10 @@ Every row is a real failure on a real long recording, with what it cost. This is
 | **A music bed judged by ear** | A bed 6 to 7 dB under the voices was "way too loud"; about 19 to 20 dB under was right. Measure bed against voice in the same window and say the number before anybody watches. |
 | **Chunk bounds off the frame grid** | A parallel finalise that speeds up each chunk loses up to a frame per chunk when a chunk's sped-up length is not a whole number of frames, and sample-exact audio runs ahead (121ms on one cut). Round every bound to the output frame grid, and bound the chunks on the **real master**, never on edit-list arithmetic (an EDL 0.19 seconds short cut the last chunk short). |
 | **A memory gate on swap used** | The OS keeps swap allocated after the pressure is gone, so a gate on swap used waited on a machine that was 49% free. Gate on memory pressure. |
+| **A piece that hangs only when it runs detached** (2026-11-05) | On one machine, every piece started in its own session (what a detached runner does) could hang at its final flush: 0 CPU, the file 1 to 2 s short, while the same command from the login session finished in 3 s. 6 of 257 pieces hung, twice each, and a plain retry hung the same way. A piece runner that watches output size AND CPU (both flat for 20 s: kill and retry, up to 4 times) finished the master. Detail: `edit-lab/privacy-and-pipeline.md` B16. |
+| **2 builds writing into one content-keyed cache** (2026-11-05) | The full cut and a shorter cut built from the same pieces raced on the same cache key, and one build's temporary file vanished under it (`FileNotFoundError`, 3 times in a night). Run them one after the other, or give each its own cache. |
+| **The raw tracks deleted before the finals passed review** (2026-11-05) | The review then asked for a new body start and a new layout on the goodbye, and the new pieces needed the raw tracks again. When disk is short, the cache and the intermediates go first, the raw tracks last. |
+| **A caption calibration carried to a new machine** (2026-11-05) | libass drew the same word 436 px wide on a Linux box where the layout expected 398, so every caption's letters ran together. Measure 1 known word through libass on the machine that burns, before the first burn. |
 
 ### The review errors
 
@@ -171,6 +175,8 @@ Every row is a real failure on a real long recording, with what it cost. This is
 | **Spot samples called a deep pass** | A shallow pass once cleared a cut carrying a 0.3 second lip-sync drift at the end. A deep pass is every-N-second frames across the **whole** runtime plus freeze and black detection plus an audio and video duration check. |
 | **A check that fails on a file you know is right** | The check is wrong. 2 of these: a probe reading a title card's last frame as empty because it sampled 0.03 seconds in instead of 0.20, and a 2 pixel probe landing in a gap between layout regions. Fix the check; do not accept the finding. |
 | **A failure cause asserted rather than proved** | 3 consecutive confident misdiagnoses once hid a self-inflicted missing flag for 3 days, with the machine's owner closing browsers and blaming their own hardware. **A failure cause is a hypothesis until an artifact proves it, and your own command gets audited first.** Say "hypothesis" out loud until it reproduces. |
+| **A fix folded into the notes taken as a fix in the file** (2026-11-05) | Of 13 fixes folded into one episode's version 2, an independent reviewer found 6 not on the render: a speaker's level change never reached the output because the staging step that writes the levels was not re-run; the music bed ran out under the title card; the compressor still flattened the laughs; a card ended 1.8 s before its piece. Every review round lists the last round's fixes and checks each one on the new render, and the reviews repeat until one comes back with nothing blocking (4 versions on that episode). |
+| **A teardown with no frames read as if it had them** (2026-11-05) | A cloud session could not download the reference videos (the platform's bot check refused them, and it was not worked around), so its style teardown rested on transcripts alone. Every claim about what was on screen was marked inferred. Say so on the page whenever a study had no pictures. |
 
 ---
 
@@ -201,3 +207,20 @@ Every row is a real failure on a real long recording, with what it cost. This is
 **2. Green is not done.** A clean check battery means the file is now worth a person's time to watch. Done is them having watched it. The battery exists to stop wasting their watches on files with a fixable defect, never to replace the watch. Under an explicit end-to-end mandate too: a finished public artifact is not the kind of irreversible thing an autonomy grant covers.
 
 **3. Catch what a viewer would catch, and ask about taste.** A fault any viewer would notice is yours to fix without asking. A genuine taste call goes to the person, and their answer becomes a line in their taste files, dated, in their words. 2 review passes once recommended shrinking a caption size on corpus grounds and were both wrong, because the person had set that floor by hand 3 times. **A corpus finding never overrides a floor somebody set.**
+
+---
+
+## Part 6: standing rulings one working channel settled for its long form (2026-11-04)
+
+The creator settled these in one sitting when an editor took over the long-form podcast episodes. They are starting defaults: copy the ones that fit into `content/taste/podcast-edit.md` or your kind sheets, in your own words.
+
+1. **The creator watches every long-form file before it uploads. An exception is the creator's alone to grant, when asked.** So the editor plans each episode back from its publish date, with the day the creator watches it on the plan, and the system keeps the editor on that plan. Why: the creator found the editor guiding the schedule when the plan should have been guiding both of them.
+2. **The editor proposes and the creator picks on a call: 3 great options each of the trailer moments, the frames and the music, none with a known fault.**
+3. **Title and thumbnail are reviewed together**, as rendered options (the thumbnail and the title are one story).
+4. **1 full review call per episode**, never a string of small gates.
+5. **The independent end-of-run review repeats until one comes back with nothing blocking.** Never the builder reviewing itself.
+6. **The trailer is 30 to 40 seconds**, built from the moments the creator picked.
+7. **No generated second camera angle on a podcast: the second angle is a punch-in on the real pixels.**
+8. **The description opens with 1 to 2 sentences of about 20 searched words, then the creator's links, then the guest's.**
+9. **When the creator edits a take themselves, the combined master is where the launch session can find it before launch day.** A launch session that cannot find it says so in its first line. Why: once the creator's own master never reached the editing machine, the intro was found missing a week later, and cut-review never ran on the cut that went out.
+10. **Every episode is the editor's unless the creator names it as theirs**, and the plan says whose it is.
